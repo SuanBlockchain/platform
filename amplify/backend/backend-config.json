@@ -1,6 +1,7 @@
 {
   "api": {
-    "kiosuanbcrjsapp": {
+    "platform": {
+      "dependsOn": [],
       "output": {
         "authConfig": {
           "additionalAuthenticationProviders": [],
@@ -17,13 +18,13 @@
     }
   },
   "auth": {
-    "kiosuanbcrjsappa6accc93": {
+    "platformauth": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {
-        "mfaConfiguration": "OFF",
+        "mfaConfiguration": "OPTIONAL",
         "mfaTypes": [
-          "SMS"
+          "TOTP"
         ],
         "passwordProtectionSettings": {
           "passwordPolicyCharacters": [],
@@ -42,33 +43,8 @@
       "service": "Cognito"
     }
   },
-  "function": {},
-  "hosting": {
-    "amplifyhosting": {
-      "service": "amplifyhosting",
-      "type": "cicd"
-    }
-  },
-  "parameters": {
-    "AMPLIFY_hosting_amplifyhosting_appId": {
-      "usedBy": [
-        {
-          "category": "hosting",
-          "resourceName": "amplifyhosting"
-        }
-      ]
-    },
-    "AMPLIFY_hosting_amplifyhosting_type": {
-      "usedBy": [
-        {
-          "category": "hosting",
-          "resourceName": "amplifyhosting"
-        }
-      ]
-    }
-  },
   "storage": {
-    "s37845b3b9": {
+    "platformstorage": {
       "dependsOn": [],
       "providerPlugin": "awscloudformation",
       "service": "S3"

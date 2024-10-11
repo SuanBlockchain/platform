@@ -29,7 +29,8 @@ type User @model {
   documents: [Document] @hasMany(indexName: "byUser", fields: ["id"])
   companies: [Company] @hasMany(indexName: "byUser", fields: ["id"])
   payments: [Payment] @hasMany(indexName: "byUser", fields: ["id"])
-  marketplace: String
+  marketplaceID: ID @index(name: "byMarketplace")
+  marketplace: Marketplace @belongsTo(fields: ["marketplaceID"])
 }
 
 type Wallet @model {
@@ -41,13 +42,14 @@ type Wallet @model {
   address: String!
   stake_address: String!
   isSelected: Boolean
-  isAdmin: Boolean
   claimed_token: Boolean
+  isAdmin: Boolean
   userID: ID @index(name: "byUser")
   user: User @belongsTo(fields: ["userID"])
   orders: [Order] @hasMany(indexName: "byWallet", fields: ["id"])
   boughtOrders: [Order] @hasMany(indexName: "byWalletBuyer", fields: ["id"])
   transactions: [Transactions] @hasMany(indexName: "byWallet", fields: ["id"])
+  claimedToken: [ClaimedToken] @hasMany(indexName: "byWallet", fields: ["id"])
 }
 
 type Verification @model {
@@ -105,6 +107,20 @@ type ProductItem @model {
   type: String!
 }
 
+type Marketplace @model {
+  id: ID!
+  name: String!
+  oracleTokenName: String
+  oracleWalletID: ID
+  oracleWallet: Wallet @hasOne(fields: ["oracleWalletID"])
+  adminWalletID: ID
+  adminWallet: Wallet @hasOne(fields: ["adminWalletID"])
+  scripts: [Script] @hasMany(indexName: "byMarketplace", fields: ["id"])
+  products: [Product] @hasMany(indexName: "byMarketplace", fields: ["id"])
+  users: [User] @hasMany(indexName: "byMarketplace", fields: ["id"])
+  claimedToken: [ClaimedToken] @hasMany(indexName: "byMarketplace", fields: ["id"])
+}
+
 type Product @model {
   id: ID!
   name: String!
@@ -120,6 +136,8 @@ type Product @model {
   tokenGenesis: Boolean
   categoryID: ID! @index(name: "byCategory")
   category: Category @belongsTo(fields: ["categoryID"])
+  marketplaceID: ID @index(name: "byMarketplace")
+  marketplace: Marketplace @belongsTo(fields: ["marketplaceID"])
   images: [Image] @hasMany(indexName: "byProduct", fields: ["id"])
   productFeatures: [ProductFeature]
     @hasMany(indexName: "byProduct", fields: ["id"])
@@ -130,13 +148,14 @@ type Product @model {
   payments: [Payment] @hasMany(indexName: "byProduct", fields: ["id"])
   scripts: [Script] @hasMany(indexName: "byProduct", fields: ["id"])
   tokens: [Token] @hasMany(indexName: "byProduct", fields: ["id"])
-  analisis: [Analisis] @hasMany(indexName: "byProduct", fields: ["id"])
+  analysis: [Analysis] @hasMany(indexName: "byProduct", fields: ["id"])
+  apiQueries: [ApiQuery] @hasMany(indexName: "byProduct", fields: ["id"])
 }
 
-type Analisis @model {
+type Analysis @model {
   id: ID!
-  proyectoID: ID! @index(name: "byProduct")
-  proyecto: Product @belongsTo(fields: ["proyectoID"])
+  productID: ID! @index(name: "byProduct")
+  product: Product @belongsTo(fields: ["productID"])
   imgAnteriorNombreImg: String
   imgAnteriorSatellite: String
   imgAnteriorYear: Int
@@ -153,6 +172,40 @@ type Analisis @model {
   imgPosteriorBandas: String
   resultados: AWSJSON
   ajustado: Boolean
+}
+
+type AnalysisResult @model {
+  id: ID!
+  fuente: String!
+  modelo: String!
+  cobertura: String!
+  valor: Float!
+  unidad: String!
+  proyecto: String!
+  nombreImagen: String!
+  data: String!
+}
+
+type ApiQuery @model {
+  id: ID!
+  productID: ID! @index(name: "byProduct")
+  product: Product @belongsTo(fields: ["productID"])
+  cedulaCatastral: String
+  imgAnteriorSatellite: String!
+  imgAnteriorYear: Int!
+  imgAnteriorMesInicial: Int!
+  imgAnteriorMesFinal: Int!
+  imgAnteriorNubosidadMaxima: Int!
+  imgPosteriorSatellite: String!
+  imgPosteriorYear: Int!
+  imgPosteriorMesInicial: Int!
+  imgPosteriorMesFinal: Int!
+  imgPosteriorNubosidadMaxima: Int!
+  fechaHoraConsulta: AWSTimestamp
+  fechaHoraActualizacion: AWSTimestamp
+  verificado: Boolean!
+  rawConsulta: AWSJSON
+  resultadoConsulta: AWSJSON
 }
 
 type Image @model {
@@ -359,6 +412,8 @@ type Script @model {
   name: String!
   script_type: String! # mintSuanCO2/mintProject/spend/any
   script_category: String! # NativeScript/PlutusV1/PlutusV2/PlutusV3
+  marketplaceID: ID @index(name: "byMarketplace")
+  marketplace: Marketplace @belongsTo(fields: ["marketplaceID"])
   pbk: [String] # List[pkh]
   token_name: String
   cbor: String!
@@ -385,4 +440,12 @@ type Token @model {
   tokenName: String
   supply: Int
   oraclePrice: Int
+}
+
+type ClaimedToken @model {
+  id: ID!
+  marketplaceID: ID! @index(name: "byMarketplace")
+  walletID: ID! @index(name: "byWallet")
+  marketplace: Marketplace @belongsTo(fields: ["marketplaceID"])
+  wallet: Wallet @belongsTo(fields: ["walletID"])
 }

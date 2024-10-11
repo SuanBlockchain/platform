@@ -1,16 +1,16 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "kiosuanbcrjsappa6accc93_identitypool_a6accc93",
+    "identityPoolName": "platformauth_identitypool_e2d9b0e9",
     "allowUnauthenticatedIdentities": true,
-    "resourceNameTruncated": "kiosuaa6accc93",
-    "userPoolName": "kiosuanbcrjsappa6accc93_userpool_a6accc93",
+    "resourceNameTruncated": "platfo82accf3f",
+    "userPoolName": "platform82accf3f_userpool_82accf3f",
     "autoVerifiedAttributes": [
       "email"
     ],
-    "mfaConfiguration": "OFF",
+    "mfaConfiguration": "OPTIONAL",
     "mfaTypes": [
-      "SMS Text Message"
+      "TOTP"
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
     "smsVerificationMessage": "Your verification code is {####}",
@@ -31,12 +31,16 @@
     "userpoolClientReadAttributes": [
       "email"
     ],
-    "userpoolClientLambdaRole": "kiosuaa6accc93_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "platfo82accf3f_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "a6accc93",
-    "resourceName": "kiosuanbcrjsappa6accc93",
+    "sharedId": "82accf3f",
+    "resourceName": "platformauth",
     "authSelections": "identityPoolAndUserPool",
-    "useDefault": "default",
+    "useDefault": "manual",
+    "userPoolGroups": false,
+    "adminQueries": false,
+    "triggers": {},
+    "hostedUI": false,
     "userPoolGroupList": [],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,
