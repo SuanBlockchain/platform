@@ -676,6 +676,7 @@ export default function ProjectInfoCard(props) {
                   handleSaveBtn("projectInfoLocationMunicipio")
                 }
               />
+              {autorizedUser && (
               <div>
                 <div className="mb-3">
                   <div className="grid grid-cols-12 gap-4">
@@ -729,6 +730,7 @@ export default function ProjectInfoCard(props) {
                   </div>
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>

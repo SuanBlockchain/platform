@@ -26,6 +26,7 @@ import ProjectPage from "./components/Constructor/ProjectPage/ProjectPage";
 import ListS3 from "components/ListS3";
 import NewProject from "components/Constructor/NewProject/NewProject";
 import Dashboard from "components/Dashboard/Dashboard";
+import BarGraphComponent from "components/Constructor/ProjectPage/ProjectAnalysis/BarGraphComponent";
 
 function App() {
   return (
@@ -87,6 +88,10 @@ function App() {
                 <InvestorAdmon />
               </RoleMiddleware>
             }
+          />
+           <Route
+            path="/resultados"
+            element={ <BarGraphComponent />}
           />
           <Route
             path="/constructor"

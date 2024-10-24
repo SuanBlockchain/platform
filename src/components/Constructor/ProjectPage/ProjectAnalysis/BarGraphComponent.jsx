@@ -11,7 +11,8 @@ import {
   Legend,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
-
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from "react-bootstrap-icons";
 // Registrar componentes de ChartJS
 ChartJS.register(
   CategoryScale,
@@ -27,12 +28,19 @@ ChartJS.register(
 // Colores para los gráficos
 const colors = ["#666de9", "#cc674e", "#6bd089", "#f39c12", "#e74c3c"];
 
-export default function BarGraphComponent({ infoBarGraph }) {
+export default function BarGraphComponent({ infoBarGraph,toggleShowResults , setSelectedData   }) {
+  const navigate = useNavigate();
   if (!infoBarGraph || !infoBarGraph.resultados) {
     console.error("Error: infoBarGraph no está definido o tiene una estructura inesperada.");
     return null;
   }
 
+ 
+
+  const resultadosParsed = JSON.parse(infoBarGraph.resultados);
+  
+
+  console.log("resultado", resultadosParsed)
   // Configuración común de opciones de gráfico
   const commonOptions = {
     responsive: true,
@@ -45,7 +53,7 @@ export default function BarGraphComponent({ infoBarGraph }) {
 
   // Preparación de datos para el gráfico NDVI
   const prepareNDVIData = () => {
-    const { Anterior, Posterior } = infoBarGraph.resultados['Clasificación NDVI'];
+    const { Anterior, Posterior } = resultadosParsed['Clasificación NDVI'];
     const categories = Object.keys(Anterior);
     return {
       labels: categories,
@@ -66,7 +74,7 @@ export default function BarGraphComponent({ infoBarGraph }) {
 
   // Preparación de datos para el histograma NDVI
   const prepareHistogramData = () => {
-    const { "NDVI Anterior (Promedio)": prevAvg, "NDVI Posterior (Promedio)": postAvg } = infoBarGraph.resultados['Histograma Comparativo del NDVI'];
+    const { "NDVI Anterior (Promedio)": prevAvg, "NDVI Posterior (Promedio)": postAvg } = resultadosParsed['Histograma Comparativo del NDVI'];
     return {
       labels: ["NDVI Anterior", "NDVI Posterior"],
       datasets: [
@@ -81,7 +89,7 @@ export default function BarGraphComponent({ infoBarGraph }) {
 
   // Configuración del gráfico de líneas para el mapa de cambio en coberturas
   const prepareMapChangeData = () => {
-    const data = infoBarGraph.resultados['Mapa de Cambio en Coberturas']['Cambio de vegetación'];
+    const data = resultadosParsed['Mapa de Cambio en Coberturas']['Cambio de vegetación'];
     const categories = Object.keys(data);
     return {
       labels: categories,
@@ -99,7 +107,7 @@ export default function BarGraphComponent({ infoBarGraph }) {
   };
 
   const prepareBiomasaCO2Data = () => {
-    const { NDVI } = infoBarGraph.resultados;
+    const { NDVI } = resultadosParsed;
     const categories = ["Biomasa por Ha", "Biomasa total", "CO2 Equivalente", "Carbono Aéreo"];
     return {
       labels: categories,
@@ -129,10 +137,41 @@ export default function BarGraphComponent({ infoBarGraph }) {
       ]
     };
   };
+
+  const handleBack = () => {
+    console.log("Botón 'Volver' presionado, ejecutando toggleShowResults");
+    toggleShowResults();
+    setSelectedData(null);
+  };
   
-  // Renderizar cada gráfico
+
+  
   return (
     <div style={{ width: '100%', height: 'auto', padding: '20px' }}>
+      <button onClick={handleBack} style={{ display: 'flex', alignItems: 'center' }}>
+        <ArrowLeft style={{ marginRight: '8px' }} /> Volver
+      </button>
+      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Análisis de Biomasa</h1>
+      <div style={{
+        backgroundColor: '#f7f7f7',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+        marginBottom: '20px'
+      }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '15px' }}>Datos de Entrada</h2>
+        <div style={{ fontSize: '16px', lineHeight: '1.6' }}>
+          <p><strong>Nombre imagen anterior:</strong> {resultadosParsed.imgAnteriorNombreImg || "No disponible"}</p>
+          <p><strong>Nombre imagen posterior:</strong> {resultadosParsed.imgPosteriorNombreImg || "No disponible"}</p>
+          <p><strong>Correcciones:</strong> {resultadosParsed.correcciones?.join(', ') || "Ninguna"}</p>
+          <p><strong>Banda NIR:</strong> {resultadosParsed.BandaNIR || "No especificado"}</p>
+          <p><strong>Posición banda NIR:</strong> {resultadosParsed.PosiciónBandaNIR || "No especificado"}</p>
+          <p><strong>Banda RED:</strong> {resultadosParsed.BandaRED || "No especificado"}</p>
+          <p><strong>Posición banda RED:</strong> {resultadosParsed.PosiciónBandaRED || "No especificado"}</p>
+          <p><strong>Resolución imagen anterior:</strong> {resultadosParsed.resoluciónImagenAnterior || "No especificado"}</p>
+          <p><strong>Resolución imagen posterior:</strong> {resultadosParsed.resoluciónImagenPosterior || "No especificado"}</p>
+        </div>
+      </div>
       <div style={{ height: '300px' }}>
         <Bar options={{ ...commonOptions, title: { text: 'Clasificación NDVI' } }} data={prepareNDVIData()} />
       </div>
