@@ -100,8 +100,8 @@ const mapVerificationsData = async (verifications) => {
               ...msg,
               userName: await capitalizeWords(
                 msg.isCommentByVerifier
-                  ? verification.userVerifier.name
-                  : verification.userVerified.name
+                  ? verification.userVerifier?.name
+                  : verification.userVerified?.name
               ),
               createdAt: await convertAWSDatetimeToDate(msg.createdAt),
               elapsedTime: await getElapsedTime(msg.createdAt),

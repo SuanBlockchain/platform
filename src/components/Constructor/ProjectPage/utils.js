@@ -55,7 +55,7 @@ export const getElapsedTime = async (initDate, endDate = new Date()) => {
   return elapsedTime;
 };
 
-export const capitalizeWords = async (str) => {
+export const capitalizeWords = async (str='') => {
   const lowercaseStr = str.toLowerCase();
 
   const words = lowercaseStr.split(" ");
