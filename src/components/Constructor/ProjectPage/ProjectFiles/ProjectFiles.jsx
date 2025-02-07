@@ -96,7 +96,7 @@ export default function ProjectFiles({ visible }) {
     <>
       {visible && (
         <div className="row row-cols-1 row-cols-xl-2 g-4">
-          <div className={isMessageCardActive ? "col" : "col-12 col-xl-12"}>
+          <div className={isMessageCardActive ? "col" : "col-12 col-xl-12 mb-5"}>
             <PostulantFilesInfoCard
               projectFiles={projectData.projectFiles}
               propertyFiles={projectData.projectPropertyFiles}

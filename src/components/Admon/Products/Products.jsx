@@ -69,7 +69,7 @@ class Products extends Component {
       },
       productFeatures: [],
       listPF: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       isImageUploadingFile: false,
       products: [],
@@ -379,7 +379,7 @@ class Products extends Component {
   async handleCRUDProduct() {
     const tempCRUD_Product = this.state.CRUD_Product;
     tempCRUD_Product.id = await checkIfUserExists(tempCRUD_Product.id);
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       const payLoadNewProduct = {
         id: tempCRUD_Product.id,
         name: tempCRUD_Product.name,
@@ -747,7 +747,7 @@ class Products extends Component {
         images: [],
       },
       productFeatures: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       isImageUploadingFile: false, //se borraban los features y categorys
       selectedCategory: null,
@@ -927,7 +927,7 @@ class Products extends Component {
         <form className="bg-white p-4 rounded-lg shadow-sm mb-4">
           <div className="mb-4">
             <h2 className="text-xl font-bold">
-              PROJECT PROPERTIES on {CRUDButtonName}
+            PROPIEDADES DEL PROYECTO en {CRUDButtonName}
             </h2>
           </div>
 
@@ -936,7 +936,7 @@ class Products extends Component {
               className="block text-sm font-bold mb-2"
               htmlFor="formGridCategorySelectList"
             >
-              Category
+              Categoría
             </label>
             <Select
               options={this.state.categorySelectList}
@@ -946,7 +946,7 @@ class Products extends Component {
             <div className="mt-2">
               <Alert key="idx_key_1" variant="success">
                 {selectedCategory === null
-                  ? "Not selected"
+                  ? "No seleccionado"
                   : selectedCategory.name}
               </Alert>
             </div>
@@ -958,7 +958,7 @@ class Products extends Component {
                 className="block text-sm font-bold mb-2"
                 htmlFor="formGridCRUD_ProductName"
               >
-                Name
+                Nombre
               </label>
               <input
                 type="text"
@@ -975,7 +975,7 @@ class Products extends Component {
                 className="block text-sm font-bold mb-2"
                 htmlFor="formGridCRUD_ProductDescription"
               >
-                Description
+                Descripción
               </label>
               <input
                 type="text"
@@ -994,7 +994,7 @@ class Products extends Component {
                 className="block text-sm font-bold mb-2"
                 htmlFor="formGridCRUD_ProductStatus"
               >
-                Status
+                Estado
               </label>
               <select
                 name="CRUD_ProductStatus"
@@ -1013,19 +1013,19 @@ class Products extends Component {
             </div>
 
             <div className="w-full md:w-1/2 px-2 mb-4">
-              <label className="block text-sm font-bold mb-2">Is Active</label>
+              <label className="block text-sm font-bold mb-2">Está activo?</label>
               <div>
                 <button
                   className={`inline-block px-3 py-1 rounded-full ${
                     CRUD_Product.isActive
-                      ? "bg-green-700 text-white"
+                      ? "bg-[#6e6c35] border-1 border-dark text-white"
                       : "bg-red-500 text-white"
                   }`}
                   onClick={(e) =>
                     this.handleOnChangeInputForm(e, "productIsActive")
                   }
                 >
-                  {CRUD_Product.isActive ? "YES" : "NO"}
+                  {CRUD_Product.isActive ? "SI" : "NO"}
                 </button>
               </div>
             </div>
@@ -1036,7 +1036,7 @@ class Products extends Component {
               className="block text-sm font-bold mb-2"
               htmlFor="formGridCRUD_ProductOrder"
             >
-              Order
+              Orden
             </label>
             <input
               type="number"
@@ -1051,7 +1051,7 @@ class Products extends Component {
 
         <div className="pt-4 bg-white p-4 rounded-lg shadow-sm my-4">
           <div className="mb-4">
-            <h2 className="text-xl font-bold">PROJECT Features</h2>
+            <h2 className="text-xl font-bold">Características del proyecto</h2>
           </div>
 
           <CRUDProductFeatures
@@ -1072,7 +1072,7 @@ class Products extends Component {
 
         <div className="pt-4 bg-white p-4 rounded-lg shadow-sm my-4">
           <div className="mb-4">
-            <h2 className="text-xl font-bold">PROJECT Images</h2>
+            <h2 className="text-xl font-bold">Imagenes de proyecto</h2>
           </div>
 
           <div className="mb-4">
@@ -1080,7 +1080,7 @@ class Products extends Component {
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={(e) => this.handleAddNewImageToActualProduct(e)}
             >
-              ADD IMAGE TO ACTUAL PROJECT
+              AGREGAR IMAGEN AL PROYECTO ACTUAL
             </button>
           </div>
 

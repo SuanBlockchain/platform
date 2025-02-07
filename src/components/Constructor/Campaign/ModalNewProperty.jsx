@@ -270,6 +270,19 @@ export default function ModalNewProperty({
               >
                 Agregar identificador
               </button>
+              <div className="mt-3">
+    <p className="text-muted">
+      ¿No sabes cómo sacar tu número catastral?{" "}
+      <a
+        href="https://terrasacha.gitbook.io/terrasacha/guia-de-usuario-plataforma/rol-propietario/como-obtener-el-numero-catastral-de-un-predio"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary"
+      >
+        Mira esta guía
+      </a>
+    </p>
+  </div>
             </Form.Group>
           </Form>
         </Modal.Body>

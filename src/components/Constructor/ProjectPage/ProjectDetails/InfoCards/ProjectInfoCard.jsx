@@ -717,7 +717,7 @@ export default function ProjectInfoCard(props) {
                       <button
                         disabled={!autorizedUser}
                         onClick={handleUploadButton}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                        className="px-4 py-2 text-white rounded-md hover:bg-blue-600 bg-[#6e6c35] border-1 border-dark"
                       >
                         Cargar nuevo archivo
                       </button>

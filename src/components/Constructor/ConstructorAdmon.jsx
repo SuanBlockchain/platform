@@ -459,23 +459,21 @@ class ConstructorAdmon extends Component {
     };
 
     return (
-      <div className="container-sm" style={{ paddingTop: 60, minHeight: "100vh" }}>
-        <Row>
-          <NewHeaderNavbar/>
-          {/* <HeaderNavbar
-            changeHeaderNavBarRequest={this.changeHeaderNavBarRequest}
-            handleSignOut={this.handleSignOut}
-          ></HeaderNavbar> */}
-        </Row>
+      <div>
+        <div className="container-sm " style={{ paddingTop: 60, minHeight: "100vh" }}>
+          <div className="mb-5">
+            <NewHeaderNavbar></NewHeaderNavbar>
+          </div>
 
-        <div className="mt-4">
-          {renderProductsList()}
-          {/* {renderProfile()} */}
-          {/* {renderOrders()} */}
-          {/* {renderProductsBuyed()} */}
-          {/* {renderNewProduct()} */}
-          {/* {renderModalWallet()} */}
-          {/* <NewProduct /> */}
+          <div className="mt-4">
+            {renderProductsList()}
+            {/* {renderProfile()} */}
+            {/* {renderOrders()} */}
+            {/* {renderProductsBuyed()} */}
+            {/* {renderNewProduct()} */}
+            {/* {renderModalWallet()} */}
+            {/* <NewProduct /> */}
+          </div>
         </div>
       </div>
     );

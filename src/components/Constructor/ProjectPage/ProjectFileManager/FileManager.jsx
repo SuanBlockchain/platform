@@ -37,7 +37,7 @@ export default function FileManager(props) {
         // const actualFolder = currentPath.length === 0 ? rootFolder : currentPath.join("/");
         setS3Objects(data);
         if (currentPath.length === 0) {
-          setSelectedFolder(data[rootFolder].data);
+          setSelectedFolder(data[rootFolder]?.data);
           setCurrentPath([rootFolder]);
         } else {
           let currentData = data;

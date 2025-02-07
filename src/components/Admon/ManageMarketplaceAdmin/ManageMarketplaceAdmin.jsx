@@ -54,6 +54,8 @@ export default function ManageMarketplaceAdmin() {
   const [listMarketplaces, setListMarketplaces] = useState([]);
   const [newAdmin, setNewAdmin] = useState(initialState);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
   const [showModalCreate, setShowModalCreate] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
@@ -106,14 +108,71 @@ export default function ManageMarketplaceAdmin() {
     });
   };
 
-  const handleOnChangeInputForm = async (event) => {
-    const { name, value } = event.target;
-    setNewAdmin((prevState) => (
-      {
-      ...prevState,
-      [name]: value,
+  const validateForm = () => {
+    const { username, email, marketplace } = newAdmin;
+    const errors = {};
+
+    if (!username.trim()) {
+      errors.username = "El nombre de usuario es obligatorio.";
+    } else if (username.length < 3) {
+      errors.username = "El nombre de usuario debe tener al menos 3 caracteres.";
     }
-  ));
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      errors.email = "El correo electrónico es obligatorio.";
+    } else if (!emailRegex.test(email)) {
+      errors.email = "El correo electrónico no es válido.";
+    }
+
+    if (!marketplace) {
+      errors.marketplace = "Debe seleccionar un Marketplace.";
+    }
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0; // Retorna true si no hay errores
+  };
+
+  const handleOnChangeInputForm = (event) => {
+    const { name, value } = event.target;
+    setNewAdmin((prevState) => {
+      const updatedAdmin = { ...prevState, [name]: value };
+
+      if (showErrors) {
+        const updatedErrors = { ...errors };
+
+        if (name === "username") {
+          if (!value.trim()) {
+            updatedErrors.username = "El nombre de usuario es obligatorio.";
+          } else if (value.length < 3) {
+            updatedErrors.username = "El nombre de usuario debe tener al menos 3 caracteres.";
+          } else {
+            delete updatedErrors.username;
+          }
+        }
+
+        if (name === "email") {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!value.trim()) {
+            updatedErrors.email = "El correo electrónico es obligatorio.";
+          } else if (!emailRegex.test(value)) {
+            updatedErrors.email = "El correo electrónico no es válido.";
+          } else {
+            delete updatedErrors.email;
+          }
+        }
+
+        if (name === "marketplace" && !value) {
+          updatedErrors.marketplace = "Debe seleccionar un Marketplace.";
+        } else {
+          delete updatedErrors.marketplace;
+        }
+
+        setErrors(updatedErrors);
+      }
+
+      return updatedAdmin;
+    });
   };
 
   const toDeleteUser = (user) => {
@@ -138,13 +197,21 @@ export default function ManageMarketplaceAdmin() {
   };
 
   const getMarketplaceNameById = (marketplaceId) => {
-    return listMarketplaces.find((marketplace) => marketplace.id === marketplaceId).name
-  }
+    const marketplace = listMarketplaces.find(
+      (marketplace) => marketplace.id === marketplaceId
+    );
+    return marketplace ? marketplace.name : "Marketplace no encontrado";
+  };
+  
 
   const confirmCreateUser = async () => {
+    setShowErrors(true);
+    if (!validateForm()) {
+      return;
+    }
+
     setLoadingCreate(true);
-    const endpoint =
-      "https://vhal4tf7id.execute-api.us-east-1.amazonaws.com/create-admin-marketplace";
+    const endpoint = process.env.REACT_APP_CREATE_MARKETPLACE_ADMIN_ENDPOINT;
       
     const marketplaceName = listMarketplaces.find((marketplace) => marketplace.id === newAdmin.marketplace).name
     const data = {
@@ -217,7 +284,7 @@ export default function ManageMarketplaceAdmin() {
         <form className="mt-4">
           <div className="mb-4">
             <label htmlFor="formGridUsername" className="block font-semibold">
-              Username
+              Nombre de usuario
             </label>
             <input
               type="text"
@@ -225,12 +292,17 @@ export default function ManageMarketplaceAdmin() {
               placeholder="Username"
               value={newAdmin.username}
               onChange={handleOnChangeInputForm}
-              className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+              className={`block w-full border ${
+                errors.username ? "border-red-500" : "border-gray-300"
+              } rounded px-3 py-2 mt-1 focus:outline-none`}
             />
+            {errors.username && (
+              <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+            )}
           </div>
           <div className="mb-4">
             <label htmlFor="formGridEmail" className="block font-semibold">
-              Email
+              Correo
             </label>
             <input
               type="email"
@@ -238,8 +310,13 @@ export default function ManageMarketplaceAdmin() {
               placeholder="Email"
               value={newAdmin.email}
               onChange={handleOnChangeInputForm}
-              className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+              className={`block w-full border ${
+                errors.email ? "border-red-500" : "border-gray-300"
+              } rounded px-3 py-2 mt-1 focus:outline-none`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
           <div className="mb-4">
             <label htmlFor="marketplace" className="block font-semibold">
@@ -250,7 +327,9 @@ export default function ManageMarketplaceAdmin() {
               name="marketplace"
               value={newAdmin.marketplace}
               onChange={handleOnChangeInputForm}
-              className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+              className={`block w-full border ${
+                errors.marketplace ? "border-red-500" : "border-gray-300"
+              } rounded px-3 py-2 mt-1 focus:outline-none`}
             >
               <option value="" disabled selected>Seleccionar Marketplace</option>
               {listMarketplaces.map((marketplace, idx) => (
@@ -276,8 +355,8 @@ export default function ManageMarketplaceAdmin() {
             <table className="table-auto w-full">
               <thead>
                 <tr>
-                  <th className="border px-4 py-2">Username</th>
-                  <th className="border px-4 py-2">Email</th>
+                  <th className="border px-4 py-2">Nombre de usuario</th>
+                  <th className="border px-4 py-2">Correo</th>
                   <th className="border px-4 py-2">Marketplace</th>
                   <th className="border px-4 py-2">Entorno</th>
                   <th className="border px-4 py-2"></th>
@@ -304,7 +383,7 @@ export default function ManageMarketplaceAdmin() {
                           })
                         }
                       >
-                        Delete
+                        Eliminar
                       </button>
                     </td>
                   </tr>
@@ -328,7 +407,7 @@ export default function ManageMarketplaceAdmin() {
               onClick={() => setShowModalDelete(false)}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="button"
@@ -342,7 +421,7 @@ export default function ManageMarketplaceAdmin() {
                   style={{ marginRight: ".5rem" }}
                 />
               )}
-              Delete
+              Eliminar
             </button>
           </Modal.Footer>
         </Modal>
@@ -380,12 +459,12 @@ export default function ManageMarketplaceAdmin() {
               onClick={() => setShowModalCreate(false)}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="button"
               onClick={() => confirmCreateUser()}
-              className="bg-green-700 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-[#6e6c35] border-1 border-dark hover:bg-[#6e6c35] border-1 border-dark text-white font-bold py-2 px-4 rounded"
             >
               {loadingCreate && (
                 <Spinner

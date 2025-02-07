@@ -290,7 +290,7 @@ export default function ConsultOraculo() {
                   </Col>
                 </Row>
                 
-                <Button type="submit" variant="primary" disabled={loading} className="mt-8 d-flex gap-x-3">
+                <Button type="submit" disabled={loading} className="mt-8 d-flex gap-x-3 border-1 border-dark" style={{backgroundColor: "#6e6c35"}}>
                   {loading ? (
                     <Spinner animation="border" size="sm" />
                   ) : (

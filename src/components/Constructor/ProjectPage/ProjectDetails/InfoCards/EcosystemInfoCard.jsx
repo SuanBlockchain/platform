@@ -248,7 +248,7 @@ export default function EcosystemInfoCard(props) {
         {autorizedUser && (
           <div className="d-flex justify-content-center">
             <button
-              className="p-2 text-white bg-green-700 rounded-md"
+              className="p-2 text-white bg-[#6e6c35] border-1 border-dark rounded-md"
               onClick={() => handleSaveBtn()}
               variant="success"
             >

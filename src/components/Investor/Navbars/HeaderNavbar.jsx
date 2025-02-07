@@ -4,7 +4,7 @@ import { Container, Nav, Navbar } from "react-bootstrap";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import s from "./HeaderNavbar.module.css";
 // Import images
-import LOGO from "../../common/_images/suan_logo.png";
+import TerrasachaLogo from "../../common/TerrasachaLogo";
 import { Auth } from "aws-amplify";
 
 export default class HeaderNavbar extends Component {
@@ -49,14 +49,14 @@ export default class HeaderNavbar extends Component {
         <Navbar key="sm" bg="light" expand="lg" fixed="top">
           <Container>
             <Navbar.Brand href="/" style={{ marginLeft: "2%" }}>
-              <img src={LOGO} className="w-8 h-auto" alt="ATP" />
+              <TerrasachaLogo className={"w-48 h-auto"} />
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Offcanvas placement="end">
               <Offcanvas.Header closeButton>
                 <Offcanvas.Title>
                   <a href="/">
-                    <img src={LOGO} className="w-8 h-auto" alt="ATP" />
+                    <TerrasachaLogo className={"w-48 h-auto"} />
                   </a>
                 </Offcanvas.Title>
               </Offcanvas.Header>
@@ -103,6 +103,8 @@ export default class HeaderNavbar extends Component {
                               ? "Consultor"
                               : role === "constructor"
                               ? "Propietario"
+                              : role === "analyst"
+                              ? "Analista"
                               : role}
                           </p>
                         </button>

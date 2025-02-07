@@ -150,7 +150,7 @@ export default class PQRForm extends Component {
             <FaArrowLeft />
             Regresar
           </Button>
-          <h2 className="text-center mb-4">Envía tu PQR</h2>
+          <h2 className="text-center mb-4">Envía tu PQRS</h2>
           <Form onSubmit={this.handlePRQSubmit}>
             <Form.Group controlId="prqDescription" className="mb-3">
               <Form.Label>Descripción de la consulta</Form.Label>
@@ -229,7 +229,7 @@ export default class PQRForm extends Component {
               className="w-100 mt-3"
               disabled={isLoading}
             >
-              Enviar PQR
+              Enviar PQRS
             </Button>
           </Form>
 

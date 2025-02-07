@@ -16,6 +16,7 @@ import { formatArea } from "../ProjectPage/mappers";
 import { onUpdateProperty } from "graphql/subscriptions";
 import { WindowFullscreen } from "react-bootstrap-icons";
 import ModalEditImage from "./ModalEditImage";
+import Imagen from "../../common/_images/Campaña.png";
 
 export default function Campaign() {
   const [campaign, setCampaign] = useState(null);
@@ -168,7 +169,11 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
           <article className="flex flex-col lg:flex-row gap-8">
           <div className="relative w-full lg:w-1/2 flex justify-center items-center">
   <img
-    src={JSON.parse(campaign.images)[0]}
+    src={
+      campaign.images && JSON.parse(campaign.images).length > 0
+        ? JSON.parse(campaign.images)[0] 
+        : Imagen 
+    }
     alt="Imagen de la campaña"
     className="object-cover w-full h-auto rounded-lg shadow-md"
   />

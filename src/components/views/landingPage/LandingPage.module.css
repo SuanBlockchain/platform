@@ -13,7 +13,12 @@
     background-image: url('../_images/fondo_landinf_banner.jpg');
     background-repeat: no-repeat;   
     background-size: cover;
-    height: 100dvh;
+    height: 100%;
+    min-height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -64,8 +69,6 @@ a{
     cursor: pointer;    
     border: none;
     color: white;
-    background: rgb(77,188,94);
-    background: linear-gradient(45deg, rgba(77,188,94,1) 0%, rgba(3,102,103,1) 100%);
     transition: .2s;
 }
 .container button:hover{
@@ -120,8 +123,6 @@ a{
     border: none;
     font-size: 1.1em;
     color: white;
-    background: rgb(77,188,94);
-    background: linear-gradient(45deg, rgba(77,188,94,1) 0%, rgba(3,102,103,1) 100%);
 }
 @keyframes appear {
   from {
@@ -206,9 +207,7 @@ a{
     .title{
         margin-top: 2%;
         font-size: 3em;
-    }
-
-   
+    }   
   }
   
   /* Estilos para pantallas grandes */

@@ -19,6 +19,7 @@ import plataforma from "../_images/diseno-de-respuesta.png";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import DropDownProjects from "components/common/DropDownProjects";
+import NewHeaderNavbar from "components/common/NewHeaderNavbar";
 
 export default class LandingPage extends Component {
   constructor(props) {
@@ -167,7 +168,24 @@ export default class LandingPage extends Component {
     const urlS3Image = WebAppConfig.url_s3_public_images;
     return (
       <div style={{ minHeight: "100vh" }}>
-        <HeaderNavbar logOut={this.logOut}></HeaderNavbar>
+
+        {/* <HeaderNavbar logOut={this.logOut}></HeaderNavbar> */}
+        <NewHeaderNavbar/>
+        {/*         <Carousel>
+        {this.state.productsImagesIsOnCarousel.map((image, idx) => (
+            <Carousel.Item key={idx}>
+                <img
+                className="d-block w-100"
+                src={urlS3Image+image.imageURL}
+                alt="First slide"
+                />
+                <Carousel.Caption>
+                <h3>{image.carouselLabel}</h3>
+                <p>{image.carouselDescription}</p>
+                </Carousel.Caption>
+                </Carousel.Item>
+        ))}
+        </Carousel> */}
         <div className={s.container}>
           <h1 className='fade-in fade-in-title p-2 mx-2'>
             Aceleramos la transición hacia un<br></br>
@@ -180,10 +198,13 @@ export default class LandingPage extends Component {
           </p>
           <div className='fade-in fade-in-row row'>
             <div className='col p-2 mx-3'>
-              <Button className="" onClick={this.handleShow}>
+            <Button 
+  style={{ backgroundColor: "#6B8E0F", color: "white", border: "none" }} 
+  onClick={this.handleShow}
+>
                 Tengo un proyecto
               </Button>
-              <DropDownProjects/>
+              <DropDownProjects style={{width:"100vw"}}/>
               <Modal show={this.state.show} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                   <div className="row">
@@ -417,7 +438,7 @@ export default class LandingPage extends Component {
               <div className="col-12 sm:col-6">
                 <a
                   className="m-auto d-block btn-landing text-center mb-2 sm:mb-0"
-                  href="https://suan-1.gitbook.io/documentacion-suan-sandbox/"
+                  href="https://terrasacha.gitbook.io/terrasacha/readme/guia-de-usuario"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -427,7 +448,7 @@ export default class LandingPage extends Component {
               <div className="col-12 sm:col-6">
                 <a
                   className="m-auto d-block btn-landing text-center sm:ml-2"
-                  href="https://suan-1.gitbook.io/documentacion-suan/"
+                  href="https://terrasacha.gitbook.io/terrasacha"
                   target="_blank"
                   rel="noreferrer"
                 >

@@ -52,7 +52,7 @@ export default function NewProject() {
       // "H_aliados_estrategicos_desc",
       // "H_grupo_comunitario_desc",
     ];
-    
+
     const productFeaturesGroupsToCreate1 = [
       //   "D_actual_use",
       //   "D_area_potrero",
@@ -467,35 +467,39 @@ export default function NewProject() {
   };
 
   return (
-    <div className="container-sm">
-      <div className="mb-5">
-        <NewHeaderNavbar></NewHeaderNavbar>
+    <div>
+      <div
+        className="container-sm "
+        style={{ paddingTop: 60, minHeight: "100vh" }}
+      >
+        <div className="mb-5">
+          <NewHeaderNavbar></NewHeaderNavbar>
+        </div>
+        <section className="mb-5">
+          <h2>Creación de un nuevo proyecto</h2>
+          <p>
+            Para crear un proyecto en nuestra plataforma, es necesario que
+            completes el siguiente formulario. Es importante que ingreses toda
+            la información requerida de manera precisa y detallada para que
+            podamos evaluar tu solicitud.
+          </p>
+          <p>
+            Una vez que hayas completado el formulario, nuestro equipo revisará
+            la información proporcionada y te informaremos si tu proyecto ha
+            sido aprobado o no. Si es aprobado, el equipo de Suan te enviará un
+            contrato en el que se te especificará como continuar el proceso.
+          </p>
+        </section>
+        <DynamicForm
+          XLSFormURL={formURL}
+          formData={formData}
+          setFormData={setFormData}
+          formDataErrors={formDataErrors}
+          setFormDataErrors={setFormDataErrors}
+          handleSubmit={handleSubmit}
+          submitBtnLabel="Postular este proyecto"
+        />
       </div>
-      <div className="my-2">-</div>
-      <section className="mb-5">
-        <h2>Creación de un nuevo proyecto</h2>
-        <p>
-          Para crear un proyecto en nuestra plataforma, es necesario que
-          completes el siguiente formulario. Es importante que ingreses toda la
-          información requerida de manera precisa y detallada para que podamos
-          evaluar tu solicitud.
-        </p>
-        <p>
-          Una vez que hayas completado el formulario, nuestro equipo revisará la
-          información proporcionada y te informaremos si tu proyecto ha sido
-          aprobado o no. Si es aprobado, el equipo de Suan te enviará un
-          contrato en el que se te especificará como continuar el proceso.
-        </p>
-      </section>
-      <DynamicForm
-        XLSFormURL={formURL}
-        formData={formData}
-        setFormData={setFormData}
-        formDataErrors={formDataErrors}
-        setFormDataErrors={setFormDataErrors}
-        handleSubmit={handleSubmit}
-        submitBtnLabel="Postular este proyecto"
-      />
     </div>
   );
 }

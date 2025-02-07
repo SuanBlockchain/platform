@@ -12,6 +12,7 @@ import {
   getImagesCategories,
   getYearFromAWSDatetime,
 } from "../../Constructor/ProjectPage/utils";
+import NewHeaderNavbar from "components/common/NewHeaderNavbar";
 
 export const listDocuments = /* GraphQL */ `
   query ListDocuments(
@@ -307,7 +308,7 @@ class ValidatorAdmon extends Component {
                           <Card.Footer>
                             <div className="d-flex justify-content-center align-items-center">
                               <a href={"project/" + product.id}>
-                                <Button>Ver más</Button>
+                              <button className="p-2 bg-[#6e6c35] text-white rounded-md border-1 border-dark">Ver más</button>
                               </a>
                             </div>
                           </Card.Footer>
@@ -324,10 +325,11 @@ class ValidatorAdmon extends Component {
     };
     return (
       <Container style={{ paddingTop: 70, minHeight: "100vh" }}>
-        <HeaderNavbar
+        {/* <HeaderNavbar
           logOut={this.logOut}
           changeHeaderNavBarRequest={this.changeHeaderNavBarRequest}
-        ></HeaderNavbar>
+        ></HeaderNavbar> */}
+        <NewHeaderNavbar/>
         <ToastContainer />
         {renderValidatingProjects()}
       </Container>

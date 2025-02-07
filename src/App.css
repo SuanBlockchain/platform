@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap');
+
+
 .App {
   text-align: center;
 }
@@ -23,6 +26,28 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+
+body p, body h1, body h2, body h3, body h4, body h5, body h6 {
+  font-family: 'Jost', sans-serif !important;
+}
+
+button {
+  background-color: #74742c !important; /* Color de fondo */
+  border: 2px solid #74742c !important; /* Color del borde */
+  color: white !important; /* Color del texto */
+  padding: 10px 20px !important; /* Espaciado interno */
+  font-size: 16px !important; /* Tamaño de la fuente */
+  border-radius: 5px !important; /* Bordes redondeados */
+  cursor: pointer !important; /* Cursor de mano */
+  transition: background-color 0.3s ease, border-color 0.3s ease !important; /* Transición suave */
+}
+
+button:hover {
+  background-color: #5f5f23 !important; /* Color de fondo al pasar el mouse */
+  border-color: #5f5f23 !important; /* Color del borde al pasar el mouse */
+}
+
+
 
 .App-link {
   color: #61dafb;
