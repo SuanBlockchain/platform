@@ -21,6 +21,8 @@ const initialForm = {
 
 export default function NewCampaign() {
   const [formData, setFormData] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const userID = useRef(null);
@@ -29,25 +31,112 @@ export default function NewCampaign() {
   useEffect(() => {
     Auth.currentAuthenticatedUser().then((data) => {
       userID.current = data.attributes.sub;
+    }).catch((error) => {
+      navigate('/')
     });
+
   }, []);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "El nombre de la campaña es obligatorio.";
+    } else if (formData.name.length < 3) {
+      newErrors.name = "El nombre debe tener al menos 3 caracteres.";
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = "La descripción es obligatoria.";
+    } else if (formData.description.length < 10) {
+      newErrors.description = "La descripción debe tener al menos 10 caracteres.";
+    }
+
+    if (!formData.initialDate) {
+      newErrors.initialDate = "La fecha inicial es obligatoria.";
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = "La fecha de finalización es obligatoria.";
+    } else if (formData.initialDate && formData.endDate < formData.initialDate) {
+      newErrors.endDate =
+        "La fecha de finalización no puede ser anterior a la fecha inicial.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+  
+    // Manejo especial para el campo 'images'
     if (name === "images") {
-      setImages(Array.from(files));
+      setImages(Array.from(files)); // Guardar los archivos seleccionados en un estado independiente
     } else {
+      // Actualizar el estado del formulario para otros campos
       setFormData({
         ...formData,
         [name]: type === "checkbox" ? checked : value,
       });
     }
+  
+    // Validación en tiempo real: Eliminar errores del campo si se corrige
+    if (showErrors) {
+      setErrors((prevErrors) => {
+        const updatedErrors = { ...prevErrors };
+  
+        if (name === "name" && value.trim()) {
+          if (value.length < 3) {
+            updatedErrors.name = "El nombre debe tener al menos 3 caracteres.";
+          } else {
+            delete updatedErrors.name;
+          }
+        }
+  
+        if (name === "description" && value.trim()) {
+          if (value.length < 10) {
+            updatedErrors.description =
+              "La descripción debe tener al menos 10 caracteres.";
+          } else {
+            delete updatedErrors.description;
+          }
+        }
+  
+        if (name === "initialDate" && value) {
+          delete updatedErrors.initialDate;
+        }
+  
+        if (name === "endDate" && value) {
+          if (formData.initialDate && value < formData.initialDate) {
+            updatedErrors.endDate =
+              "La fecha de finalización no puede ser anterior a la fecha inicial.";
+          } else {
+            delete updatedErrors.endDate;
+          }
+        }
+  
+        return updatedErrors;
+      });
+    }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowErrors(true); // Mostrar errores solo al intentar enviar
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
     formData.userID = userID.current;
+    const duplicates = await checkDuplicateCampaignName(formData.name);
+  if (duplicates.length > 0) {
+    toast.error("El nombre de la campaña ya existe. Elige otro.");
+    setLoading(false);
+    return;
+  }
 
     const timestampData = {
       ...formData,
@@ -69,7 +158,7 @@ export default function NewCampaign() {
       const result2 = await API.graphql(
         graphqlOperation(createProduct, {
           input: {
-            name: `projecto - ${campaignName}`,
+            name: `Proyecto - ${campaignName}`,
             description: "",
             isActive: false,
             categoryID: "MIXTO",
@@ -130,6 +219,34 @@ export default function NewCampaign() {
     }
   };
 
+  const checkDuplicateCampaignName = async (name) => {
+    const query = `
+      query CheckDuplicateCampaign($filter: ModelCampaignFilterInput) {
+        listCampaigns(filter: $filter) {
+          items {
+            id
+            name
+          }
+        }
+      }
+    `;
+  
+    try {
+      const result = await API.graphql(
+        graphqlOperation(query, {
+          filter: {
+            name: { eq: name },
+          },
+        })
+      );
+      return result.data.listCampaigns.items;
+    } catch (error) {
+      console.error("Error verificando duplicados:", error);
+      return [];
+    }
+  };
+  
+
   return (
     <div className="container-sm">
       <div className="mb-24">
@@ -149,8 +266,11 @@ export default function NewCampaign() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Ingrese el nombre de la campaña"
-                    required
+                    isInvalid={showErrors && errors.name}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.name}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="pb-4" controlId="description">
@@ -161,9 +281,12 @@ export default function NewCampaign() {
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Ingrese una descripción"
-                    required
                     className="h-28"
+                    isInvalid={showErrors && errors.description}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.description}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="pb-4" controlId="initialDate">
@@ -173,8 +296,11 @@ export default function NewCampaign() {
                     name="initialDate"
                     value={formData.initialDate}
                     onChange={handleChange}
-                    required
+                    isInvalid={showErrors && errors.initialDate}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.initialDate}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="pb-4" controlId="endDate">
@@ -184,8 +310,11 @@ export default function NewCampaign() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleChange}
-                    required
+                    isInvalid={showErrors && errors.endDate}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.endDate}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
                 <Form.Group className="pb-4" controlId="images">

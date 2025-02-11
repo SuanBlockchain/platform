@@ -78,7 +78,7 @@ export default function DescriptionValidator(props) {
         />
         <div className="d-flex justify-content-end mt-3">
           <button
-            className="p-2 rounded-md text-white bg-green-700"
+            className="p-2 rounded-md text-white bg-[#6e6c35] border-1 border-dark"
             disabled={
               projectDescription.length === 0 ||
               projectDescription ===

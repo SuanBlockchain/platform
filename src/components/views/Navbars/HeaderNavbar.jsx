@@ -27,7 +27,7 @@ export default class HeaderNavbar extends Component {
 
   getNavLinksByRole(role) {
     const commonLinks = [
-      <Nav.Link href="https://suans-organization.gitbook.io/suan" target="_blank" rel="noopener noreferrer">
+      <Nav.Link href="https://terrasacha.gitbook.io/terrasacha" target="_blank" rel="noopener noreferrer">
         Ayuda
       </Nav.Link>
     ];
@@ -38,19 +38,19 @@ export default class HeaderNavbar extends Component {
       ],
       investor: [
         <Nav.Link onClick={() => window.location.href = "/investor_admon"}>Perfil</Nav.Link>,
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
       ],
       validator: [
         <Nav.Link onClick={() => window.location.href = "/validator_admon"}>Perfil</Nav.Link>,
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
       ],
       analyst: [
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>,
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>,
         <Nav.Link onClick={() => window.location.href = "/project_analyst"}>Ver Proyectos</Nav.Link>
       ],
       constructor: [
         <Nav.Link onClick={() => window.location.href = "/constructor"}>Perfil</Nav.Link>,
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
       ]
     };
 
@@ -61,6 +61,16 @@ export default class HeaderNavbar extends Component {
     const { user } = this.state;
     const role = user?.attributes['custom:role'] || '';
     const userlog = user?.username || '';
+
+    const roleDisplayNames = {
+      admon: "Administrador",
+      validator: "Consultor",
+      analyst: "Analista",
+      constructor: "Propietario"
+    };
+
+    const displayRole = roleDisplayNames[role] || "Sin Rol";
+  
 
     return (
       <Navbar bg="light" expand="lg" fixed="top">
@@ -81,6 +91,7 @@ export default class HeaderNavbar extends Component {
             <Offcanvas.Body>
               <Nav className="me-auto my-2 my-lg-0" style={{ maxHeight: "100px" }} navbarScroll />
               <Nav>
+              {console.log("Rol del usuario:", role)}
                 {this.getNavLinksByRole(role)}
                 {localStorage.getItem("role") ? (
                   <div className="sm:flex sm:ml-5 gap-x-3">
@@ -91,7 +102,7 @@ export default class HeaderNavbar extends Component {
                     </svg>
                     <div>
                       {userlog}
-                      <p className="role_btn">{role || "Sin Rol"}</p>
+                      <p className="role_btn">{displayRole}</p>
                     </div>
                   </button>
                 </div>

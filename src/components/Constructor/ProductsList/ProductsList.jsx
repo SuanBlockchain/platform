@@ -42,10 +42,10 @@ const CampaignCard = ({ campaign }) => {
     />
     <div className="p-4">
       <div className="flex space-x-2 mb-2">
-        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
+        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded" style={{backgroundColor:"#74742c"}}>
           {getYearFromAWSDatetime(campaign?.products?.items?.[0]?.createdAt)}
         </span>
-        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
+        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded" style={{backgroundColor:"#74742c"}}>
           {campaign?.products?.items?.[0]?.categoryID}
         </span>
       </div>
@@ -55,6 +55,7 @@ const CampaignCard = ({ campaign }) => {
         <a
           href={`campaign/${campaign?.id}`}
           className="inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
+          style={{backgroundColor:"#74742c"}}
         >
           Ver Campaña
         </a>
@@ -78,24 +79,26 @@ const PropertyCard = ({ property }) => (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <div className="p-4">
         <h3 className="text-lg font-bold mb-2">{property?.name}</h3>
-        <p className="text-gray-600 text-sm mb-2">{property?.campaign.name}</p>
+        <p className="text-gray-600 text-sm mb-2">{property?.campaign?.name}</p>
         <div className="flex flex-wrap gap-2 mb-6">
-          <span className="bg-blue-400 text-white text-xs font-medium px-2 py-1 rounded w-fit">
-            {getYearFromAWSDatetime(property?.createdAt)}
-          </span>
-          <span className="bg-blue-400 text-white text-xs font-medium px-2 py-1 rounded w-fit">
-            Vinculado a campaña
-          </span>
+        <span className="bg-[#9a9a56] text-white text-xs font-medium px-2 py-1 rounded w-fit">
+  {getYearFromAWSDatetime(property?.createdAt)}
+</span>
+<span className="bg-[#9a9a56] text-white text-xs font-medium px-2 py-1 rounded w-fit">
+  Vinculado a campaña
+</span>
+
           <span className={`${statusColor[property.status]} text-white text-xs font-medium px-2 py-1 rounded w-fit`}>
             {statusEs[property.status]}
           </span>
         </div>
         <a
-          href={`property/${property?.id}`}
-          className="w-full inline-flex bg-blue-500 text-white text-sm justify-center font-bold px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Ver más
-        </a>
+  href={`property/${property?.id}`}
+  className="w-full inline-flex bg-[#74742c] text-white text-sm justify-center font-bold px-4 py-2 rounded hover:bg-[#5f5f23]"
+>
+  Ver más
+</a>
+
       </div>
     </div>
   </div>
@@ -154,6 +157,7 @@ export default function ProductsList() {
 
   return (
     <>
+     {/*
       <section>
         <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Tus Campañas</h2>
         {userCampaigns.length === 0 ? (
@@ -169,6 +173,7 @@ export default function ProductsList() {
             <a
               href="/new_campaign"
               className="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
+              style={{backgroundColor:"#74742c"}}
             >
               Crear Campaña
             </a>
@@ -181,20 +186,31 @@ export default function ProductsList() {
           </div>
         )}
       </section>
+      */}
 
-      {userProperties.length > 0 && (
-        <section>
-          <h2 className="text-xl font-bold mt-8 mb-4">Tus Predios Postulados</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
-        </section>
-      )}
+ {userProperties.length > 0 && (
+  <section className="mt-8">
+    {/* Contenedor estilizado */}
+    <div className="bg-white shadow-lg rounded-lg p-6">
+      {/* Título con mayor peso y espaciado */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+         Tus Predios Postulados
+      </h2>
+
+      {/* Contenedor con efecto "tarjeta" para mayor estética */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {userProperties.map((property) => {
+          console.log("Property:", property); // Depuración de la propiedad
+          return <PropertyCard key={property.id} property={property} />;
+        })}
+      </div>
+    </div>
+  </section>
+)}
+
 
       <section>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Tus Proyectos</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center"></h2>
         {userProjectsFiltered.length === 0 ? (
           <div></div>
           /* <div className="py-12 text-center">

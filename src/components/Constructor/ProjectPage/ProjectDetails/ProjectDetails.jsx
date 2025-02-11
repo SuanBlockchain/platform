@@ -157,7 +157,7 @@ export default function ProjectDetails({ visible }) {
           <div className="col">
             <PropertyInfoCard autorizedUser={autorizedUser} />
           </div>
-          <div className="col">
+          <div className="col mb-5">
             <RelationsInfoCard autorizedUser={autorizedUser} />
           </div> */}
           <div className="col-12 col-xl-12">

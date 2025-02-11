@@ -29,6 +29,7 @@ export default function PostulantFilesInfoCard(props) {
   } = props;
   const [isValidating, setIsValidating] = useState(false);
   const [isLoadingDoc, setIsLoadingDoc] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
   const {
     handleUpdateContextDocumentStatus,
     handleUpdateContextFileVerification,
@@ -130,11 +131,11 @@ export default function PostulantFilesInfoCard(props) {
         });
       } else {
         await handleSendMessage(
-          "Tú archivo fue rechazado, por favor sube un nuevo archivo con la documentación correcta",
+          "Tú archivo fue rechazado",
           verificationId
         );
         notify({
-          msg: "El archivo fue rechazado, el postulante deberá subir un nuevo archivo",
+          msg: "El archivo fue rechazado",
           type: "success",
         });
       }
@@ -234,48 +235,93 @@ export default function PostulantFilesInfoCard(props) {
     fileInputRef.current.click();
   };
 
-  const getValidationRender = (file, fileIndex, type) => {
-    const statusMap = {
-      pending: "Pendiente",
-      accepted: "Aceptado",
-      denied: "Negado",
-    };
-    if (file.status === "pending" && isVerifier) {
-      if (isValidating) {
-        return (
-          <>
-            <button
-              className="px-2 py-1 text-blue-500 rounded-md border-[1px] border-blue-500 hover:bg-blue-500 hover:text-white"
-              onClick={() =>
-                handleUpdateDocumentStatus(fileIndex, file.id, true, type)
-              }
-            >
-              <CheckIcon />
-            </button>
-            <button
-              className="px-2 py-1 text-white rounded-md bg-red-500"
-              onClick={() =>
-                handleUpdateDocumentStatus(fileIndex, file.id, false, type)
-              }
-            >
-              <XIcon />
-            </button>
-          </>
-        );
-      } else {
-        return (
-          <button
-            className="px-2 py-1 text-blue-500 rounded-md border-[1px] border-blue-500 hover:bg-blue-500 hover:text-white"
-            onClick={() => setIsValidating(true)}
-          >
-            Verificar
-          </button>
-        );
-      }
-    } else {
-      return statusMap[file.status];
-    }
+const getValidationRender = (file, fileIndex, type) => {
+
+
+  const statusMap = {
+    pending: "Pendiente",
+    accepted: "Aceptado",
+    denied: "Comentado",
   };
+
+  // Si el estado es "Comentado" (denied), mostrarlo normalmente y permitir hacer clic para aprobar
+  if (file.status === "denied" && isVerifier) {
+    return (
+      <>
+        <span
+          className="text-gray-600 font-medium cursor-pointer hover:underline"
+          onClick={() => setShowApprovalModal(true)}
+        >
+          {statusMap[file.status]}
+        </span>
+
+        {/* Modal de confirmación */}
+        {showApprovalModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-4 rounded-md shadow-lg">
+              <p className="text-lg font-semibold">¿Quieres aprobar este documento?</p>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  className="px-3 py-1 text-white bg-green-500 rounded-md hover:bg-green-600"
+                  onClick={() => {
+                    handleUpdateDocumentStatus(fileIndex, file.id, true, type);
+                    setShowApprovalModal(false);
+                  }}
+                >
+                  Sí, aprobar
+                </button>
+                <button
+                  className="px-3 py-1 text-white bg-gray-500 rounded-md hover:bg-gray-600"
+                  onClick={() => setShowApprovalModal(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Si el estado es "Pendiente", permitir la verificación normal
+  if (file.status === "pending" && isVerifier) {
+    if (isValidating) {
+      return (
+        <>
+          <button
+            className="px-2 py-1 text-white bg-green-500 rounded-md hover:bg-green-600"
+            onClick={() =>
+              handleUpdateDocumentStatus(fileIndex, file.id, true, type)
+            }
+          >
+            <CheckIcon />
+          </button>
+          <button
+            className="px-2 py-1 text-white bg-red-500 rounded-md hover:bg-red-600"
+            onClick={() =>
+              handleUpdateDocumentStatus(fileIndex, file.id, false, type)
+            }
+          >
+            <XIcon />
+          </button>
+        </>
+      );
+    } else {
+      return (
+        <button
+          className="px-2 py-1 text-blue-500 rounded-md border border-blue-500 hover:bg-blue-500 hover:text-white"
+          onClick={() => setIsValidating(true)}
+        >
+          Verificar
+        </button>
+      );
+    }
+  }
+
+  // Para otros estados, solo mostrar el estado normalmente
+  return <span className="text-gray-600 font-medium">{statusMap[file.status]}</span>;
+};
 
   return (
     <div>
@@ -401,14 +447,12 @@ export default function PostulantFilesInfoCard(props) {
                         <button className="px-2 py-1 rounded-md border-[1px] border-blue-500 hover:bg-blue-500 hover:text-white" onClick={() => handleOpenObject(s3Client, bucketName, file.url)}>
                           <DownloadIcon />
                         </button>
-                      {file.verification && (
                         <button
                           className="px-2 py-1 text-blue-500 rounded-md border-[1px] border-blue-500 hover:bg-blue-500 hover:text-white"
                           onClick={() => handleMessageButtonClick(fileIndex, 'propertyFeature')}
                         >
                           <MessagesIcon />
                         </button>
-                      )}
                     </td>
                   </tr>
                 );

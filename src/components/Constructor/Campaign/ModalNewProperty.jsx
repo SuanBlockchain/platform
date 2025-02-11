@@ -89,6 +89,15 @@ export default function ModalNewProperty({
       return;
     }
 
+    if (
+      formData.cadastralNumbers.length === 0 ||
+      formData.cadastralNumbers.some(num => num.trim() === "")
+    ) {
+      showError("Debe ingresar al menos un número catastral válido.");
+      setLoading(false);
+      return;
+    }
+
     const isDuplicate = await isPropertyNameDuplicate(formData.name.trim());
     if (isDuplicate) {
       showError("El nombre del predio ya existe en esta campaña.");
@@ -270,6 +279,19 @@ export default function ModalNewProperty({
               >
                 Agregar identificador
               </button>
+              <div className="mt-3">
+    <p className="text-muted">
+      ¿No sabes cómo sacar tu número catastral?{" "}
+      <a
+        href="https://terrasacha.gitbook.io/terrasacha/guia-de-usuario-plataforma/rol-propietario/como-obtener-el-numero-catastral-de-un-predio"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary"
+      >
+        Mira esta guía
+      </a>
+    </p>
+  </div>
             </Form.Group>
           </Form>
         </Modal.Body>

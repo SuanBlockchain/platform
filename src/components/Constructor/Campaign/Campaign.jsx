@@ -16,6 +16,8 @@ import { formatArea } from "../ProjectPage/mappers";
 import { onUpdateProperty } from "graphql/subscriptions";
 import { WindowFullscreen } from "react-bootstrap-icons";
 import ModalEditImage from "./ModalEditImage";
+import Imagen from "../../common/_images/Campaña.png";
+
 
 export default function Campaign() {
   const [campaign, setCampaign] = useState(null);
@@ -168,7 +170,11 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
           <article className="flex flex-col lg:flex-row gap-8">
           <div className="relative w-full lg:w-1/2 flex justify-center items-center">
   <img
-    src={JSON.parse(campaign.images)[0]}
+    src={
+      campaign.images && JSON.parse(campaign.images).length > 0
+        ? JSON.parse(campaign.images)[0] 
+        : Imagen 
+    }
     alt="Imagen de la campaña"
     className="object-cover w-full h-auto rounded-lg shadow-md"
   />
@@ -275,14 +281,15 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
 
           {projectVerifiers.length > 0 && (
             <section className="mt-8">
-              <h3 className="text-md font-semibold text-gray-700 mb-4">
-                Validadores asignados:
-              </h3>
+              <h3 className="text-md font-semibold text-[#74742c] mb-4">
+  Validador de la campaña
+</h3>
+
               <div className="flex flex-wrap gap-3">
                 {projectVerifiers.map((pvn, index) => (
                   <div
                     key={index}
-                    className="bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-md shadow"
+                      className="bg-[#74742c] text-white text-sm font-medium px-4 py-2 rounded-md shadow"
                   >
                     Consultor {index + 1}: {pvn.name}
                   </div>

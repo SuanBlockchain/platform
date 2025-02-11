@@ -1,16 +1,13 @@
-import LOGO from '../../common/_images/suan_logo_white.png';
+import TerrasachaLogo from "components/common/TerrasachaLogo";
+/* import LOGO from "../../common/_images/suan_logo.png"; */
 
 const Footer = () => {
   const year = new Date().getFullYear();
-  
+
   return (
-    <footer className="footer pt-8 flex flex-col items-center justify-center text-center">
-      <img 
-        src={LOGO} 
-        style={{ width: '20px', height: 'auto' }} 
-        alt="logo" 
-      />
-      <p className='pt-1'>Suan {year}</p>
+    <footer className="py-3 flex flex-col items-center text-center bg-[#ecd798] text-[#6e6c35] font-bold space-y-2">
+      <TerrasachaLogo className={"w-64 h-auto"} />
+      <p className="mb-0">Copyright © Terrasacha {year}</p>
     </footer>
   );
 };

@@ -501,7 +501,7 @@ const S3FileManager = ({ userId, products }) => {
           >
             <AddFolderIcon />
           </button>
-          <label className="p-2 text-white bg-blue-600 rounded-md">
+          <label className="p-2 text-white bg-blue-600 rounded-md" style={{backgroundColor:"#74742c"}}>
             Subir Carpeta
             <input
               type="file"
@@ -511,7 +511,7 @@ const S3FileManager = ({ userId, products }) => {
               className="hidden"
             />
           </label>
-          <label className="p-2 text-white bg-blue-600 rounded-md">
+          <label className="p-2 text-white bg-blue-600 rounded-md" style={{backgroundColor:"#74742c"}}  >
             Subir Archivos
             <input
               type="file"

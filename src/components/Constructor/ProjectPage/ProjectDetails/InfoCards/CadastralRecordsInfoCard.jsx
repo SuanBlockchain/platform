@@ -747,7 +747,7 @@ export default function CadastralRecordsInfoCard(props) {
                         </td>
                         <td className="flex justify-end gap-1">
                           <button
-                            className="p-2 text-white rounded-md bg-green-700"
+                            className="p-2 text-white rounded-md bg-[#6e6c35] border-1 border-dark"
                             onClick={() => handleSaveHistoricalData(index)}
                           >
                             <SaveDiskIcon />
