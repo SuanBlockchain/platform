@@ -48,13 +48,11 @@ class Documents extends Component {
     componentDidMount = async () => {
         let actualUser = await  Auth.currentAuthenticatedUser()
         const actualUserID = actualUser.attributes.sub
-        console.log(actualUserID, 'actualUserID')
         this.setState({
             actualUserID: actualUserID
         })
         await this.loadUserProducts(actualUserID)
         await this.loadDocuments(actualUserID)
-        console.log(this.state.documents, 'documents')
         // Subscriptions
         // OnCreate Document
         this.createDocumentListener = API.graphql(graphqlOperation(onCreateDocument))
@@ -117,7 +115,6 @@ class Documents extends Component {
             if(aux === 0) listPFWithoutDoc.push(listProductFeatures[i])
         }
         }
-        console.log(listPFWithoutDoc)
         this.setState({listPFWithoutDoc: listPFWithoutDoc})
     }
     async loadDocuments(actualUserID) {
@@ -164,7 +161,6 @@ class Documents extends Component {
           tempNewDocument.data = JSON.stringify({empty: ''})
           tempNewDocument.userID = this.state.actualUserID
           await API.graphql(graphqlOperation(createDocument , { input: tempNewDocument }))
-          console.log('document created')
           this.cleanState()
     }
     handleHideModalDocument() {

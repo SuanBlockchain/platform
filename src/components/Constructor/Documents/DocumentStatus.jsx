@@ -344,7 +344,6 @@ class DocumentStatus extends Component {
 
       const fileToDelete = decodeURIComponent(this.state.selectedDocument.url.split('/').pop());
       deleteFileResult = await Storage.remove(fileToDelete);
-      console.log(deleteFileResult, "delete result")
       
       const docToDelete = {
         id: this.state.selectedDocument.id,
@@ -374,8 +373,6 @@ class DocumentStatus extends Component {
       tempNewDocument.timeStamp = Date.now()
       tempNewDocument.data = JSON.stringify({ empty: '' })
       tempNewDocument.userID = this.state.actualUser
-      console.log(tempNewDocument, "payload")
-      console.log(`url de ${tempNewDocument.id}`, tempNewDocument.url)
       await API.graphql(graphqlOperation(createDocument, { input: tempNewDocument })).then(()=> console.log('documento creado'))
       this.cleanState()
   }

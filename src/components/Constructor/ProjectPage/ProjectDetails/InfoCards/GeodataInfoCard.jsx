@@ -14,7 +14,6 @@ export default function GeodataInfoCard(props) {
   const [ubicacionPfId, setUbicacionPfId] = useState(null);
   const [polygonsFetchedData, setPolygonsFetchedData] = useState(null);
   const [mapKey, setMapKey] = useState(0);  // Key to force map reload
-  console.log(projectData.projectProperties.cadastralDataProperties, 'projectData.projectProperties.cadastralDataProperties')
   const [formData, setFormData] = useState({
     coords: {
       lat: 0,

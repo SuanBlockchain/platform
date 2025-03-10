@@ -7,6 +7,7 @@ import { Button, Container, Nav, Navbar, Dropdown } from "react-bootstrap";
 
 // Import images
 import LOGO from "../../common/_images/suan_logo.png";
+import TerrasachaLogo from "components/common/TerrasachaLogo";
 
 export default class HeaderNavbar extends Component {
   constructor(props) {
@@ -19,7 +20,6 @@ export default class HeaderNavbar extends Component {
   }
 
   async handleChangeObjectElement() {
-    console.log("handleChangeObjectElement: ");
     this.props.handleSignOut();
   }
 
@@ -38,26 +38,29 @@ export default class HeaderNavbar extends Component {
     const renderNavBar = () => {
       if (isActualUserLogged) {
         return (
-          <Navbar style={{ backgroundColor: "#fff" }} fixed="top">
+          <Navbar className="bg-[#ecd798]" fixed="top">
             <Container>
               <Navbar.Brand href="/">
-                <img src={LOGO} className="w-8 h-auto" alt="ATP" />
+                <a href="/">
+                  <TerrasachaLogo className={"w-48 h-auto"} />
+                </a>
               </Navbar.Brand>
               <Navbar.Toggle aria-controls="navbarScroll" />
               <Navbar.Collapse id="navbarScroll">
                 <Nav
-                  className="me-auto my-2 my-lg-0"
+                  className="me-auto my-2 my-lg-0 space-x-3"
                   style={{ maxHeight: "100px" }}
                   navbarScroll
                 >
-                  <Nav.Link
+                  <a
                     href="#products"
+                    className="text-[#6e6c35] font-bold"
                     onClick={(e) =>
                       this.changeHeaderNavBarRequest("products", e)
                     }
                   >
                     Proyectos
-                  </Nav.Link>
+                  </a>
                   {/* 
                   <Nav.Link
                     href="#documents"
@@ -85,45 +88,53 @@ export default class HeaderNavbar extends Component {
                   >
                     Resultados
                   </Nav.Link> */}
-                  <Nav.Link
+                  <a
+                    className="text-[#6e6c35] font-bold"
                     href="#categorys"
                     onClick={(e) =>
                       this.changeHeaderNavBarRequest("categorys", e)
                     }
                   >
                     Categorías
-                  </Nav.Link>
-                  <Nav.Link
+                  </a>
+                  <a
+                    className="text-[#6e6c35] font-bold"
                     href="#items"
                     onClick={(e) => this.changeHeaderNavBarRequest("items", e)}
                   >
                     Items de proyectos
-                  </Nav.Link>
-                  <Nav.Link
+                  </a>
+                  <a
+                    className="text-[#6e6c35] font-bold"
                     href="#features"
                     onClick={(e) =>
                       this.changeHeaderNavBarRequest("features", e)
                     }
                   >
-                    Features
-                  </Nav.Link>
+                    Características
+                  </a>
 
-                  <Nav.Link
+                  <a
+                    className="text-[#6e6c35] font-bold"
                     href="#uom"
                     onClick={(e) => this.changeHeaderNavBarRequest("uom", e)}
                   >
                     UOM
-                  </Nav.Link>
+                  </a>
                 </Nav>
                 <Nav>
-                <div style={{ fontWeight: "700", color: "#FE4849", border: '3px solid #FE4849', padding: '.2rem 2rem', marginRight: '1rem'}}>
+                  <div class="font-bold text-[#FE4849] border-4 border-[#FE4849] px-4 py-1 mr-4">
                     {process.env.REACT_APP_ENV}
                   </div>
                   <div style={{ fontWeight: "700", color: "#FE4849", padding: '.2rem 2rem' }}>
-                    {role ? role : ""}
+                  {role === "admon" ? "Administrador" : role || ""}
                   </div>
-                  <Dropdown align={'end'}>
-                    <Dropdown.Toggle variant="secondary" id="dropdown-basic" style={{ margin:'0 2rem'}}>
+                  <Dropdown align={"end"}>
+                    <Dropdown.Toggle
+                      variant="secondary"
+                      id="dropdown-basic"
+                      style={{ margin: "0 2rem" }}
+                    >
                       Más acciones
                     </Dropdown.Toggle>
 
@@ -135,7 +146,7 @@ export default class HeaderNavbar extends Component {
                           this.changeHeaderNavBarRequest("assign_pf", e)
                         }
                       >
-                        Asignar Validadores
+                        Asignar Consultores
                       </Dropdown.Item>
                       <Dropdown.Item
                       href="#assign_analyst"
@@ -150,7 +161,7 @@ export default class HeaderNavbar extends Component {
                           this.changeHeaderNavBarRequest("validators", e)
                         }
                       >
-                        Validadores
+                        Consultores
                       </Dropdown.Item>
                       {/* Nueva entrada para Analistas */}
                       <Dropdown.Item
@@ -175,11 +186,11 @@ export default class HeaderNavbar extends Component {
                           this.changeHeaderNavBarRequest("apps_status", e)
                         }
                       >
-                        Apps status
+                         Estado de las aplicaciones
                       </Dropdown.Item>
                       <Dropdown.Divider />
                       <Dropdown.Item onClick={(e) => this.handleChangeObjectElement()}>
-                        Sign Out
+                      Cerrar sesión
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>

@@ -5,7 +5,6 @@ import { groupBy } from 'lodash';
 export const getProjectItems = async () => {
   try {
     const response = await API.graphql(graphqlOperation(listProductItems));
-    console.log(response)
     const groupedData = groupBy(response.data.listProductItems.items, 'type');
     return groupedData;
   } catch (error) {

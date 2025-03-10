@@ -6814,9 +6814,18 @@ export const verificationsByUserVerifierID = /* GraphQL */ `
           __typename
         }
         verificationComments {
-          nextToken
+        items {
+          id
+          comment
+          isCommentByVerifier
+          verificationID
+          createdAt
+          updatedAt
           __typename
         }
+        nextToken
+        __typename
+      }
         createdAt
         updatedAt
         __typename
@@ -6913,9 +6922,18 @@ export const verificationsByUserVerifiedID = /* GraphQL */ `
           __typename
         }
         verificationComments {
-          nextToken
+        items {
+          id
+          comment
+          isCommentByVerifier
+          verificationID
+          createdAt
+          updatedAt
           __typename
         }
+        nextToken
+        __typename
+      }
         createdAt
         updatedAt
         __typename

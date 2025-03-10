@@ -21,7 +21,6 @@ export default class HeaderNavbar2 extends Component {
     }
     
     async handleChangeNavBar(pRequest) {
-        console.log('handleChangeNavBar: ', pRequest)
         this.props.changeHeaderNavBarRequest(pRequest)
     }
 

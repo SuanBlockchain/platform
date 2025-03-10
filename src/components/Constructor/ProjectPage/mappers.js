@@ -19,6 +19,11 @@ export const marketplaceURLMapper = {
     TEST: "https://test-marketplace-cauca.suan.global/",
     PROD: "https://marketplace-cauca.suan.global/",
   },
+  terrasacha: {
+    INTERNAL: "https://internal-platform.terrasacha.com/",
+    TEST: "https://test-platform.terrasacha.com/",
+    PROD: "https://platform.terrasacha.com/",
+  }
 };
 
 export const mapGeoData = (validatorDocuments) => {
@@ -51,7 +56,6 @@ const mapProjectVerifiers = async (data) => {
   //   });
   // });
 
-  console.log(data.userProducts);
 
   const projectVerifiers = data.userProducts.items
     .filter((up) => up.user?.role === "validator")
@@ -124,7 +128,7 @@ const mapDocumentsDataFromProperty = async (data, ownersData) => {
   const verifiablePF = data.propertyFeatures.items.filter(
     (pf) => pf.feature.isVerifable === true
   );
-  console.log(verifiablePF, "verifiablePF");
+
   const documentsPromises = verifiablePF.map((pf) =>
     pf.documents.items
       .filter((document) => document.status !== "validatorFile")
@@ -149,7 +153,7 @@ const mapDocumentsDataFromProperty = async (data, ownersData) => {
         };
       })
   );
-  console.log("documentsPromises", documentsPromises);
+
   const documents = await Promise.all(documentsPromises.flat());
   return documents;
 };
@@ -162,7 +166,6 @@ const mapDocumentsData = async (data, ownersData) => {
   const verifiablePF = data.productFeatures.items.filter(
     (pf) => pf.feature.isVerifable === true
   );
-  console.log(verifiablePF, "verifiablePF");
   const documentsPromises = verifiablePF.map((pf) =>
     pf.documents.items
       .filter((document) => document.status !== "validatorFile")
@@ -187,7 +190,6 @@ const mapDocumentsData = async (data, ownersData) => {
         };
       })
   );
-  console.log("documentsPromises", documentsPromises);
   const documents = await Promise.all(documentsPromises.flat());
   return documents;
 };
@@ -245,7 +247,6 @@ const mapPropertyDocumentsData = async (data) => {
       arrayDocs.push(...mappedDocs);
     }
   }
-  console.log(arrayDocs, "arrayDocs 230");
   return arrayDocs;
 };
 const mapLocationData = async (location) => {
@@ -456,7 +457,6 @@ const mapProjectUses = (data) => {
 };
 
 export const mapProjectData = async (data) => {
-  console.log("dataa", data);
   const projectID = data.id;
   const projecIsActive = data.isActive;
   const verifierDescription =
@@ -576,7 +576,6 @@ export const mapProjectData = async (data) => {
     })[0]?.value || "[]"
   );
 
-  console.log(tokenHistoricalData, "tokenHistoricalData");
   // const lastTokenHistoricalData =tokenHistoricalData.length > 0 && tokenHistoricalData[tokenHistoricalData.length - 1].periods || []
 
   const periods = tokenHistoricalData.map((tkhd) => {
@@ -817,7 +816,6 @@ export const mapProjectData = async (data) => {
         }
       } catch (e) {}
     });
-    console.log(cadastralNumbers, "cadastralNumberscadastralNumbers");
     return cadastralNumbers;
   };
 
@@ -839,8 +837,7 @@ export const mapProjectData = async (data) => {
         });
       }
     });
-  console.log("data.properties.items", data.properties.items);
-  console.log("totalArea", totalArea);
+
 
   return {
     projectInfo: {
@@ -1043,26 +1040,26 @@ export const mapPropertyData = async (data) => {
     cadastralData.map((cadObj) => cadObj.cadastralNumber) || []
   ).join(", ");
 
-  const projectVerifiers = data.product.userProducts?.items
-    .filter((up) => up.user?.role === "validator")
-    .map((userProduct) => {
-      return userProduct.user.id;
-    });
+  const projectVerifiers = data.product?.userProducts?.items
+  ?.filter((up) => up.user?.role === "validator")
+  ?.map((userProduct) => userProduct.user.id) || [];
 
-  console.log("data", data);
   return {
     propertyInfo: {
       id: data.id,
       projectID: data.productID,
-      campaignID: data.campaign.id,
+      campaignID: data.campaign?.id || null,
       projectAge: getElapsedDays(data.createdAt),
       name: data.name,
       status: data.status,
     },
-    propertyCampaign: {
+    propertyCampaign: data.campaign
+  ? {
       id: data.campaign.id,
       userId: data.campaign.userID,
-    },
+    }
+  : { id: null, userId: null }, // Asignamos `null` si no hay campaña
+
     projectPostulant: {
       id: data.userID,
     },

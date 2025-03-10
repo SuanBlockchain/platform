@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import { useAuth } from "context/AuthContext";
 import { API, graphqlOperation } from "aws-amplify";
 import { createPropertyFeature, updatePropertyFeature } from "graphql/mutations";
@@ -9,116 +8,128 @@ import { notify } from "utilities/notify";
 import FormGroup from "components/common/FormGroup";
 
 export default function UseRestrictions(props) {
-  const { className, autorizedUser } = props;
-  const { propertyData, refresh } =
-    usePropertyData();
+  const { className, autorizedUser, setHasUnsavedChanges, handleFieldChange } = props;
+  const { propertyData, refresh } = usePropertyData();
   const { user } = useAuth();
 
-  const [formData, setFormData] = useState([{}]);
+  const [formData, setFormData] = useState({});
   const [executedOnce, setExecutedOnce] = useState(false);
   const [resDescPfID, setResDescPfID] = useState(null);
   const [resOtherPfID, setResOtherPfID] = useState(null);
+  const [changedFields, setChangedFields] = useState({});
 
   useEffect(() => {
     if (propertyData && propertyData.propertyFeatures && user && !executedOnce) {
-      const pfIDResDesc =
-        propertyData.propertyFeatures.filter((item) => {
-          return item.featureID === "E_restriccion_desc";
-        })[0]?.id || null;
+      const pfIDResDesc = propertyData.propertyFeatures.find(
+        (item) => item.featureID === "E_restriccion_desc"
+      )?.id || null;
       setResDescPfID(pfIDResDesc);
 
-      const pfIDResOther =
-        propertyData.propertyFeatures.filter((item) => {
-          return item.featureID === "E_resctriccion_other";
-        })[0]?.id || null;
+      const pfIDResOther = propertyData.propertyFeatures.find(
+        (item) => item.featureID === "E_resctriccion_other"
+      )?.id || null;
       setResOtherPfID(pfIDResOther);
 
-      setFormData((prevState) => ({
-        ...prevState,
-        projectRestrictionsDesc: propertyData.projectRestrictions?.desc,
-        projectRestrictionsOther: propertyData.projectRestrictions?.other,
-      }));
+      setFormData({
+        projectRestrictionsDesc: propertyData.projectRestrictions?.desc || "",
+        projectRestrictionsOther: propertyData.projectRestrictions?.other || "",
+      });
+
+      setChangedFields({}); // Inicializa sin cambios
       setExecutedOnce(true);
     }
   }, [propertyData, user]);
 
-  const handleChangeInputValue = async (e) => {
+  const handleChangeInputValue = (e) => {
     const { name, value } = e.target;
-    if (name === "projectRestrictionsDesc") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectRestrictionsDesc: value,
-      }));
-      return;
-    }
-    if (name === "projectRestrictionsOther") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectRestrictionsOther: value,
-      }));
-      return;
-    }
+
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+
+    // Marcar el campo como cambiado
+    setChangedFields((prev) => ({
+      ...prev,
+      [name]: value !== propertyData.projectRestrictions?.[name.replace("projectRestrictions", "").toLowerCase()],
+    }));
+
+    handleFieldChange(name, true);
+    setHasUnsavedChanges(true);
   };
-  const handleSaveBtn = async (toSave) => {
-    if (toSave === "projectRestrictionsDesc") {
-      if (resDescPfID) {
-        const updatedPropertyFeature = {
-          id: resDescPfID,
-          value: formData.projectRestrictionsDesc,
-        };
-        await API.graphql(
-          graphqlOperation(updatePropertyFeature, {
-            input: updatedPropertyFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          propertyID: propertyData.propertyInfo.id,
-          featureID: "E_restriccion_desc",
-          value: formData.projectRestrictionsDesc,
-        };
 
-        const response = await API.graphql(
-          graphqlOperation(createPropertyFeature, {
-            input: newProductFeature,
-          })
-        );
-        setResDescPfID(response.data.createPropertyFeature.id);
+  const handleSaveBtn = async () => {
+    try {
+      let updates = [];
+
+      if (changedFields["projectRestrictionsDesc"]) {
+        const featureID = "E_restriccion_desc";
+        const featureValue = formData.projectRestrictionsDesc;
+
+        if (resDescPfID) {
+          updates.push(
+            API.graphql(
+              graphqlOperation(updatePropertyFeature, {
+                input: { id: resDescPfID, value: featureValue },
+              })
+            )
+          );
+        } else {
+          updates.push(
+            API.graphql(
+              graphqlOperation(createPropertyFeature, {
+                input: {
+                  propertyID: propertyData.propertyInfo.id,
+                  featureID,
+                  value: featureValue,
+                },
+              })
+            ).then((response) => setResDescPfID(response.data.createPropertyFeature.id))
+          );
+        }
       }
 
-      refresh()
-    }
+      if (changedFields["projectRestrictionsOther"]) {
+        const featureID = "E_resctriccion_other";
+        const featureValue = formData.projectRestrictionsOther;
 
-    if (toSave === "projectRestrictionsOther") {
-      if (resOtherPfID) {
-        const updatedPropertyFeature = {
-          id: resOtherPfID,
-          value: formData.projectRestrictionsOther,
-        };
-        await API.graphql(
-          graphqlOperation(updatePropertyFeature, {
-            input: updatedPropertyFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          propertyID: propertyData.propertyInfo.id,
-          featureID: "E_resctriccion_other",
-          value: formData.projectRestrictionsOther,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createPropertyFeature, {
-            input: newProductFeature,
-          })
-        );
-        setResDescPfID(response.data.createPropertyFeature.id);
+        if (resOtherPfID) {
+          updates.push(
+            API.graphql(
+              graphqlOperation(updatePropertyFeature, {
+                input: { id: resOtherPfID, value: featureValue },
+              })
+            )
+          );
+        } else {
+          updates.push(
+            API.graphql(
+              graphqlOperation(createPropertyFeature, {
+                input: {
+                  propertyID: propertyData.propertyInfo.id,
+                  featureID,
+                  value: featureValue,
+                },
+              })
+            ).then((response) => setResOtherPfID(response.data.createPropertyFeature.id))
+          );
+        }
       }
 
-      refresh()
-    }
+      await Promise.all(updates);
 
-    notify({ msg: "Información actualizada", type: "success" });
+      // Limpiar los cambios después de guardar
+      setChangedFields({});
+      handleFieldChange("projectRestrictionsDesc", false);
+      handleFieldChange("projectRestrictionsOther", false);
+
+      notify({ msg: "Información actualizada", type: "success" });
+      setHasUnsavedChanges(false);
+      refresh();
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      notify({ msg: "Error al guardar la información", type: "error" });
+    }
   };
 
   return (
@@ -129,40 +140,43 @@ export default function UseRestrictions(props) {
           <div className="col">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
               inputType="textarea"
               label="Restricción de uso por encontrarse inmerso en áreas de protección declaradas como parques, zonas de reserva, otros"
               inputName="projectRestrictionsDesc"
               inputValue={formData.projectRestrictionsDesc}
-              saveBtnDisabled={
-                propertyData.projectRestrictions?.desc ===
-                formData.projectRestrictionsDesc
-                  ? true
-                  : false
-              }
               onChangeInputValue={(e) => handleChangeInputValue(e)}
-              onClickSaveBtn={() => handleSaveBtn("projectRestrictionsDesc")}
+              className={`border rounded-md p-1 ${
+                changedFields["projectRestrictionsDesc"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
               inputType="textarea"
               label="Otros limitantes"
               inputName="projectRestrictionsOther"
               inputValue={formData.projectRestrictionsOther}
-              saveBtnDisabled={
-                propertyData.projectRestrictions?.other ===
-                formData.projectRestrictionsOther
-                  ? true
-                  : false
-              }
               onChangeInputValue={(e) => handleChangeInputValue(e)}
-              onClickSaveBtn={() => handleSaveBtn("projectRestrictionsOther")}
+              className={`border rounded-md p-1 ${
+                changedFields["projectRestrictionsOther"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
         </div>
+
+        {/* Botón único para guardar todos los cambios */}
+        {autorizedUser && (
+          <div className="d-flex justify-content-center mt-3">
+            <button
+              className="p-2 text-white bg-green-700 rounded-md"
+              onClick={handleSaveBtn}
+              disabled={!Object.values(changedFields).some((changed) => changed)} // Se desactiva si no hay cambios
+            >
+              Guardar
+            </button>
+          </div>
+        )}
       </Card.Body>
     </Card>
   );

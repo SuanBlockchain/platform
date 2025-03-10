@@ -7,114 +7,211 @@ import {
   deleteDocument,
   deleteVerification,
   deleteCampaign,
+  deleteProperty,
+  deleteOrder,
+  deletePayment,
+  deleteTransactions,
+  deleteToken,
 } from "../../../graphql/mutations";
+import { Auth } from "aws-amplify";
+
 
 import { Storage } from "aws-amplify";
 import { getProduct } from "graphql/queries";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+} from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: "us-east-1",
+  credentials: async () => {
+    const credentials = await Auth.currentCredentials();
+    return Auth.essentialCredentials(credentials);
+  },
+});
 
 export async function deleteAllInfoProduct(product) {
   if (!product) {
-    console.log("No product provided for deletion.");
     return;
   }
 
   const promises = [];
 
   try {
-    // Obtener el campaignID del producto
+    // 1. Eliminar la carpeta del proyecto en S3
+    if (product.id) {
+      await deleteFolderFromS3(`projects/${product.id}/`);
+    }
+
+    // 2. Obtener información completa del producto
     const { data } = await API.graphql(
       graphqlOperation(getProduct, { id: product.id })
     );
-    const campaignID = data?.getProduct?.campaignID;
+    const productData = data?.getProduct;
+    // 3. Manejar campañas
+    const campaign = productData?.campaign;
+    if (campaign) {
 
-    // Si existe campaignID, eliminar la campaña
-    if (campaignID) {
-      console.log("Deleting campaign associated with product:", campaignID);
+      const propertyPromises = campaign.properties.items?.map((property) => {
+        return API.graphql(
+          graphqlOperation(deleteProperty, { input: { id: property.id } })
+        );
+      });
+
+      if (propertyPromises) {
+        promises.push(...propertyPromises);
+      }
+
+      await deleteFolderFromS3(`public/campaign/${campaign.id}-campaign/`);
+
       promises.push(
         API.graphql(
-          graphqlOperation(deleteCampaign, { input: { id: campaignID } })
+          graphqlOperation(deleteCampaign, { input: { id: campaign.id } })
         )
       );
     }
-  } catch (error) {
-    console.error("Error fetching campaignID for product:", product.id, error);
-  }
 
-  // Eliminar el producto
-  console.log("Deleting product:", product.id, product.name);
-  promises.push(
-    API.graphql(graphqlOperation(deleteProduct, { input: { id: product.id } }))
-  );
-
-  // Eliminar imágenes asociadas
-  const imagePromises = product.images.items?.map((image) => {
-    console.log("Deleting image:", image.id, image.url);
-    return API.graphql(graphqlOperation(deleteImage, { input: { id: image.id } }));
-  });
-  promises.push(...imagePromises);
-
-  // Eliminar características del producto
-  const productFeaturePromises = product.productFeatures.items?.map((pf) => {
-    console.log("Deleting product feature:", pf.id, pf.name);
-
-    // Eliminar documentos asociados a las características
-    pf.documents?.items?.map((doc) => {
-      console.log("Deleting document:", doc.id, doc.url);
-      API.graphql(graphqlOperation(deleteDocument, { input: { id: doc.id } }));
-      moveObjectS3(doc.url, product.id);
-    });
-
-    // Eliminar verificaciones asociadas
-    pf.verifications?.items?.map((verification) => {
-      console.log("Deleting verification:", verification.id);
-      API.graphql(
-        graphqlOperation(deleteVerification, { input: { id: verification.id } })
+    const propertyPromises = productData?.properties?.items?.map((property) => {
+      return API.graphql(
+        graphqlOperation(deleteProperty, { input: { id: property.id } })
       );
     });
 
-    return API.graphql(
-      graphqlOperation(deleteProductFeature, { input: { id: pf.id } })
+    if (propertyPromises) {
+      promises.push(...propertyPromises);
+    }
+
+    // 4. Eliminar órdenes asociadas
+    if (productData?.orders?.items) {
+      productData.orders.items.forEach((order) => {
+        promises.push(API.graphql(graphqlOperation(deleteOrder, { input: { id: order.id } })));
+      });
+    }
+
+    // 5. Eliminar pagos asociados
+    if (productData?.payments?.items) {
+      productData.payments.items.forEach((payment) => {
+        promises.push(API.graphql(graphqlOperation(deletePayment, { input: { id: payment.id } })));
+      });
+    }
+
+    // 6. Eliminar transacciones asociadas
+    if (productData?.transactions?.items) {
+      productData.transactions.items.forEach((transaction) => {
+        promises.push(API.graphql(graphqlOperation(deleteTransactions, { input: { id: transaction.id } })));
+      });
+    }
+
+    // 7. Eliminar tokens asociados
+    if (productData?.tokens?.items) {
+      productData.tokens.items.forEach((token) => {
+        promises.push(API.graphql(graphqlOperation(deleteToken, { input: { id: token.id } })));
+      });
+    }
+
+    // 8. Eliminar imágenes asociadas
+    const imagePromises = productData?.images?.items?.map((image) => {
+      return API.graphql(graphqlOperation(deleteImage, { input: { id: image.id } }));
+    });
+    if (imagePromises) {
+      promises.push(...imagePromises);
+    }
+
+    // 9. Eliminar características del producto
+    const productFeaturePromises = productData?.productFeatures?.items?.map((pf) => {
+
+      // Eliminar documentos asociados a las características
+      pf.documents?.items?.forEach((doc) => {
+        API.graphql(graphqlOperation(deleteDocument, { input: { id: doc.id } }));
+      });
+
+      // Eliminar verificaciones asociadas
+      pf.verifications?.items?.forEach((verification) => {
+        API.graphql(
+          graphqlOperation(deleteVerification, { input: { id: verification.id } })
+        );
+      });
+
+      return API.graphql(
+        graphqlOperation(deleteProductFeature, { input: { id: pf.id } })
+      );
+    });
+    if (productFeaturePromises) {
+      promises.push(...productFeaturePromises);
+    }
+
+    // 10. Eliminar asociaciones de usuarios con el producto
+    const userProductPromises = productData?.userProducts?.items?.map((up) => {
+      return API.graphql(graphqlOperation(deleteUserProduct, { input: { id: up.id } }));
+    });
+    if (userProductPromises) {
+      promises.push(...userProductPromises);
+    }
+
+    // 11. Eliminar el producto de la base de datos
+    promises.push(
+      API.graphql(graphqlOperation(deleteProduct, { input: { id: product.id } }))
     );
-  });
-  promises.push(...productFeaturePromises);
 
-  // Eliminar asociaciones de usuarios con el producto
-  const userProductPromises = product.userProducts.items?.map((up) => {
-    console.log("Deleting user product association:", up.id, up.userId);
-    return API.graphql(graphqlOperation(deleteUserProduct, { input: { id: up.id } }));
-  });
-  promises.push(...userProductPromises);
-
-  // Ejecutar todas las promesas
-  try {
+    // Ejecutar todas las promesas
     await Promise.all(promises);
-    console.log("Todas las operaciones de eliminación se han completado.");
   } catch (error) {
     console.error("Error al eliminar la información del producto:", error);
   }
 }
 
-// Función para mover objetos en S3 a una carpeta de respaldo
-async function moveObjectS3(sourceKey, productID) {
-  const item = sourceKey.split("/").pop();
+async function deleteFolderFromS3(folderPath) {
+  const bucketName = "platformd9531187bef34a10abb664f2878180ae00db6-internal"; // Tu bucket
 
-  console.log("Moving object in S3:", sourceKey, "to backup folder for product:", productID);
   try {
-    await Storage.copy(
-      { key: `${productID}/${item}` },
-      { key: `${productID}/backup/${item}` }
+    let continuationToken = null; // Token para manejar múltiples iteraciones
+    let filesDeleted = 0; // Contador de archivos eliminados
+
+    // Eliminar todos los objetos dentro del prefijo
+    do {
+      const listParams = {
+        Bucket: bucketName,
+        Prefix: folderPath,
+        ContinuationToken: continuationToken,
+      };
+
+      const listResponse = await s3Client.send(new ListObjectsV2Command(listParams));
+      const fileKeys = listResponse.Contents?.map((file) => ({ Key: file.Key })) || [];
+
+      if (fileKeys.length === 0) break; // Si no hay archivos, detener el bucle
+
+      // Eliminar los objetos listados
+      const deleteParams = {
+        Bucket: bucketName,
+        Delete: { Objects: fileKeys },
+      };
+
+      const deleteResponse = await s3Client.send(new DeleteObjectsCommand(deleteParams));
+      filesDeleted += deleteResponse.Deleted?.length || 0;
+
+      continuationToken = listResponse.NextContinuationToken; // Continuar con la siguiente página
+    } while (continuationToken);
+
+    // Intentar eliminar explícitamente el marcador de carpeta vacío
+    await s3Client.send(
+      new DeleteObjectsCommand({
+        Bucket: bucketName,
+        Delete: { Objects: [{ Key: folderPath }] },
+      })
     );
 
-    await Storage.remove(`${productID}/${item}`);
-
-    console.log(`File moved from ${sourceKey} to ${productID}/backup/${item}`);
+    console.info(`Se eliminaron ${filesDeleted} archivos y la carpeta '${folderPath}'.`);
   } catch (error) {
-    if (error.code === "NoSuchKey") {
-      console.log(
-        `El objeto ${item} no existe. Continuando con el siguiente objeto.`
+    if (error.name === "AccessDenied") {
+      console.error(
+        `Permiso denegado al intentar eliminar '${folderPath}'. Revisa las políticas del bucket.`
       );
     } else {
-      console.error("Error moving the file:", error);
+      console.error(`Error general al eliminar la carpeta '${folderPath}':`, error);
     }
   }
 }
+
+

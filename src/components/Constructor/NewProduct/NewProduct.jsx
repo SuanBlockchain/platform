@@ -399,7 +399,6 @@ class NewProduct extends Component {
                     status: 'pending',
                     isUploadedToBlockChain: false,
                 }
-                    console.log(`url de ${newDocPayLoad.id}`, newDocPayLoad.url)
                     await API.graphql(graphqlOperation(createDocument, { input: newDocPayLoad })).then(()=> console.log('documento creado'))
                 
             } catch (error) {

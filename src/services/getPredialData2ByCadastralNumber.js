@@ -21,7 +21,6 @@ export const getPredialData2ByCadastralNumber = async (cadastralNumbers) => {
   try {
     const response = await fetch(fullUrl);
     const data = await response.json();
-    console.log('RawPredialData2', data)
     const mappedData = data.features.reduce((result, feature) => {
       const numeroDelPredio = feature.attributes.NUMERO_DEL_PREDIO;
 

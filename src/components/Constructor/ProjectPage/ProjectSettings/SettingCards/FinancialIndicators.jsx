@@ -90,7 +90,6 @@ export default function FinancialIndicators(props) {
           id: pfID,
           value: JSON.stringify(revenueByProductToUpload),
         }
-        console.log(tempProductFeature, 'ya existe')
         const response = await API.graphql(
           graphqlOperation(updateProductFeature, { input: tempProductFeature })
         )
@@ -104,7 +103,6 @@ export default function FinancialIndicators(props) {
           productID: projectData.projectInfo.id,
           featureID: fID,
         }
-        console.log(tempProductFeature, 'no existe')
 
         API.graphql(
           graphqlOperation(createProductFeature, { input: tempProductFeature })

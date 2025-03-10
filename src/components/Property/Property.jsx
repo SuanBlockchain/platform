@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { API, Auth, graphqlOperation } from "aws-amplify";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
 
 // Contexts
 import { S3ClientProvider } from "context/s3ClientContext";
@@ -27,8 +30,10 @@ export default function Property() {
   const { propertyData, handlePropertyData } = usePropertyData();
   const [property, setProperty] = useState(null);
   const [editable, setEditable] = useState(false);
-
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("details");
+  const [changedFields, setChangedFields] = useState({});
 
   useEffect(() => {
     /* const fetchUserGroups = async () => {
@@ -50,6 +55,48 @@ export default function Property() {
     }
   }, [id]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        event.returnValue = "Tienes cambios sin guardar. ¿Seguro que deseas salir?";
+      }
+    };
+  
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+  
+  const handleNavigation = (path) => {
+    if (hasUnsavedChanges) {
+      Swal.fire({
+        title: "Cambios sin guardar",
+        text: "Tienes cambios sin guardar. ¿Seguro que deseas salir?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, salir",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(path);
+        }
+      });
+    } else {
+      navigate(path);
+    }
+  };
+
+  const handleFieldChange = (field, value) => {
+    setChangedFields((prev) => ({
+      ...prev,
+      [field]: true, // 🔴 Marca el campo como modificado
+    }));
+    setHasUnsavedChanges(true);
+  };
+
   const isAuthor = async (id) => {
     try {
       const userLogged = await Auth.currentAuthenticatedUser();
@@ -69,7 +116,6 @@ export default function Property() {
     try {
       const data = await API.graphql(graphqlOperation(getProperty, { id }));
 
-      console.log(data.data.getProperty, "data.data.getProperty");
       setProperty(data.data.getProperty);
       const isAuthorResult = await isAuthor(data.data.getProperty.userID);
 
@@ -86,7 +132,7 @@ export default function Property() {
 
   if (!property) return null;
   if (!propertyData) return null;
-  console.log("propertyData", propertyData);
+
 
   return (
     <S3ClientProvider>
@@ -97,18 +143,23 @@ export default function Property() {
           </div>
           <div className="my-2">-</div>
           <div className="mt-4">
-            <a
-              href={
-                property.campaign.available
-                  ? `/campaign/${property.campaign.id}`
-                  : `/project/${property.productID}`
-              }
-              className="border-2 border-yellow-500 bg-yellow-500 rounded-md px-2 py-1 active:bg-yellow-600 active:border-yellow-600"
-            >
-              {property.campaign.available
-                ? "Regresar a la campaña"
-                : "Regresar al proyecto"}
-            </a>
+          {property.campaign ? (
+  <a
+    onClick={() => handleNavigation(`/campaign/${property.campaign.id}`)}
+    className="border-2 border-yellow-500 bg-yellow-500 rounded-md px-2 py-1 active:bg-yellow-600 active:border-yellow-600"
+  >
+    Regresar a la campaña
+  </a>
+) : (
+  <a
+    onClick={() => handleNavigation(`/constructor`)}
+    className="border-2 border-yellow-500 bg-yellow-500 rounded-md px-2 py-1 active:bg-yellow-600 active:border-yellow-600"
+  >
+    Ir a mis predios
+  </a>
+)}
+
+
             <div className="relative pt-3 px-4 mb-4 mt-4 border rounded shadow">
               <div className="row gy-2">
                 <header className="d-flex justify-content-between">
@@ -160,7 +211,11 @@ export default function Property() {
                 </li>
               </ul>
             </div>
-            <PropertyDetails visible={activeSection === "details"} />
+            <PropertyDetails
+  visible={activeSection === "details"}
+  setHasUnsavedChanges={setHasUnsavedChanges}
+  handleFieldChange={handleFieldChange}
+/>
           </div>
           <ToastContainer></ToastContainer>
         </div>

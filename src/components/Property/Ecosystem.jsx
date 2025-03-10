@@ -9,13 +9,15 @@ import FormGroup from "components/common/FormGroup";
 import { notify } from "utilities/notify";
 
 export default function Ecosystem(props) {
-  const { className, autorizedUser } = props;
+  const { className, autorizedUser, setHasUnsavedChanges , handleFieldChange} = props;
   const { propertyData } = usePropertyData();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState([{}]);
   const [executedOnce, setExecutedOnce] = useState(false);
   const [nacimientoPfID, setNacimientoPfID] = useState(null);
+  const [changedFields, setChangedFields] = useState({});
+
 
   const productFeaturesGroup = [
     "F_nacimiento_agua",
@@ -83,6 +85,13 @@ export default function Ecosystem(props) {
 
       return updatedFormData;
     });
+
+    setChangedFields((prev) => ({
+      ...prev,
+      [name]: true, // ✅ Marcar campo como cambiado
+    }));
+    handleFieldChange(name, true);
+    setHasUnsavedChanges(true); 
   };
 
   const handleSaveBtn = async () => {
@@ -104,7 +113,6 @@ export default function Ecosystem(props) {
           id: nacimientoPfID,
           value: `[${values.join(", ")}]`,
         };
-        console.log("newPropertyFeature:", updatedPropertyFeature);
         await API.graphql(
           graphqlOperation(updatePropertyFeature, {
             input: updatedPropertyFeature,
@@ -116,14 +124,15 @@ export default function Ecosystem(props) {
           propertyID: propertyData.propertyInfo.id,
           value: `[${values.join(", ")}]`,
         };
-        console.log("newPropertyFeature:", newPropertyFeature);
         const response = await API.graphql(
           graphqlOperation(createPropertyFeature, { input: newPropertyFeature })
         );
         setNacimientoPfID(response.data.createPropertyFeature.id);
       }
     }
-
+    setChangedFields({});
+    Object.keys(changedFields).forEach((key) => handleFieldChange(key, false));
+    setHasUnsavedChanges(false);
     notify({ msg: "Información actualizada", type: "success" });
   };
 
@@ -144,6 +153,9 @@ export default function Ecosystem(props) {
               optionCheckedList={formData.F_nacimiento_agua}
               inputName="F_nacimiento_agua"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_nacimiento_agua"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           {formData.F_nacimiento_agua === "yes" && (
@@ -155,6 +167,9 @@ export default function Ecosystem(props) {
                 inputValue={formData.F_nacimiento_agua_quantity}
                 inputName="F_nacimiento_agua_quantity"
                 onChangeInputValue={(e) => handleChangeInputValue(e)}
+                className={`border rounded-md p-1 ${
+                  changedFields["F_nacimiento_agua_quantity"] ? "border-red-500 bg-red-100" : ""
+                }`}
               />
             </div>
           )}
@@ -170,6 +185,9 @@ export default function Ecosystem(props) {
               optionCheckedList={formData.F_agua_concede}
               inputName="F_agua_concede"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_agua_concede"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           {formData.F_agua_concede === "yes" && (
@@ -181,6 +199,9 @@ export default function Ecosystem(props) {
                 inputValue={formData.F_agua_concede_entity}
                 inputName="F_agua_concede_entity"
                 onChangeInputValue={(e) => handleChangeInputValue(e)}
+                className={`border rounded-md p-1 ${
+                  changedFields["F_agua_concede_entity"] ? "border-red-500 bg-red-100" : ""
+                }`}
               />
             </div>
           )}
@@ -192,6 +213,9 @@ export default function Ecosystem(props) {
               inputValue={formData.F_amenazas_defo_desc}
               inputName="F_amenazas_defo_desc"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_amenazas_defo_desc"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -202,6 +226,9 @@ export default function Ecosystem(props) {
               inputValue={formData.F_conservacion_desc}
               inputName="F_conservacion_desc"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_conservacion_desc"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -212,6 +239,9 @@ export default function Ecosystem(props) {
               inputValue={formData.F_especies_fauna}
               inputName="F_especies_fauna"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_especies_fauna"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -222,6 +252,9 @@ export default function Ecosystem(props) {
               inputValue={formData.F_especies_mamiferos}
               inputName="F_especies_mamiferos"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_especies_mamiferos"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -232,6 +265,9 @@ export default function Ecosystem(props) {
               inputValue={formData.F_especies_aves}
               inputName="F_especies_aves"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_especies_aves"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -242,6 +278,9 @@ export default function Ecosystem(props) {
               inputValue={formData.F_especies_flora}
               inputName="F_especies_flora"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["F_especies_flora"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
         </div>

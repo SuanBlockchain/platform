@@ -6,6 +6,8 @@ import { SaveDiskIcon } from "components/common/icons/SaveDiskIcon";
 import { PlusIcon } from "components/common/icons/PlusIcon";
 import { API, Storage, graphqlOperation } from "aws-amplify";
 import { handleOpenObject } from "utilities/s3clientcommands";
+import { v4 as uuidv4 } from 'uuid';
+
 // s3Client
 import { useS3Client } from "context/s3ClientContext";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
@@ -15,7 +17,11 @@ import {
   createDocument,
   createPropertyFeature,
   updateDocument,
+  deleteProductFeature,
+  deleteDocument,
   updatePropertyFeature,
+  createVerificationComment,
+  createVerification,
 } from "graphql/mutations";
 import { useAuth } from "context/AuthContext";
 import WebAppConfig from "components/common/_conf/WebAppConfig";
@@ -26,40 +32,80 @@ import { usePropertyData } from "context/PropertyDataContext";
 import { notify } from "utilities/notify";
 import { fetchPropertyDataByPropertyID } from "components/Constructor/ProjectPage/api";
 import Card from "components/common/Card";
+import { CloudUpload, Eye, EyeSlash } from "react-bootstrap-icons";
+import { MessagesIcon } from "components/common/icons/MessagesIcon";
+import MessagesHistoryCard from "components/Constructor/ProjectPage/ProjectFiles/InfoCards/MessagesHistoryCard";
+import { getDocument } from "graphql/queries";
+import { useProjectData } from "context/ProjectDataContext";
 
 export default function CadastralRecords(props) {
-  const { className, autorizedUser, tooltip, setTotalArea, totalArea } = props;
+  const { className, autorizedUser, tooltip, setTotalArea, totalArea,setHasUnsavedChanges, handleFieldChange   } = props;
   const { propertyData, refresh } = usePropertyData();
   const { user } = useAuth();
   const { s3Client, bucketName } = useS3Client();
   const fileInputRef = useRef(null);
-
+  const [deletingIndex, setDeletingIndex] = useState(null);
   const [multipleData, setMultipleData] = useState([]);
   const [executedOnce, setExecutedOnce] = useState(false);
   const [cadastralData, setCadastralDataPfID] = useState(null);
   const [areaDataPfID, setAreaDataPfID] = useState(null);
   const [predialFetchedData, setPredialFetchedData] = useState({});
+  const [changedFields, setChangedFields] = useState({});
+  const [isMessageCardActive, setIsMessageCardActive] = useState(false);
+  const [selectedVerificationId, setSelectedVerificationId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isFileVerifier, setIsFileVerifier] = useState(false);
+  const [isDocApproved, setIsDocApproved] = useState(false);
+  const isOwner = propertyData.propertyCampaign.userId === user.id;
+  const { handleUpdateContextFileVerification } = useProjectData();
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     if (propertyData && propertyData.projectCadastralRecords) {
-      let ownersData =
-        [...propertyData.projectCadastralRecords.cadastralRecords].map(
-          (cadastralData) => {
-            return {
-              ...cadastralData,
-              editing: false,
-            };
-          }
-        ) || [];
-
-      setCadastralDataPfID(
-        propertyData.projectCadastralRecords.cadastralDataPfID
-      );
-      setAreaDataPfID(propertyData.projectCadastralRecords.totalAreaPfID);
-
-      setMultipleData(ownersData);
+      const fetchDocumentsVisibility = async () => {
+        try {
+          // Mapeamos los datos y consultamos la API para obtener la visibilidad correcta
+          const updatedRecords = await Promise.all(
+            propertyData.projectCadastralRecords.cadastralRecords.map(async (cadastralData) => {
+              if (!cadastralData.documentID) {
+                return { ...cadastralData, visible: false, editing: false }; // Si no tiene documento, ocultarlo por defecto
+              }
+  
+              try {
+                const response = await API.graphql(
+                  graphqlOperation(getDocument, { id: cadastralData.documentID })
+                );
+                const documentData = response.data.getDocument;
+  
+                return {
+                  ...cadastralData,
+                  visible: documentData?.visible ?? false, // Si `visible` no existe, usar `false`
+                  editing: false,
+                };
+              } catch (error) {
+                console.error(`❌ Error obteniendo documento ${cadastralData.documentID}:`, error);
+                return { ...cadastralData, visible: false, editing: false };
+              }
+            })
+          );
+  
+          // ✅ Se actualizan los estados necesarios
+          setMultipleData(updatedRecords);
+          setCadastralDataPfID(propertyData.projectCadastralRecords.cadastralDataPfID);
+          setAreaDataPfID(propertyData.projectCadastralRecords.totalAreaPfID);
+  
+        } catch (error) {
+          console.error("❌ Error general en fetchDocumentsVisibility:", error);
+        }
+      };
+  
+      fetchDocumentsVisibility();
     }
   }, [propertyData]);
+  
+  
 
   useEffect(() => {
     async function updatePredialData() {
@@ -70,7 +116,7 @@ export default function CadastralRecords(props) {
       const predialData = await getPredialDataByCadastralNumber(
         cadastralNumbersArray
       ); // Llamada a la función getData
-      console.log("predialData", predialData);
+     
       setPredialFetchedData(predialData);
 
       // Área total del predio
@@ -91,7 +137,6 @@ export default function CadastralRecords(props) {
     }
     if (multipleData.length > 0 && executedOnce) {
       const obj = multipleData.filter((data) => data.editing === true)[0];
-      console.log(obj);
 
       if (obj) {
         let cadastralNumberLength = obj.cadastralNumber.length;
@@ -102,6 +147,48 @@ export default function CadastralRecords(props) {
     }
   }, [multipleData]);
 
+  const handleMessageButtonClick = async (fileIndex, type) => {
+    const file = propertyData.projectFiles.find((doc) => doc.id === multipleData[fileIndex].documentID);
+  
+    if (!file || !file.verification) {
+      notify({ msg: "Este archivo no tiene verificación asociada.", type: "warning" });
+      return;
+    }
+  
+    setIsMessageCardActive(true);
+    setSelectedVerificationId(file.verification.id);
+    setIsDocApproved(file.isApproved || false);
+    setIsFileVerifier(user.role === "validator" || user.role === "constructor");
+    setMessages(file.verification.messages || []);
+  };
+
+  const handleSendMessageButtonClick = async () => {
+    const localMessage = {
+      id: uuidv4(),
+      comment: newMessage,
+      createdAt: new Date().toISOString(),
+      isCommentByVerifier: user.role === "validator" || user.role === "constructor",
+      userName: user.name,
+      elapsedTime: "Hace un momento",
+    };
+  
+    const updatedMessages = [...messages, localMessage];
+    setMessages(updatedMessages);
+  
+    const newVerificationComment = {
+      verificationID: selectedVerificationId,
+      comment: newMessage,
+      isCommentByVerifier: user.role === "validator" || user.role === "constructor",
+    };
+  
+    await API.graphql(
+      graphqlOperation(createVerificationComment, { input: newVerificationComment })
+    );
+  
+    setNewMessage("");
+  };
+  
+
   const handleFileChange = (e, indexToSaveFile) => {
     setMultipleData((prevState) =>
       prevState.map((item, index) =>
@@ -110,7 +197,62 @@ export default function CadastralRecords(props) {
           : item
       )
     );
+    setHasUnsavedChanges(true);
+    setChangedFields((prev) => ({
+      ...prev,
+      [`certificate_${indexToSaveFile}`]: true,
+    }));
   };
+
+ const deleteFileFromS3AndDB = async (documentID) => {
+    if (!documentID) {
+        console.warn("⚠️ No se proporcionó documentID para eliminar.");
+        return;
+    }
+
+    console.log("🗑️ Eliminando archivo y referencias para documentID:", documentID);
+
+    const documentToDelete = propertyData.projectFiles.find(item => item.id === documentID);
+
+    if (!documentToDelete) {
+        console.warn("⚠️ Documento no encontrado en projectFiles.");
+        return;
+    }
+
+    // Extraer nombre del archivo de la URL
+    const getFilePathRegex = /\/public\/(.+)$/;
+    const fileToDeleteName = decodeURIComponent(documentToDelete.url.match(getFilePathRegex)?.[1] || "");
+
+    if (fileToDeleteName) {
+        try {
+            await Storage.remove(fileToDeleteName);
+            console.log("✅ Archivo eliminado de S3:", fileToDeleteName);
+        } catch (error) {
+            console.error("❌ Error eliminando el archivo en S3:", error);
+        }
+    }
+
+    // 🟢 Eliminar el Product Feature asociado al documento
+    if (documentToDelete.pfID) {
+        try {
+            const pfToDelete = { id: documentToDelete.pfID };
+            await API.graphql(graphqlOperation(deleteProductFeature, { input: pfToDelete }));
+            console.log("✅ Product Feature eliminado correctamente:", documentToDelete.pfID);
+        } catch (error) {
+            console.error("❌ Error eliminando Product Feature:", error);
+        }
+    }
+
+    // 🟢 Eliminar el documento de la base de datos
+    try {
+        const docToDelete = { id: documentToDelete.id };
+        await API.graphql(graphqlOperation(deleteDocument, { input: docToDelete }));
+        console.log("🗑️ Documento eliminado correctamente de la base de datos:", documentID);
+    } catch (error) {
+        console.error("❌ Error eliminando el documento de la base de datos:", error);
+    }
+};
+
 
   const handleUploadButton = (index) => {
     Swal.fire({
@@ -158,6 +300,13 @@ export default function CadastralRecords(props) {
             : item
         )
       );
+      setHasUnsavedChanges(true);
+      handleFieldChange(name, value);
+       // ✅ Marcar el campo como modificado
+    setChangedFields((prev) => ({
+      ...prev,
+      [`${multipleDataFeature}_${multipleDataIndex}`]: true,
+    }));
     }
   };
 
@@ -177,6 +326,7 @@ export default function CadastralRecords(props) {
           },
         ];
       });
+      setHasUnsavedChanges(true); 
     } else {
       notify({
         msg: "Guarda primero los datos antes de agregar una nueva fila",
@@ -217,122 +367,115 @@ export default function CadastralRecords(props) {
     )}`;
 
     if (documentID) {
-      const oldDocument = propertyData.projectFiles.find(
-        (item) => item.id === documentID
-      );
-      // Si toca actualizar
-      const getFilePathRegex = /\/public\/(.+)$/;
+        const oldDocument = propertyData.projectFiles.find(
+            (item) => item.id === documentID
+        );
 
-      // Eliminar archivo viejo de S3
-      const fileToDeleteName = decodeURIComponent(
-        oldDocument.url.match(getFilePathRegex)[1]
-      );
-      try {
-        await Storage.remove(fileToDeleteName);
-      } catch (error) {
-        console.error("Error removing the file:", error);
+        if (oldDocument) {
+            try {
+                await deleteFileFromS3AndDB(documentID);
+            } catch (error) {
+                console.error("❌ Error eliminando el archivo anterior:", error);
+            }
+
+            const command = new PutObjectCommand({
+              Bucket: bucketName,
+              Key: urlPath,
+              Body: fileToSave,
+              ContentType: fileToSave.type,
+          });
+  
+          try {
+              await s3Client.send(command);
+          } catch (error) {
+              console.error(error);
+              notify({
+                  msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
+                  type: "error",
+              });
+              return;
+          }
+
+          const newPropertyFeature = {
+            featureID: "B_owner_certificado",
+            propertyID: propertyData.propertyInfo.id,
+            value: fileToSave.name,
+        };
+        const createPropertyFeatureResponse = await API.graphql(
+            graphqlOperation(createPropertyFeature, { input: newPropertyFeature })
+        );
+
+            // 📌 Crear un nuevo documento en la base de datos, ya que el anterior fue eliminado
+            const newDocument = {
+              propertyFeatureID:
+              createPropertyFeatureResponse.data.createPropertyFeature.id,
+              userID: user.id,
+              timeStamp: Date.now(),
+              status: "pending",
+              isApproved: false,
+              isUploadedToBlockChain: false,
+              url: WebAppConfig.url_s3_images + urlPath,
+          };
+  
+          const createDocumentResponse = await API.graphql(
+              graphqlOperation(createDocument, { input: newDocument })
+          );
+  
+          docID = createDocumentResponse.data.createDocument.id;
       }
+      return docID;
 
-      //  Cargar archivo nuevo a S3
-      try {
-        const uploadImageResult = await Storage.put(urlPath, fileToSave, {
-          level: "public",
-          contentType: "*/*",
-        });
-
-        console.log("Archivo seleccionado:", fileToSave);
-        console.log("Archivo subido:", uploadImageResult);
-      } catch (error) {
-        notify({
-          msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
-          type: "error",
-        });
-        return;
-      }
-
-      // Actualizar base de datos (Product Feature y Documento)
-      const updatedProductFeature = {
-        id: oldDocument.pfID,
-        value: fileToSave.name,
-      };
-      console.log("updatedProductFeature:", updatedProductFeature);
-      await API.graphql(
-        graphqlOperation(updatePropertyFeature, {
-          input: updatedProductFeature,
-        })
-      );
-
-      const updatedDocument = {
-        id: oldDocument.id,
-        timeStamp: Date.now(),
-        status: "pending",
-        isApproved: false,
-        isUploadedToBlockChain: false,
-        url: WebAppConfig.url_s3_public_images + urlPath,
-      };
-
-      await API.graphql(
-        graphqlOperation(updateDocument, { input: updatedDocument })
-      );
     } else {
-      // Crear pf y document
-      console.log(s3Client, "s3client 284");
-      console.log(urlPath, "urlPath cadastral 284");
-      console.log(fileToSave, "fileToSave cadastral 285");
-
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: urlPath,
-        Body: fileToSave,
-        ContentType: fileToSave.type,
-      });
-
-      try {
-        const uploadImageResult = await s3Client.send(command);
-        console.log(uploadImageResult, "uploadImageResult");
-        /* const uploadImageResult = await Storage.put(urlPath, fileToSave, {
-        }); */
-
-        console.log("Archivo seleccionado:", fileToSave);
-        console.log("Archivo subido:", uploadImageResult);
-      } catch (error) {
-        console.error(error);
-        notify({
-          msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
-          type: "error",
+        // 🚀 Subir archivo a S3 para un nuevo documento
+        const command = new PutObjectCommand({
+            Bucket: bucketName,
+            Key: urlPath,
+            Body: fileToSave,
+            ContentType: fileToSave.type,
         });
-        return;
-      }
 
-      const newPropertyFeature = {
-        featureID: "B_owner_certificado",
-        propertyID: propertyData.propertyInfo.id,
-        value: fileToSave.name,
-      };
-      console.log("newPropertyFeature:", newPropertyFeature);
-      const createPropertyFeatureResponse = await API.graphql(
-        graphqlOperation(createPropertyFeature, { input: newPropertyFeature })
-      );
+        try {
+            await s3Client.send(command);
+        } catch (error) {
+            console.error(error);
+            notify({
+                msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
+                type: "error",
+            });
+            return;
+        }
 
-      const newDocument = {
-        propertyFeatureID:
-          createPropertyFeatureResponse.data.createPropertyFeature.id,
-        userID: user.id,
-        timeStamp: Date.now(),
-        status: "pending",
-        isApproved: false,
-        isUploadedToBlockChain: false,
-        url: WebAppConfig.url_s3_images + urlPath,
-      };
+        // 📌 Crear un nuevo Property Feature
+        const newPropertyFeature = {
+            featureID: "B_owner_certificado",
+            propertyID: propertyData.propertyInfo.id,
+            value: fileToSave.name,
+        };
+        const createPropertyFeatureResponse = await API.graphql(
+            graphqlOperation(createPropertyFeature, { input: newPropertyFeature })
+        );
 
-      const createDocumentResponse = await API.graphql(
-        graphqlOperation(createDocument, { input: newDocument })
-      );
+        // 📌 Crear un nuevo documento en la base de datos
+        const newDocument = {
+            propertyFeatureID:
+            createPropertyFeatureResponse.data.createPropertyFeature.id,
+            userID: user.id,
+            timeStamp: Date.now(),
+            status: "pending",
+            isApproved: false,
+            isUploadedToBlockChain: false,
+            url: WebAppConfig.url_s3_images + urlPath,
+        };
 
-      docID = createDocumentResponse.data.createDocument.id;
+        const createDocumentResponse = await API.graphql(
+            graphqlOperation(createDocument, { input: newDocument })
+        );
+
+        docID = createDocumentResponse.data.createDocument.id;
     }
     return docID;
-  };
+};
+
 
   // Crear una función que actualice el area
 
@@ -344,6 +487,7 @@ export default function CadastralRecords(props) {
       });
       return;
     }
+    setIsLoading(true);
     let error = false;
     const newCadastralNumber = multipleData[indexToSave].cadastralNumber;
     const certificate = multipleData[indexToSave].certificate;
@@ -513,6 +657,12 @@ export default function CadastralRecords(props) {
 
       const projectCadastralRecordsData =
         updatedPropertyData.projectCadastralRecords; */
+        setChangedFields((prev) => {
+          const updatedFields = { ...prev };
+          delete updatedFields[`cadastralNumber_${indexToSave}`];
+          return updatedFields;
+        });
+        setHasUnsavedChanges(false);
 
       refresh();
     } else {
@@ -529,154 +679,143 @@ export default function CadastralRecords(props) {
         type: "success",
       });
     }
+    setIsLoading(false);
   };
 
   const handleDeleteHistoricalData = async (indexToDelete) => {
+    setDeletingIndex(indexToDelete); // Deshabilita el botón de eliminar mientras se procesa
     let error = false;
-
-    const documentToDelete = propertyData.projectFiles.find(
-      (item) => item.id === multipleData[indexToDelete].documentID
-    );
-    console.log("documentToDelete", documentToDelete);
-    if (documentToDelete) {
-      // Borrar de S3
-      const getFilePathRegex = /\/projects\/(.+)$/;
-
-      const fileToDeleteName = decodeURIComponent(
-        documentToDelete.url.match(getFilePathRegex)[1]
-      );
-      console.log(fileToDeleteName, "filetodelete");
-      /* try {
-        await Storage.remove(fileToDeleteName);
-      } catch (error) {
-        console.error("Error removing the file:", error);
+  
+    try {
+      // 🛑 Verificar que el índice no sea inválido antes de proceder
+      if (indexToDelete < 0 || indexToDelete >= multipleData.length) {
+        console.error("Índice fuera de rango:", indexToDelete);
+        notify({ msg: "Error al eliminar: índice inválido.", type: "error" });
+        return;
       }
-
-      // Borrar product feature del documento
-      const pfToDelete = {
-        id: documentToDelete.pfID,
-      };
-      await API.graphql(
-        graphqlOperation(deleteProductFeature, { input: pfToDelete })
+  
+      const documentToDelete = propertyData.projectFiles.find(
+        (item) => item.id === multipleData[indexToDelete]?.documentID
       );
-
-      // Borrar documento
-      const docToDelete = {
-        id: documentToDelete.id,
-      };
-      await API.graphql(
-        graphqlOperation(deleteDocument, { input: docToDelete })
-      );
-
-      if (documentToDelete.verification) {
-        // Borrar verification (si existe)
-        const verificationToDelete = {
-          id: documentToDelete.verification.id,
-        };
-        await API.graphql(
-          graphqlOperation(deleteVerification, { input: verificationToDelete })
+  
+  
+      if (documentToDelete) {
+        // Extraer nombre del archivo de la URL
+        const getFilePathRegex = /\/public\/(.+)$/;
+        const fileToDeleteName = decodeURIComponent(
+          documentToDelete.url.match(getFilePathRegex)?.[1] || ""
         );
-
-        // Borrar verification comments (si existe)
-        if (documentToDelete.verification.messages.length > 0) {
-          documentToDelete.verification.messages.forEach(async (item) => {
-            const verificationCommentToDelete = {
-              id: item.id,
-            };
-            await API.graphql(
-              graphqlOperation(deleteVerificationComment, {
-                input: verificationCommentToDelete,
-              })
-            );
-          });
+  
+        if (fileToDeleteName) {
+          try {
+            await Storage.remove(fileToDeleteName);
+          } catch (error) {
+            console.error("Error eliminando el archivo en S3:", error);
+          }
         }
-      } */
-    }
-
-    // Actualizar multipleData
-    const tempMultipleData = multipleData.filter(
-      (_, index) => index !== indexToDelete
-    );
-    setMultipleData(tempMultipleData);
-
-    if (
-      areaDataPfID &&
-      predialFetchedData[multipleData[indexToDelete].cadastralNumber]
-        ?.AREA_TERRENO
-    ) {
-      let tempPropertyFeature = {
-        id: areaDataPfID,
-        value:
-          totalArea -
-          predialFetchedData[multipleData[indexToDelete].cadastralNumber]
-            ?.AREA_TERRENO,
-      };
-      const response = await API.graphql(
-        graphqlOperation(updatePropertyFeature, { input: tempPropertyFeature })
-      );
-
-      if (!response.data.updatePropertyFeature) error = true;
-    }
-
-    if (cadastralData) {
-      let tempPropertyFeature = {
-        id: cadastralData,
-        value: JSON.stringify(getImportantValues(tempMultipleData)),
-      };
-      const response = await API.graphql(
-        graphqlOperation(updatePropertyFeature, { input: tempPropertyFeature })
-      );
-
-      if (!response.data.updatePropertyFeature) error = true;
-    } else {
-      let tempPropertyFeature = {
-        value: JSON.stringify(getImportantValues(tempMultipleData)),
-        isToBlockChain: false,
-        isOnMainCard: false,
-        propertyID: propertyData.propertyInfo.id,
-        featureID: "A_predio_ficha_catastral",
-      };
-      const response = await API.graphql(
-        graphqlOperation(createPropertyFeature, { input: tempPropertyFeature })
-      );
-      setCadastralDataPfID(response.data.createPropertyFeature.id);
-
-      if (!response.data.createPropertyFeature) error = true;
-    }
-
-    /* const updatedPropertyData = await fetchPropertyDataByPropertyID(
-      propertyData.propertyInfo.id
-    );
-
-    const projectCadastralRecordsData =
-      updatedPropertyData.projectCadastralRecords; */
-
-    refresh();
-
-    if (!error) {
-      notify({
-        msg: "Valores borrados exitosamente",
-        type: "success",
-      });
+  
+        // Eliminar Product Feature asociado al documento
+        if (documentToDelete.pfID) {
+          const pfToDelete = { id: documentToDelete.pfID };
+          await API.graphql(graphqlOperation(deleteProductFeature, { input: pfToDelete }));
+        }
+  
+        // Eliminar el documento de la base de datos
+        const docToDelete = { id: documentToDelete.id };
+        await API.graphql(graphqlOperation(deleteDocument, { input: docToDelete }));
+      }
+  
+      // Filtrar el elemento eliminado
+      let tempMultipleData = multipleData.filter((_, idx) => idx !== indexToDelete);
+  
+      // ✅ Si no quedan más elementos, asegurarse de actualizar el estado a `[]`
+      setMultipleData(tempMultipleData.length > 0 ? tempMultipleData : []);
+  
+      // 🏗️ Actualizar el área total si es necesario
+      const cadastralNumber = multipleData[indexToDelete]?.cadastralNumber;
+      if (areaDataPfID && cadastralNumber && cadastralNumber in predialFetchedData) {
+        const tempPropertyFeature = {
+          id: areaDataPfID,
+          value: totalArea - (predialFetchedData[cadastralNumber]?.AREA_TERRENO || 0),
+        };
+        const response = await API.graphql(graphqlOperation(updatePropertyFeature, { input: tempPropertyFeature }));
+        if (!response.data.updatePropertyFeature) error = true;
+      }
+  
+      // 🏗️ Actualizar datos catastrales si es necesario
+      if (cadastralData) {
+        const tempPropertyFeature = {
+          id: cadastralData,
+          value: JSON.stringify(getImportantValues(tempMultipleData)),
+        };
+        const response = await API.graphql(graphqlOperation(updatePropertyFeature, { input: tempPropertyFeature }));
+        if (!response.data.updatePropertyFeature) error = true;
+      } else {
+        const tempPropertyFeature = {
+          value: JSON.stringify(getImportantValues(tempMultipleData)),
+          isToBlockChain: false,
+          isOnMainCard: false,
+          propertyID: propertyData.propertyInfo.id,
+          featureID: "A_predio_ficha_catastral",
+        };
+        const response = await API.graphql(graphqlOperation(createPropertyFeature, { input: tempPropertyFeature }));
+        setCadastralDataPfID(response.data.createPropertyFeature.id);
+        if (!response.data.createPropertyFeature) error = true;
+      }
+  
+      refresh();
+  
+      if (!error) {
+        notify({ msg: "Valores borrados exitosamente", type: "success" });
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      notify({ msg: "Error al eliminar el registro", type: "error" });
+    } finally {
+      setDeletingIndex(null); // Habilita nuevamente el botón después de finalizar
     }
   };
+  
 
   const renderFileLinkByDocumentID = (documentID) => {
-    if (documentID) {
-      const document = propertyData.projectFiles.find(
-        (item) => item.id === documentID
-      );
-      return (
-        <button
-          onClick={() => handleOpenObject(s3Client, bucketName, document?.url)}
-        >
-          Archivo
-        </button>
-      );
-    } else {
-      return "Sin archivo";
+    if (!documentID) {
+      return <span className="text-gray-500">Sin archivo</span>;
     }
+  
+    // Verificar si `projectFiles` está disponible
+    const document = propertyData?.projectFiles?.find(
+      (item) => item.id === documentID
+    );
+  
+    if (!document) {
+      return <span className="text-gray-500">Documento no encontrado</span>;
+    }
+
+    const cadastralRecord = multipleData.find((item) => item.documentID === documentID);
+  
+    // Determinar visibilidad y permisos
+    const isOwner = propertyData?.projectPostulant?.id === user?.id;
+    const isCampaignOwner = propertyData?.propertyCampaign?.userId === user?.id;
+    const hasFullAccess = isOwner || isCampaignOwner; // Solo dueños pueden verlo siempre
+    const isVisible = cadastralRecord.visible ?? false; // Si `visible` es `undefined`, se asume `false`
+    const isDisabled = !hasFullAccess && !isVisible; // Si no es dueño y el documento está oculto, se deshabilita
+  
+    return (
+      <button
+        onClick={() => handleOpenObject(s3Client, bucketName, document?.url)}
+        disabled={isDisabled } // Se desactiva si no está autorizado o el documento está oculto
+        className={`px-4 py-2 rounded-md transition duration-200 ${
+          isDisabled 
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-blue-500 text-white hover:bg-blue-600"
+        }`}
+      >
+        {isDisabled ? "🔒 No Disponible" : "📄 Ver Archivo"}
+      </button>
+    );
   };
+  
+
 
   const renderAreaByCadastralNumber = (cadastralNumber) => {
     const cadNum = cadastralNumber.trim();
@@ -699,135 +838,237 @@ export default function CadastralRecords(props) {
     }
   };
 
+  
+
+
+  const toggleVisibility = async (documentID, currentVisibility) => {
+    try {
+      
+  
+      const updatedDocument = {
+        id: documentID,
+        visible: !currentVisibility,
+      };
+  
+      const response = await API.graphql(graphqlOperation(updateDocument, { input: updatedDocument }));
+  
+      if (response.data?.updateDocument) {
+        setMultipleData((prevData) =>
+          prevData.map((item) =>
+            item.documentID === documentID ? { ...item, visible: !currentVisibility } : item
+          )
+        );
+  
+        notify({ msg: `El documento ahora es ${!currentVisibility ? "visible" : "no visible"}`, type: "success" });
+      } else {
+        console.error("⚠️ No se pudo actualizar la visibilidad en la API.");
+      }
+    } catch (error) {
+      notify({ msg: "Hubo un error al cambiar la visibilidad del documento.", type: "error" });
+    }
+  };
+  
+  const checkAndCreateVerification = async (index, type) => {
+    const typeVerification = {
+      productFeature: "productFeatureID",
+      propertyFeature: "propertyFeatureID",
+    };
+  
+    // Obtener el archivo según el tipo
+    const file = typeVerification[type] === "propertyFeatureID" 
+      ? propertyData.projectFiles[index] 
+      : propertyData.projectPropertyFiles[index];
+
+      if (!file) {
+        console.log("No se encontró el archivo, mostrando la notificación...");
+        notify({
+          msg: "No hay documentos que comentar.",
+          type: "error",
+        });
+        return; // Salir de la función si no se encuentra el archivo
+      }
+  
+    // Si el archivo no tiene verificación, creamos una nueva
+    if (!file.verification) {
+      const newVerification = {
+        [typeVerification[type]]: file.pfID,
+        userVerifierID: user.id,
+        userVerifiedID: type === "productFeature" 
+          ? propertyData.projectPostulant.id 
+          : file.userID,
+      };
+  
+      try {
+        // Crear la verificación en la base de datos
+        const createVerificationResult = await API.graphql(
+          graphqlOperation(createVerification, { input: newVerification })
+        );
+  
+        const verification = createVerificationResult.data.createVerification;
+  
+        // Asignamos la verificación creada al archivo
+        file.verification = verification;
+  
+        // Creamos el objeto de verificación para el contexto
+        const localVerification = {
+          id: verification.id,
+          messages: [],
+          postulantID: propertyData.projectPostulant.id,
+          postulantName: propertyData.projectPostulant.name,
+          verifierID: user.id,
+          verifierName: user.name,
+        };
+  
+        // Actualizar el archivo en el contexto global
+        await handleUpdateContextFileVerification(index, localVerification);
+  
+      } catch (error) {
+        console.error("❌ Error al crear la verificación:", error);
+      }
+    } else {
+      console.log("📌 Verificación ya existe:", file.verification);
+    }
+  };
+  
+  const handleButtonClick = async (index, type) => {
+    // Primero, llama a la función para verificar y crear la verificación si no existe
+    await checkAndCreateVerification(index, type);
+  
+    // Luego, llama a la función para mostrar los mensajes
+    handleMessageButtonClick(index, type);
+  };
+
+  
+
+
+  
+
   return (
     <Card className={className}>
       <Card.Header title="Información predial" sep={true} tooltip={tooltip} />
       <Card.Body>
-        <div className="row">
-          <table>
-            <thead className="text-center">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse border border-gray-200">
+            <thead className="bg-gray-100 text-gray-700 text-xs md:text-sm lg:text-base">
               <tr>
-                <th style={{ width: "240px" }}>Identificador catastral</th>
-                <th style={{ width: "180px" }}>Certificado de tradición</th>
-                <th style={{ width: "180px" }}>Nombre de predio</th>
-                <th style={{ width: "180px" }}>Área</th>
-                <th style={{ width: "120px" }}></th>
+                <th className="px-4 py-2 border border-gray-300 min-w-[200px]">
+                  Identificador catastral
+                </th>
+                <th className="px-4 py-2 border border-gray-300 min-w-[180px]">
+                  Certificado de tradición
+                </th>
+                <th className="px-4 py-2 border border-gray-300 min-w-[200px]">
+                  Nombre de predio
+                </th>
+                <th className="px-4 py-2 border border-gray-300 min-w-[120px]">
+                  Área
+                </th>
+                <th className="px-4 py-2 border border-gray-300 min-w-[100px]">
+                  Acciones
+                </th>
               </tr>
             </thead>
-            <tbody className="align-middle">
-              {multipleData.map((data, index) => {
-                return (
-                  <tr
-                    key={index}
-                    className="text-center border-b-2"
-                    style={{ height: "3rem" }}
-                  >
-                    {data.editing ? (
-                      <>
-                        <td>
-                          <div className="flex items-center">
-                            <input
-                              type="text"
-                              value={data.cadastralNumber}
-                              className="text-center p-2 border rounded-md w-full"
-                              name={`cadastraldata_cadastralNumber_${index}`}
-                              onInput={(e) => handleChangeInputValue(e)}
-                            />
-                            {data.cadastralNumber.trim() in
-                            predialFetchedData ? (
-                              <CheckIcon className="ms-2 text-success" />
-                            ) : (
-                              <XIcon className="ms-2 text-danger" />
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            style={{ display: "none" }}
-                            onChange={(e) => handleFileChange(e, index)}
-                          />
-                          <button
-                            className="p-2 text-white rounded-md bg-blue-500"
-                            onClick={handleUploadButton}
-                          >
-                            {data.certificate || data.documentID !== undefined
-                              ? "Actualizar"
-                              : "Cargar"}
-                          </button>
-                        </td>
-                        <td>
-                          {renderPredioNameByCadastralNumber(
-                            data.cadastralNumber
-                          )}
-                        </td>
-                        <td>
-                          {renderAreaByCadastralNumber(data.cadastralNumber)}
-                        </td>
-                        <td className="flex justify-end gap-1">
-                          <button
-                            className="p-2 text-white rounded-md bg-green-700"
-                            onClick={() => handleSaveHistoricalData(index)}
-                          >
-                            <SaveDiskIcon />
-                          </button>
-                          <button
-                            className="p-2 text-white rounded-md bg-red-500"
-                            onClick={() => handleDeleteHistoricalData(index)}
-                          >
-                            <TrashIcon />
-                          </button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="text-break">
-                          {(user.role === "admon" ||
-                            user.role === "validator" ||
-                            user.id === propertyData.projectPostulant.id ||
-                            user.id === propertyData.propertyCampaign.userId) ?
-                            data.cadastralNumber?.toUpperCase() : '********************'}
-                        </td>
-                        <td>{renderFileLinkByDocumentID(data.documentID)}</td>
-                        <td className="text-break">
-                          {renderPredioNameByCadastralNumber(
-                            data.cadastralNumber
-                          )}
-                        </td>
-                        <td>
-                          {renderAreaByCadastralNumber(data.cadastralNumber)}
-                        </td>
-                        <td className="flex justify-end gap-1">
-                          <button
-                            className="p-2 text-white rounded-md bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            <tbody className="text-gray-800 text-xs md:text-sm lg:text-base">
+              {multipleData.map((data, index) => (
+                <tr key={index} className="border-b border-gray-300 text-center">
+                  {data.editing ? (
+                    <>
+                      {/* ✅ Ahora es un input editable cuando está en modo edición */}
+                      <td className="p-2 border border-gray-300">
+                        <input
+                          type="text"
+                          className={`w-full text-center p-1 border rounded-md ${
+                            changedFields[`cadastralNumber_${index}`] ? "border-red-500 bg-red-100" : ""
+                          }`}
+                          value={data.cadastralNumber}
+                          onChange={(e) => handleChangeInputValue(e, index)}
+                          name={`cadastraldata_cadastralNumber_${index}`}
+                        />
+                      </td>
+                      <td className={`p-2 border border-gray-300 ${changedFields[`certificate_${index}`] ? "border-red-500 bg-red-100" : ""}`}>
+  <div className="relative">
+    <input
+      type="file"
+      ref={fileInputRef}
+      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      onChange={(e) => handleFileChange(e, index)}
+    />
+    <button
+      className={`px-3 py-1 text-white rounded ${
+        changedFields[`certificate_${index}`] ? "bg-red-500" : "bg-blue-500"
+      }`}
+      onClick={(e) => handleUploadButton(e, index)}
+    >
+      {data.certificate || data.documentID !== undefined ? "Actualizar" : "Cargar"}
+    </button>
+  </div>
+</td>
+
+
+                      <td className="p-2 border border-gray-300">{renderPredioNameByCadastralNumber(data.cadastralNumber)}</td>
+                      <td className="p-2 border border-gray-300">{renderAreaByCadastralNumber(data.cadastralNumber)}</td>
+                      <td className="p-2 border border-gray-300 flex justify-end gap-2">
+                        <button className="p-2 text-white rounded bg-green-600"  disabled={isLoading} onClick={() => handleSaveHistoricalData(index)}>
+                          <SaveDiskIcon />
+                        </button>
+                        <button className="p-2 text-white rounded bg-red-500" onClick={() => handleDeleteHistoricalData(index)}>
+                          <TrashIcon />
+                        </button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="p-2 border border-gray-300">{data.cadastralNumber}</td>
+                      <td className="p-2 border border-gray-300">{renderFileLinkByDocumentID(data.documentID, data.visible ?? true)}</td>
+                      <td className="p-2 border border-gray-300">{renderPredioNameByCadastralNumber(data.cadastralNumber)}</td>
+                      <td className="p-2 border border-gray-300">{renderAreaByCadastralNumber(data.cadastralNumber)}</td>
+                        <td className="p-2 border border-gray-300 flex justify-end gap-2">
+                          <button className="p-2 text-white rounded bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={!autorizedUser}
-                            onClick={() => handleEditHistoricalData(index)}
-                          >
+                            onClick={() => handleEditHistoricalData(index)}>
                             <EditIcon />
                           </button>
-                          <button
-                            className="p-2 text-white rounded-md bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          <button className="p-2 text-white rounded bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={!autorizedUser}
-                            onClick={() => handleDeleteHistoricalData(index)}
-                          >
+                            onClick={() => handleDeleteHistoricalData(index)}>
                             <TrashIcon />
                           </button>
+                          <button
+    disabled={!autorizedUser}
+    className="px-2 py-1 text-blue-500 rounded-md border-[1px] border-blue-500 hover:bg-blue-500 hover:text-white disabled:opacity-50 disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+    onClick={() => handleButtonClick(index, "propertyFeature")} 
+  >
+    <MessagesIcon />
+  </button>
+  {isOwner && (
+  <button
+    onClick={() => toggleVisibility(data.documentID, data.visible)}
+    disabled={!autorizedUser}
+    className={`p-2 rounded text-white transition duration-200 ${
+      !autorizedUser
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed" // 🔒 Estilo gris cuando está deshabilitado
+        : data.visible
+        ? "bg-gray-500 hover:bg-gray-700"
+        : "bg-green-500 hover:bg-green-700"
+    }`}
+    title={data.visible ? "Ocultar Documento" : "Hacer Visible"}
+  >
+   {data.visible ? <Eye size={20} /> : <EyeSlash size={20} />}
+  </button>
+)}
+
                         </td>
-                      </>
-                    )}
-                  </tr>
-                );
-              })}
+                    </>
+                  )}
+                </tr>
+              ))}
               <tr>
-                <td colSpan={6}>
+                <td colSpan={5} className="p-2">
                   <div className="flex">
-                    <button
-                      className="p-2 w-full text-white rounded-md bg-slate-600 flex justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={!autorizedUser}
-                      onClick={() => handleAddNewPeriodToHistoricalData()}
-                    >
-                      <PlusIcon></PlusIcon>
+                    <button className="p-2 w-full text-white rounded bg-gray-600 flex justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!autorizedUser || multipleData.some(item => item.editing) || deletingIndex !== null}
+                      onClick={handleAddNewPeriodToHistoricalData}>
+                      <PlusIcon />
                     </button>
                   </div>
                 </td>
@@ -836,6 +1077,21 @@ export default function CadastralRecords(props) {
           </table>
         </div>
       </Card.Body>
+      {isMessageCardActive && (
+  <div className="col">
+    <MessagesHistoryCard
+      className="scale-up-ver-top"
+      messages={messages}
+      newMessage={newMessage}
+      setNewMessage={setNewMessage}
+      handleSendMessageButtonClick={handleSendMessageButtonClick}
+      isFileVerifier={isFileVerifier}
+      isDocApproved={isDocApproved}
+    />
+  </div>
+)}
+
     </Card>
   );
+  
 }
