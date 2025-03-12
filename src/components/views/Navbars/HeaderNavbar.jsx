@@ -27,7 +27,7 @@ export default class HeaderNavbar extends Component {
 
   getNavLinksByRole(role) {
     const commonLinks = [
-      <Nav.Link href="https://suans-organization.gitbook.io/suan" target="_blank" rel="noopener noreferrer">
+      <Nav.Link href="https://terrasacha.gitbook.io/terrasacha" target="_blank" rel="noopener noreferrer">
         Ayuda
       </Nav.Link>
     ];
@@ -38,19 +38,23 @@ export default class HeaderNavbar extends Component {
       ],
       investor: [
         <Nav.Link onClick={() => window.location.href = "/investor_admon"}>Perfil</Nav.Link>,
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
       ],
       validator: [
-        <Nav.Link onClick={() => window.location.href = "/validator_admon"}>Perfil</Nav.Link>,
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>
+        <Nav.Link onClick={() => window.location.href = "/consultor_admon"}>Perfil</Nav.Link>,
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
+      ],
+      legal: [
+        <Nav.Link onClick={() => window.location.href = "/legal_admon"}>Perfil</Nav.Link>,
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
       ],
       analyst: [
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>,
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>,
         <Nav.Link onClick={() => window.location.href = "/project_analyst"}>Ver Proyectos</Nav.Link>
       ],
       constructor: [
         <Nav.Link onClick={() => window.location.href = "/constructor"}>Perfil</Nav.Link>,
-        <Nav.Link onClick={() => window.location.href = "/PQR"}>PQR</Nav.Link>
+        <Nav.Link onClick={() => window.location.href = "/PQRS"}>PQRS</Nav.Link>
       ]
     };
 
@@ -61,6 +65,17 @@ export default class HeaderNavbar extends Component {
     const { user } = this.state;
     const role = user?.attributes['custom:role'] || '';
     const userlog = user?.username || '';
+
+    const roleDisplayNames = {
+      admon: "Administrador",
+      validator: "Consultor",
+      analyst: "Analista",
+      constructor: "Propietario",
+      legal: "Legal"
+    };
+
+    const displayRole = roleDisplayNames[role] || "Sin Rol";
+  
 
     return (
       <Navbar bg="light" expand="lg" fixed="top">
@@ -91,7 +106,7 @@ export default class HeaderNavbar extends Component {
                     </svg>
                     <div>
                       {userlog}
-                      <p className="role_btn">{role || "Sin Rol"}</p>
+                      <p className="role_btn">{displayRole}</p>
                     </div>
                   </button>
                 </div>
@@ -99,7 +114,7 @@ export default class HeaderNavbar extends Component {
                 ) : (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-x-4">
                   <a className="item-menu block " href="#tecnologia">Tecnología</a>
-                  <a className="item-menu" href="#porque">¿Por qué Suan?</a>
+                  <a className="item-menu" href="#porque">¿Por qué Terrasacha?</a>
                   <DropDownProjects variant="secondary" />
                   <button className="text-green-700 font-bold w-fit" onClick={() => window.location.href = "/login"}>Ingresar</button>
                 </div>

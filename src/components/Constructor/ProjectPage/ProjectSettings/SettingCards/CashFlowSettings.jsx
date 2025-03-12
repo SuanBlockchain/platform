@@ -110,7 +110,6 @@ export default function CashFlowSettings(props) {
       const response = await API.graphql(
         graphqlOperation(updateProductFeature, { input: tempProductFeature })
       );
-      console.log(tempProductFeature, "tempProductFeature");
       if (!response.data.updateProductFeature) error = true;
     } else {
       let tempProductFeature = {
@@ -120,8 +119,6 @@ export default function CashFlowSettings(props) {
         productID: projectData.projectInfo.id,
         featureID: "GLOBAL_RESUMEN_FLUJO_DE_CAJA",
       };
-      console.log(tempProductFeature, "no existe");
-      console.log(tempProductFeature, "tempProductFeature");
 
       const response = await API.graphql(
         graphqlOperation(createProductFeature, { input: tempProductFeature })
@@ -156,7 +153,6 @@ export default function CashFlowSettings(props) {
 
     if (name.includes("input-")) {
       const [_, column, indexRow] = name.split("-");
-      console.log(column, indexRow);
       setCashFlowResume((prevState) =>
         prevState.map((item, index) =>
           index === parseInt(indexRow) ? { ...item, [column]: value } : item
@@ -228,8 +224,6 @@ export default function CashFlowSettings(props) {
           id: pfID,
           value: JSON.stringify({ flujos_de_caja: cashFlowResumeToUpload }),
         };
-        console.log(tempProductFeature, "ya existe");
-        console.log(tempProductFeature, "tempProductFeature");
         const response = await API.graphql(
           graphqlOperation(updateProductFeature, { input: tempProductFeature })
         );
@@ -243,7 +237,6 @@ export default function CashFlowSettings(props) {
           productID: projectData.projectInfo.id,
           featureID: "GLOBAL_RESUMEN_FLUJO_DE_CAJA",
         };
-        console.log(tempProductFeature, "no existe");
 
         API.graphql(
           graphqlOperation(createProductFeature, { input: tempProductFeature })
@@ -282,7 +275,6 @@ export default function CashFlowSettings(props) {
         id: pfID,
         value: JSON.stringify({ flujos_de_caja: tempCashFlowResume }),
       };
-      console.log(tempProductFeature, "delete tempProductFeature");
       const response = await API.graphql(
         graphqlOperation(updateProductFeature, { input: tempProductFeature })
       );

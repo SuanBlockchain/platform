@@ -16,7 +16,6 @@ const SankeyGraphComponent = (props) => {
     }));
 
     const data = { nodes: nodes, links: links };
-    console.log(data, "sankey data");
     return data;
   };
 

@@ -43,7 +43,6 @@ function groupElements(formattedJsonData) {
   const result = [];
   let currentGroup = null;
   let currentRepeat = null;
-  console.log(formattedJsonData, "formattedJsonData")
 
   for (const item of formattedJsonData) {
     if (item.type === "begin_group") {
@@ -168,7 +167,7 @@ export const getXLSXForm = async (url) => {
 
       groupedFormattedOptionsJsonData[list_name].push({ name, label });
     });
-    console.log(groupedFormattedOptionsJsonData);
+
 
     return {
       //survey2: groupElements(formattedInputsJsonData),

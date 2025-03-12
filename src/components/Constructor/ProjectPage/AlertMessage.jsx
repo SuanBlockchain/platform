@@ -39,7 +39,6 @@ export default function AlertMessage({ visible }) {
             projectData?.projectInfo.id,
             user.subrole
           );
-          console.log(obj, "progress");
           setProgressObj(obj);
         } catch (error) {
           console.error("Error al obtener datos:", error);
@@ -77,12 +76,17 @@ export default function AlertMessage({ visible }) {
             <h3 className="text-2xl">
               Estado de requerimientos para la publicación del proyecto{" "}
               <a
-                href={marketplaceURLMapper[projectData.projectInfo.marketplaceID || 'suan'][process.env.REACT_APP_ENV]} // remove href={process.env.REACT_APP_URL_MARKETPLACE}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Marketplace
-              </a>
+  href={
+    marketplaceURLMapper?.[projectData?.projectInfo?.marketplaceID]?.[process.env.REACT_APP_ENV] ||
+    process.env.REACT_APP_URL_MARKETPLACE || 
+    "#"
+  }
+  target="_blank"
+  rel="noreferrer"
+>
+  Marketplace
+</a>
+
             </h3>
             <p>
               Para garantizar la transparencia, confiabilidad y calidad de los
@@ -161,7 +165,7 @@ export default function AlertMessage({ visible }) {
                 <div>
                   <p className="mb-0">
                     Estado de verificación del proyecto por parte del equipo de
-                    validadores SUAN.
+                    Consultores SUAN.
                   </p>
                   <ul className="pl-0">
                     <li className="font-bold flex">

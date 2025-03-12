@@ -12,7 +12,7 @@ class Categorys extends Component {
     super(props);
     this.state = {
       categorys: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newCategory: {
         id: "",
@@ -94,7 +94,7 @@ class Categorys extends Component {
   async handleCRUDCategory() {
     let tempNewCategory = this.state.newCategory;
 
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       await API.graphql(
         graphqlOperation(createCategory, { input: tempNewCategory })
       );
@@ -124,7 +124,7 @@ class Categorys extends Component {
 
   async cleanCategoryOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newCategory: {
         id: "",
@@ -146,8 +146,8 @@ class Categorys extends Component {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="border border-gray-300 px-4 py-2">ID</th>
-                  <th className="border border-gray-300 px-4 py-2">Name</th>
-                  <th className="border border-gray-300 px-4 py-2">Action</th>
+                  <th className="border border-gray-300 px-4 py-2">Nombre</th>
+                  <th className="border border-gray-300 px-4 py-2">Acción</th>
                 </tr>
               </thead>
               <tbody>

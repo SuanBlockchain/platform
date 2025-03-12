@@ -22,9 +22,10 @@ import { XIcon } from "components/common/icons/XIcon";
 import { useS3Client } from "context/s3ClientContext";
 import { deleteFile, handleOpenObject, uploadFile } from "utilities/s3clientcommands";
 import { formatArea } from "../../mappers";
+import useFetchPropertiesProject from "hooks/useFetchPropertiesProject";
 
 export default function ProjectInfoCard(props) {
-  const { className, autorizedUser, setProgressChange, tooltip, totalArea } =
+  const { className, autorizedUser, setProgressChange, tooltip } =
     props;
   const {
     projectData,
@@ -33,6 +34,7 @@ export default function ProjectInfoCard(props) {
     handleSetContextProjectFile,
     refresh,
   } = useProjectData();
+  const { properties } = useFetchPropertiesProject();
   const {s3Client, bucketName } = useS3Client();
   const { user } = useAuth();
   const { categoryList } = useCategories();
@@ -45,6 +47,8 @@ export default function ProjectInfoCard(props) {
   const [matriculaPfID, setMatriculaPfID] = useState(null);
   const [fichaPfID, setFichaPfID] = useState(null);
   const [planosPredio, setPlanosPredio] = useState([]);
+  const [modifiedFields, setModifiedFields] = useState(new Set());
+  const [totalArea, setTotalArea] = useState(0);
 
   const fileInputRef = useRef(null);
 
@@ -67,7 +71,7 @@ export default function ProjectInfoCard(props) {
         })[0]?.id || null;
       setVeredaPfID(pfIDVereda);
 
-      const pfIDMunicipio =
+        const pfIDMunicipio =
         projectData.projectFeatures.filter((item) => {
           return item.featureID === "A_municipio";
         })[0]?.id || null;
@@ -109,7 +113,6 @@ export default function ProjectInfoCard(props) {
         });
 
       setPlanosPredio(planosPredioFiles);
-      console.log(projectData);
 
       setFormData((prevState) => ({
         ...prevState,
@@ -128,6 +131,22 @@ export default function ProjectInfoCard(props) {
       setExecutedOnce(true);
     }
   }, [projectData, user]);
+
+  const getAreaFromPf = (property) => {
+    const area =
+      property.propertyFeatures?.items?.find((item) => item.featureID === "D_area")?.value || "0";
+    return parseFloat(area);
+  };
+
+  useEffect(() => {
+    if (properties.length > 0) {
+      console.log("📌 Propiedades obtenidas en ProjectInfoCard:", properties);
+      const total = properties.reduce((sum, property) => sum + getAreaFromPf(property), 0);
+      console.log("✅ Área total calculada en ProjectInfoCard:", total);
+      setTotalArea(total);
+    }
+  }, [properties]);
+  
 
   const getPlanosPredios = async (data) => {
     let pfIDPlanos = data.projectFeatures
@@ -184,7 +203,6 @@ export default function ProjectInfoCard(props) {
   };
 
   const handleDeleteFile = async (file) => {
-    console.log(file, "file");
     // Eliminar S3
     const getFilePathRegex = /\/projects\/(.+)$/;
     let fileToDeleteName = decodeURIComponent(
@@ -201,7 +219,6 @@ export default function ProjectInfoCard(props) {
     const productFeatureToDelete = {
       id: file.pfId,
     };
-    console.log("productFeatureToDelete:", productFeatureToDelete);
     await API.graphql(
       graphqlOperation(deleteProductFeature, { input: productFeatureToDelete })
     );
@@ -210,7 +227,6 @@ export default function ProjectInfoCard(props) {
     const documentToDelete = {
       id: file.id,
     };
-    console.log("documentToDelete:", documentToDelete);
     await API.graphql(
       graphqlOperation(deleteDocument, { input: documentToDelete })
     );
@@ -220,7 +236,6 @@ export default function ProjectInfoCard(props) {
 
     const updatedProjectDataFiles = updatedProjectData.projectFiles;
     await handleSetContextProjectFile(updatedProjectDataFiles);
-    console.log(updatedProjectDataFiles);
     const planosPredios = await getPlanosPredios(updatedProjectData);
     setPlanosPredio(planosPredios);
   };
@@ -249,7 +264,6 @@ export default function ProjectInfoCard(props) {
         productID: projectData.projectInfo.id,
         value: filesToSave[i].name,
       };
-      console.log("newProductFeature:", newProductFeature);
       const createProductFeatureResponse = await API.graphql(
         graphqlOperation(createProductFeature, { input: newProductFeature })
       );
@@ -287,448 +301,142 @@ export default function ProjectInfoCard(props) {
 
   const handleChangeInputValue = async (e) => {
     const { name, value, files } = e.target;
-    if (name === "projectInfoTitle") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoTitle: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoArea") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoArea: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoDescription") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoDescription: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoCategory") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoCategory: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoLocationVereda") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoLocationVereda: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoLocationMunicipio") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoLocationMunicipio: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoLocationMatricula") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoLocationMatricula: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoLocationFichaCatrastral") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectInfoLocationFichaCatrastral: value,
-      }));
-      return;
-    }
-    if (name === "projectInfoLocationFile") {
-      //const fileToSave = files[0];
-      if (files) {
-        await saveFileOnDB(files);
-      }
-      return;
+  
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  
+    setModifiedFields((prevFields) => new Set(prevFields).add(name));
+  
+    if (name === "projectInfoLocationFile" && files) {
+      await saveFileOnDB(files);
     }
   };
 
-  const handleSaveBtn = async (toSave) => {
+  const handleSaveBtn = async () => {
+    if (modifiedFields.size === 0) {
+      notify({ msg: "No hay cambios para guardar", type: "info" });
+      return;
+    }
+  
     let error = false;
-
-    if (toSave === "projectInfoTitle") {
-      const updatedProduct = {
-        id: projectData.projectInfo.id,
-        name: formData.projectInfoTitle,
-      };
-      await API.graphql(
-        graphqlOperation(updateProduct, {
-          input: updatedProduct,
-        })
-      );
-      handleUpdateContextProjectInfo({ title: formData.projectInfoTitle });
-    }
-
-    if (toSave === "projectInfoDescription") {
-      const updatedProduct = {
-        id: projectData.projectInfo.id,
-        description: formData.projectInfoDescription,
-      };
-      await API.graphql(
-        graphqlOperation(updateProduct, {
-          input: updatedProduct,
-        })
-      );
-      handleUpdateContextProjectInfo({
-        description: formData.projectInfoDescription,
-      });
-    }
-
-    if (toSave === "projectInfoCategory") {
-      const updatedProduct = {
-        id: projectData.projectInfo.id,
-        categoryID: formData.projectInfoCategory,
-      };
-      await API.graphql(
-        graphqlOperation(updateProduct, {
-          input: updatedProduct,
-        })
-      );
-      handleUpdateContextProjectInfo({
-        category: formData.projectInfoCategory,
-      });
-    }
-
-    if (toSave === "projectInfoArea") {
-      if (areaPfID) {
-        const updatedProductFeature = {
-          id: areaPfID,
-          value: formData.projectInfoArea,
-        };
-        await API.graphql(
-          graphqlOperation(updateProductFeature, {
-            input: updatedProductFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          productID: projectData.projectInfo.id,
-          featureID: "D_area",
-          value: formData.projectInfoArea,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createProductFeature, {
-            input: newProductFeature,
-          })
-        );
-        setAreaPfID(response.data.createProductFeature.id);
+  
+    for (let field of modifiedFields) {
+      try {
+        if (field === "projectInfoTitle") {
+          const updatedProduct = { id: projectData.projectInfo.id, name: formData.projectInfoTitle };
+          await API.graphql(graphqlOperation(updateProduct, { input: updatedProduct }));
+          handleUpdateContextProjectInfo({ title: formData.projectInfoTitle });
+        }
+  
+        if (field === "projectInfoDescription") {
+          const updatedProduct = { id: projectData.projectInfo.id, description: formData.projectInfoDescription };
+          await API.graphql(graphqlOperation(updateProduct, { input: updatedProduct }));
+          handleUpdateContextProjectInfo({ description: formData.projectInfoDescription });
+        }
+  
+        if (field === "projectInfoCategory") {
+          const updatedProduct = { id: projectData.projectInfo.id, categoryID: formData.projectInfoCategory };
+          await API.graphql(graphqlOperation(updateProduct, { input: updatedProduct }));
+          handleUpdateContextProjectInfo({ category: formData.projectInfoCategory });
+        }
+  
+        if (field === "projectInfoArea") {
+          if (areaPfID) {
+            const updatedProductFeature = { id: areaPfID, value: formData.projectInfoArea };
+            await API.graphql(graphqlOperation(updateProductFeature, { input: updatedProductFeature }));
+          } else {
+            const newProductFeature = { productID: projectData.projectInfo.id, featureID: "D_area", value: formData.projectInfoArea };
+            const response = await API.graphql(graphqlOperation(createProductFeature, { input: newProductFeature }));
+            setAreaPfID(response.data.createProductFeature.id);
+          }
+          handleUpdateContextProjectInfo({ area: formData.projectInfoArea });
+        }
+  
+      } catch (error) {
+        console.error(`Error al actualizar ${field}:`, error);
+        notify({ msg: `Error al actualizar ${field}`, type: "error" });
+        error = true;
       }
-      handleUpdateContextProjectInfo({ area: formData.projectInfoArea });
     }
-
-    if (toSave === "projectInfoLocationVereda") {
-      if (veredaPfID) {
-        const updatedProductFeature = {
-          id: veredaPfID,
-          value: formData.projectInfoLocationVereda,
-        };
-        await API.graphql(
-          graphqlOperation(updateProductFeature, {
-            input: updatedProductFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          productID: projectData.projectInfo.id,
-          featureID: "A_vereda",
-          value: formData.projectInfoLocationVereda,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createProductFeature, {
-            input: newProductFeature,
-          })
-        );
-        setVeredaPfID(response.data.createProductFeature.id);
-      }
-      handleUpdateContextProjectInfoLocation({
-        vereda: formData.projectInfoLocationVereda,
-      });
+  
+    if (!error) {
+      notify({ msg: "Información actualizada con éxito", type: "success" });
+      setModifiedFields(new Set()); // Limpiar los campos modificados
     }
-
-    if (toSave === "projectInfoLocationMunicipio") {
-      if (municipioPfID) {
-        const updatedProductFeature = {
-          id: municipioPfID,
-          value: formData.projectInfoLocationMunicipio,
-        };
-        await API.graphql(
-          graphqlOperation(updateProductFeature, {
-            input: updatedProductFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          productID: projectData.projectInfo.id,
-          featureID: "A_municipio",
-          value: formData.projectInfoLocationMunicipio,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createProductFeature, {
-            input: newProductFeature,
-          })
-        );
-        setMunicipioPfID(response.data.createProductFeature.id);
-      }
-      handleUpdateContextProjectInfoLocation({
-        municipio: formData.projectInfoLocationMunicipio,
-      });
-    }
-
-    if (toSave === "projectInfoLocationMatricula") {
-      if (matriculaPfID) {
-        const updatedProductFeature = {
-          id: matriculaPfID,
-          value: formData.projectInfoLocationMatricula,
-        };
-        await API.graphql(
-          graphqlOperation(updateProductFeature, {
-            input: updatedProductFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          productID: projectData.projectInfo.id,
-          featureID: "A_matricula",
-          value: formData.projectInfoLocationMatricula,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createProductFeature, {
-            input: newProductFeature,
-          })
-        );
-        setMatriculaPfID(response.data.createProductFeature.id);
-      }
-      handleUpdateContextProjectInfoLocation({
-        matricula: formData.projectInfoLocationMatricula,
-      });
-    }
-
-    if (toSave === "projectInfoLocationFichaCatrastral") {
-      if (fichaPfID) {
-        const updatedProductFeature = {
-          id: fichaPfID,
-          value: formData.projectInfoLocationFichaCatrastral,
-        };
-        await API.graphql(
-          graphqlOperation(updateProductFeature, {
-            input: updatedProductFeature,
-          })
-        );
-      } else {
-        const newProductFeature = {
-          productID: projectData.projectInfo.id,
-          featureID: "A_ficha_catastral",
-          value: formData.projectInfoLocationFichaCatrastral,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createProductFeature, {
-            input: newProductFeature,
-          })
-        );
-        setFichaPfID(response.data.createProductFeature.id);
-      }
-      handleUpdateContextProjectInfoLocation({
-        fichaCatrastal: formData.projectInfoLocationFichaCatrastral,
-      });
-    }
-
-    notify({ msg: "Información actualizada", type: "success" });
   };
-
+  
   return (
     <Card className={className}>
-      <Card.Header
-        title="Información del proyecto"
-        sep={true}
-        tooltip={tooltip}
-      />
+      <Card.Header title="Información del proyecto" sep={true} tooltip={tooltip} />
       <Card.Body>
         <div className="row">
-          <div
-            className={autorizedUser ? "col-12 col-md-12" : "col-12 col-md-6"}
-          >
-            <FormGroup
-              disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
-              label="Nombre del proyecto"
-              inputName="projectInfoTitle"
-              inputValue={formData.projectInfoTitle}
-              saveBtnDisabled={
-                projectData.projectInfo?.title === formData.projectInfoTitle
-                  ? true
-                  : false
-              }
-              onChangeInputValue={(e) => handleChangeInputValue(e)}
-              onClickSaveBtn={() => handleSaveBtn("projectInfoTitle")}
-            />
-          </div>
-          <div
-            className={autorizedUser ? "col-12 col-md-12" : "col-12 col-md-6"}
-          >
-            <div className={className + " mb-3"}>
-              <div className="grid grid-cols-12 gap-4">
-                <label className="col-span-5">Área total (m^2)</label>
-                <div className="col-span-5">
-                  {formatArea(totalArea)}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Nombre del proyecto */}
           <div className="col-12">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
+              label="Nombre del proyecto"
+              inputName="projectInfoTitle"
+              inputValue={formData.projectInfoTitle}
+              onChangeInputValue={handleChangeInputValue}
+            />
+          </div>
+  
+          {/* Área total */}
+          <div className="col-12">
+            <div className="mb-3">
+              <div className="grid grid-cols-12 gap-4">
+                <label className="col-span-5">Área total (m²)</label>
+                <div className="col-span-5">{formatArea(totalArea)}</div>
+              </div>
+            </div>
+          </div>
+  
+          {/* Descripción */}
+          <div className="col-12">
+            <FormGroup
+              disabled={!autorizedUser}
               inputType="textarea"
               label="Descripción"
               inputName="projectInfoDescription"
               inputValue={formData.projectInfoDescription}
-              saveBtnDisabled={
-                projectData.projectInfo?.description ===
-                formData.projectInfoDescription
-                  ? true
-                  : false
-              }
-              onChangeInputValue={(e) => handleChangeInputValue(e)}
-              onClickSaveBtn={() => handleSaveBtn("projectInfoDescription")}
+              onChangeInputValue={handleChangeInputValue}
             />
           </div>
-          <div
-            className={autorizedUser ? "col-12 col-md-12" : "col-12 col-md-6"}
-          >
+  
+          {/* Categoría del proyecto */}
+          <div className="col-12">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
-              label="Categoria del proyecto"
+              label="Categoría del proyecto"
               inputType="radio"
-              optionList={categoryList.map((category) => {
-                return {
-                  label: category,
-                  value: category,
-                };
-              })}
+              optionList={categoryList.map((category) => ({
+                label: category,
+                value: category,
+              }))}
               optionCheckedList={formData.projectInfoCategory}
               inputName="projectInfoCategory"
-              saveBtnDisabled={
-                projectData.projectInfo?.category ===
-                formData.projectInfoCategory
-                  ? true
-                  : false
-              }
-              onChangeInputValue={(e) => handleChangeInputValue(e)}
-              onClickSaveBtn={() => handleSaveBtn("projectInfoCategory")}
+              onChangeInputValue={handleChangeInputValue}
             />
           </div>
-          <div className="col-12">
-            <div
-              className={
-                autorizedUser
-                  ? "row row-cols-1"
-                  : "row row-cols-1 row-cols-md-2"
-              }
-            >
-              {/* <FormGroup
-                disabled={!autorizedUser}
-                type={autorizedUser && "flex"}
-                label="Vereda al que pertenece el Predio"
-                inputName="projectInfoLocationVereda"
-                inputValue={formData.projectInfoLocationVereda}
-                saveBtnDisabled={
-                  projectData.projectInfo?.location.vereda ===
-                  formData.projectInfoLocationVereda
-                    ? true
-                    : false
-                }
-                onChangeInputValue={(e) => handleChangeInputValue(e)}
-                onClickSaveBtn={() =>
-                  handleSaveBtn("projectInfoLocationVereda")
-                }
-              />
-              <FormGroup
-                disabled={!autorizedUser}
-                type={autorizedUser && "flex"}
-                label="Municipio al que pertenece el predio"
-                inputName="projectInfoLocationMunicipio"
-                inputValue={formData.projectInfoLocationMunicipio}
-                saveBtnDisabled={
-                  projectData.projectInfo?.location.municipio ===
-                  formData.projectInfoLocationMunicipio
-                    ? true
-                    : false
-                }
-                onChangeInputValue={(e) => handleChangeInputValue(e)}
-                onClickSaveBtn={() =>
-                  handleSaveBtn("projectInfoLocationMunicipio")
-                }
-              /> */}
-              {/* <div>
-                <div className="mb-3">
-                  <div className="grid grid-cols-12 gap-4">
-                    <label className="col-span-5">
-                      Cargue planos del predio (pueden ser a mano alzada)
-                    </label>
-                    <div className="col-span-5">
-                      {planosPredio.length > 0 ? (
-                        <>
-                          {planosPredio.map((file) => (
-                            <div key={file.id} className="mb-2">
-                              <button
-                                onClick={() => handleDeleteFile(file)}
-                                size="sm"
-                                className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                              >
-                                <XIcon />
-                              </button>
-                              <button
-                                onClick={() =>{handleOpenObject(s3Client, bucketName, file.url)}}
-                              >
-                                {file.nombre}
-                              </button>
-                            </div>
-                          ))}
-                        </>
-                      ) : (
-                        <p className="text-danger">
-                          No se han subido planos de predio
-                        </p>
-                      )}
-                      <input
-                        type="file"
-                        multiple
-                        disabled={!autorizedUser}
-                        ref={fileInputRef}
-                        name="projectInfoLocationFile"
-                        onChange={(e) => handleChangeInputValue(e)}
-                        hidden
-                      />
-                      <button
-                        disabled={!autorizedUser}
-                        onClick={handleUploadButton}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                      >
-                        Cargar nuevo archivo
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
+  
+          {/* Botón de Guardar */}
+          {autorizedUser && (
+            <div className="col-12 text-center mt-4">
+              <button
+                className="px-6 py-2 bg-[#6e6c35] text-white rounded-md hover:bg-green-700 transition-all duration-300"
+                onClick={handleSaveBtn}
+                disabled={modifiedFields.size === 0} // Deshabilitar si no hay cambios
+              >
+                Guardar Cambios
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </Card.Body>
     </Card>
   );
+  
+  
 }

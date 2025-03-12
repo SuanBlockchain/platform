@@ -14,6 +14,7 @@ import {
 } from "../../Constructor/ProjectPage/utils";
 import S3FileManager from "./S3FileManager";
 import { S3ClientProvider } from "context/s3ClientContext";
+import TerrasachaLogo from "components/common/TerrasachaLogo";
 
 export const listDocuments = /* GraphQL */ `
   query ListDocuments(
@@ -223,7 +224,6 @@ class AnalitycsAdmon extends Component {
     };
 
     const renderValidatingProjects = () => {
-      console.log("products", products);
       if (products) {
         return (
           <>

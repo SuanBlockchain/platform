@@ -97,7 +97,6 @@ export default function OwnerInfoCard(props) {
     const { name, value } = e.target;
 
     if (name.includes("owner_")) {
-      console.log("entro");
       const [_, tokenHistoryFeature, tokenHistoryIndex] = name.split("_");
 
       setTokenHistoricalData((prevState) =>
@@ -190,8 +189,6 @@ export default function OwnerInfoCard(props) {
           contentType: "*/*",
         });
 
-        console.log("Archivo seleccionado:", fileToSave);
-        console.log("Archivo subido:", uploadImageResult);
       } catch (error) {
         notify({
           msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
@@ -205,7 +202,6 @@ export default function OwnerInfoCard(props) {
         id: oldDocument.pfID,
         value: fileToSave.name,
       };
-      console.log("updatedProductFeature:", updatedProductFeature);
       await API.graphql(
         graphqlOperation(updateProductFeature, { input: updatedProductFeature })
       );
@@ -230,8 +226,7 @@ export default function OwnerInfoCard(props) {
           contentType: "*/*",
         });
 
-        console.log("Archivo seleccionado:", fileToSave);
-        console.log("Archivo subido:", uploadImageResult);
+
       } catch (error) {
         notify({
           msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
@@ -245,7 +240,7 @@ export default function OwnerInfoCard(props) {
         productID: projectData.projectInfo.id,
         value: fileToSave.name,
       };
-      console.log("newProductFeature:", newProductFeature);
+
       const createProductFeatureResponse = await API.graphql(
         graphqlOperation(createProductFeature, { input: newProductFeature })
       );

@@ -76,18 +76,18 @@ export default function DescriptionValidator(props) {
           disabled={canEdit}
           onChange={handleOnChange}
         />
-        <div className="d-flex justify-content-end mt-3">
+        <div className="d-flex justify-content-center mt-3">
           <button
-            className="p-2 rounded-md text-white bg-green-700"
+            className="p-2 px-4 rounded-md text-white bg-[#6e6c35] border-1 border-dark"
             disabled={
               projectDescription.length === 0 ||
               projectDescription ===
                 projectData.projectVerifierInfo.verifierDescription ||
               canEdit
             }
-            onClick={() => saveVerifierDescription()}
+            onClick={saveVerifierDescription}
           >
-            <SaveDiskIcon />
+            Guardar Cambios
           </button>
         </div>
       </Card.Body>

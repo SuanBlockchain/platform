@@ -154,7 +154,6 @@ export default function PropertiesTable({ editable }) {
             <th className="text-left px-4 py-2 w-60">Identificador catastral</th>
             <th className="text-left px-4 py-2 w-44">Área Total</th>
             <th className="text-left px-4 py-2 w-44">Correo</th>
-            <th className="text-left px-4 py-2 w-32">Estado</th>
             <th className="text-left px-4 py-2 w-32">Acciones</th>
           </tr>
         </thead>
@@ -191,42 +190,7 @@ export default function PropertiesTable({ editable }) {
                     ? userEmails[property.projectPostulant.id] || "N/A"
                     : "********"}
                 </td>
-                {editable ? (
                   <td className="px-4 py-2">
-                    {property.propertyInfo.status === status.PENDING ? (
-                      <DropdownButton title="VALIDACIÓN" variant="secondary">
-                        <Dropdown.Item
-                          onClick={() => handleShowModalAcceptProperty(property)}
-                        >
-                          Validar predio
-                        </Dropdown.Item>
-                      </DropdownButton>
-                    ) : property.propertyInfo.status === status.ACCEPTED ? (
-                      <DropdownButton title="APROBADO" variant="success">
-                        <Dropdown.Item
-                          onClick={() => handleRevokeValidation(property.propertyInfo.id)}
-                        >
-                          Revocar validación
-                        </Dropdown.Item>
-                      </DropdownButton>
-                    ) : (
-                      <DropdownButton title="RECHAZADO" variant="danger">
-                        <Dropdown.Item
-                          onClick={() => handleRevokeValidation(property.propertyInfo.id)}
-                        >
-                          Revocar validación
-                        </Dropdown.Item>
-                      </DropdownButton>
-                    )}
-                  </td>
-                ) : (
-                  <td className="px-4 py-2">
-                    {property.propertyInfo.status === "APPROVED" && "Aceptado"}
-                    {property.propertyInfo.status === "PENDING" && "Pendiente"}
-                    {property.propertyInfo.status === "REJECTED" && "Rechazado"}
-                  </td>
-                )}
-                <td className="px-4 py-2">
                   {property.projectPostulant.id === userId ||
                   property.propertyCampaign.userId === userId ||
                   editable ? (

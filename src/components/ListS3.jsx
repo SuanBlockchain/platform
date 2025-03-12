@@ -53,7 +53,6 @@ const ListS3 = () => {
             setCurrentPath([...currentPath, propertyName])
         } else if (selectedItem.type === 'file') {
             handleDownload(selectedItem.key)
-            console.log(`Archivo ${propertyName}:`, selectedItem)
         }
     }
     const handleClick = (object ,propertyName) => {
@@ -81,7 +80,6 @@ const ListS3 = () => {
     }
     const backToAnyFolder = (path) => {
         const pathToBack = path
-        console.log(pathToBack, "pathToBack")
 
         const index = currentPath.indexOf(pathToBack)
         if (index !== -1) {

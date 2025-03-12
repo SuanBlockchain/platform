@@ -182,6 +182,7 @@ export default class AssignPF extends Component {
     this.state = {
       validators: [],
       products: [],
+      availableProducts: [],
       userProducts: [],
       selectedValidator: "",
       selectedProduct: "",
@@ -242,6 +243,27 @@ export default class AssignPF extends Component {
     }
   }
 
+  handleSelectValidator = (validatorId) => {
+    const { userProducts, products } = this.state;
+  
+    // Obtener los IDs de los productos asignados al consultor seleccionado
+    const assignedProductIds = userProducts
+      .filter((up) => up.user.id === validatorId)
+      .map((up) => up.product.id);
+  
+    // Filtrar productos disponibles
+    const availableProducts = products.filter(
+      (product) => !assignedProductIds.includes(product.id)
+    );
+  
+    this.setState({
+      selectedValidator: validatorId,
+      availableProducts,
+      selectedProduct: "", // Reiniciar selección de producto
+    });
+  };
+  
+
   handleAssignProduct = async () => {
     const { selectedValidator, selectedProduct } = this.state;
 
@@ -264,6 +286,7 @@ export default class AssignPF extends Component {
         showError: false,
       });
       await this.loadUserProducts();
+      this.handleSelectValidator(selectedValidator);
     } catch (error) {
       console.error("Error al asignar Consultor:", error);
     }
@@ -276,6 +299,9 @@ export default class AssignPF extends Component {
       );
       this.setState({ showDeleteSuccess: true });
       await this.loadUserProducts();
+      if (this.state.selectedValidator) {
+        this.handleSelectValidator(this.state.selectedValidator); // Actualizar productos disponibles
+      }
     } catch (error) {
       console.error("Error al eliminar asignación:", error);
     }
@@ -353,15 +379,17 @@ export default class AssignPF extends Component {
   <Form.Select
     value={selectedProduct}
     onChange={(e) => this.setState({ selectedProduct: e.target.value })}
+    disabled={!selectedValidator} // Deshabilitar si no hay consultor seleccionado
   >
     <option value="">-- Seleccione un producto --</option>
-    {products.map((product) => (
+    {this.state.availableProducts.map((product) => (
       <option key={product.id} value={product.id}>
         {product.name} {product.campaign ? `(${product.campaign.name})` : ""}
       </option>
     ))}
   </Form.Select>
 </Form.Group>
+
 
 
             <div className="text-center">
@@ -377,7 +405,7 @@ export default class AssignPF extends Component {
         </Container>
 
         <Container className="bg-white mt-4 p-4 rounded-lg shadow-sm">
-          <h4 className="text-center mb-4">Validadores Asignados</h4>
+          <h4 className="text-center mb-4">Consultores Asignados</h4>
           <Table striped bordered hover>
             <thead>
               <tr>
@@ -409,7 +437,7 @@ export default class AssignPF extends Component {
               ) : (
                 <tr>
                   <td colSpan="3" className="text-center">
-                    No hay validadores asignados.
+                    No hay Consultores asignados.
                   </td>
                 </tr>
               )}

@@ -57,7 +57,6 @@ class InvestorAdmon extends Component {
   }
 
   async componentDidMount() {
-    console.log("componentDidMount");
     const actualUser = await Auth.currentAuthenticatedUser();
     let idUser = actualUser.attributes.sub;
     const variables = {
@@ -73,7 +72,6 @@ class InvestorAdmon extends Component {
     this.loadActualLoggedUser(actualUser);
   }
   checkUser(data) {
-    console.log(data);
     if (data?.getProduct?.productFeatures?.items?.length > 0) {
       if (data.getProduct.productFeatures.items[0].value === undefined)
         return false;
@@ -131,7 +129,6 @@ class InvestorAdmon extends Component {
   }
 
   async changeHeaderNavBarRequest(pRequest) {
-    console.log("changeHeaderNavBarRequest: ", pRequest);
 
     if (pRequest === "investor_profile") {
       this.setState({
@@ -474,7 +471,6 @@ class InvestorAdmon extends Component {
         </Container>
       );
     } else {
-      console.log("null");
       return (
         <Container fluid style={{ paddingTop: 50, minHeight: "100vh" }}>
           <Row>

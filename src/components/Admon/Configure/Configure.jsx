@@ -36,7 +36,6 @@ export default class Configure extends Component {
             level: "public/",
             contentType: "image/jpeg",
           });
-          console.log(uploadImageResult)
           this.cleanState()
 
 

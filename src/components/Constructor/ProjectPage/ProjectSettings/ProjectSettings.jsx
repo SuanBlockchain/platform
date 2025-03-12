@@ -39,7 +39,6 @@ export default function ProjectSettings({ visible }) {
     Auth.currentAuthenticatedUser()
       .then((data) => {
         if (data.attributes["custom:subrole"]) {
-          console.log(data.attributes["custom:subrole"]);
           setValidatorSubRole(data.attributes["custom:subrole"]);
         } else {
           setValidatorSubRole(undefined);
@@ -57,7 +56,6 @@ export default function ProjectSettings({ visible }) {
     const updatedProjectData = await fetchProjectDataByProjectID(
       projectData.projectInfo.id
     );
-    console.log(updatedProjectData, 'updatedProjectData')
     const neededStakeHolders = checkStakeHolders(updatedProjectData.projectFinancialInfo.tokenAmountDistribution.tokenAmountDistribution)
     if (item === "technicalInfo") {
       if (!updatedProjectData.isTechnicalComplete) {

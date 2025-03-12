@@ -4,20 +4,15 @@
     color: white;
     border: 1px solid rgb(77,188,94);
     font-size: 1.1em;
-    background: rgb(77,188,94);
-    background: linear-gradient(45deg, rgba(77,188,94,1) 0%, rgba(3,102,103,1) 100%);
 }
 .normal{
     width: 50%;
     height: 3rem;
     border: 1px solid rgb(77,188,94);
     font-size: 1.1em;
-    color: rgb(77,188,94);
     background: #fff;
     transition: .3s;
 }
 .normal:hover{
     color: white;
-    background: rgb(77,188,94);
-    background: linear-gradient(45deg, rgba(77,188,94,1) 0%, rgba(3,102,103,1) 100%);
 }

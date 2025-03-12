@@ -8,6 +8,8 @@ import {
   Table,
   Modal,
 } from "react-bootstrap";
+import awsconfig from "../../../aws-exports";
+
 
 import { API, graphqlOperation, Auth } from "aws-amplify";
 import {
@@ -56,6 +58,8 @@ class Validators extends Component {
         role: "validator",
         subRole: "financial",
       },
+      errors: {},
+      showErrors: false, 
       showModal: false,
       showModalCreate: false,
       userToDelete: { id: null, username: null },
@@ -136,10 +140,14 @@ class Validators extends Component {
   }
 
   async confirmCreateUser() {
+    if (!this.validateForm()) {
+      return;
+    }
     const { newUser } = this.state;
     if (newUser) {
       await this.handleCRUDUser();
       this.cleanUserOnCreate();
+      this.setState({ showErrors: false });
     }
   }
 
@@ -165,20 +173,70 @@ class Validators extends Component {
     });
     this.setState({ validators: listUsersResult.data.listUsers.items });
   }
-  handleOnChangeInputForm = async (event) => {
-    let tempNewUser = this.state.newUser;
-    if (event.target.name === "newUser.username") {
-      tempNewUser.username = event.target.value;
-    }
-    if (event.target.name === "newUser.email") {
-      tempNewUser.email = event.target.value;
-    }
-    if (event.target.name === "newUser.subRole") {
-      tempNewUser.subRole = event.target.value;
-    }
 
-    this.setState({ newUser: tempNewUser });
+  validateForm = () => {
+    const { username, email } = this.state.newUser;
+    const errors = {};
+  
+    // Validar nombre de usuario
+    if (!username.trim()) {
+      errors.username = "El nombre de usuario es obligatorio.";
+    } else if (username.length < 3) {
+      errors.username = "El nombre de usuario debe tener al menos 3 caracteres.";
+    }
+  
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      errors.email = "El correo electrónico es obligatorio.";
+    } else if (!emailRegex.test(email)) {
+      errors.email = "El correo electrónico no es válido.";
+    }
+  
+    this.setState({ errors, showErrors: true }); // Activar la visualización de errores
+    return Object.keys(errors).length === 0; // Retorna true si no hay errores
   };
+  
+  
+  handleOnChangeInputForm = (e) => {
+    const { name, value } = e.target;
+    this.setState((prevState) => {
+      const updatedUser = {
+        ...prevState.newUser,
+        [name]: value,
+      };
+  
+      // Si se ha intentado enviar el formulario, validar en tiempo real
+      const updatedErrors = { ...prevState.errors };
+      if (prevState.showErrors) {
+        if (name === "username") {
+          if (!value.trim()) {
+            updatedErrors.username = "El nombre de usuario es obligatorio.";
+          } else if (value.length < 3) {
+            updatedErrors.username = "El nombre de usuario debe tener al menos 3 caracteres.";
+          } else {
+            delete updatedErrors.username; // Eliminar el error si es válido
+          }
+        }
+  
+        if (name === "email") {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!value.trim()) {
+            updatedErrors.email = "El correo electrónico es obligatorio.";
+          } else if (!emailRegex.test(value)) {
+            updatedErrors.email = "El correo electrónico no es válido.";
+          } else {
+            delete updatedErrors.email; // Eliminar el error si es válido
+          }
+        }
+      }
+  
+      return { newUser: updatedUser, errors: updatedErrors };
+    });
+  };
+  
+  
+
   async handleCRUDUser() {
     let tempNewUser = this.state.newUser;
     await this.signUp(
@@ -203,6 +261,7 @@ class Validators extends Component {
         subRole: "financial",
       },
       showModalCreate: false,
+      errors: {},
     });
   }
   async signUp() {
@@ -227,13 +286,13 @@ class Validators extends Component {
     }
   }
   render() {
-    let { validators, newUser } = this.state;
+    let { validators, newUser, errors } = this.state;
 
     const renderValidators = () => {
       if (validators.length > 0) {
         return (
           <div className="container mx-auto mt-8 bg-white p-4 rounded-lg shadow-sm mb-4">
-            <h4 className="text-lg font-semibold mb-4">Lista Validadores</h4>
+            <h4 className="text-lg font-semibold mb-4">Lista Consultores</h4>
             <div className="overflow-x-auto">
               <table className="table-auto w-full">
                 <thead>
@@ -262,12 +321,7 @@ class Validators extends Component {
                       </td>
                       <td className="border px-4 py-2">
                         <button
-                          className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ${
-                            !validator.isProfileUpdated
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                          }`}
-                          disabled={!validator.isProfileUpdated}
+                          className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded`}
                           onClick={() =>
                             this.showModalDelete({
                               id: validator.id,
@@ -289,7 +343,7 @@ class Validators extends Component {
     };
 
     return (
-      <div className="container mx-auto ">
+      <div className="container-fluid bg-tecnologia p-5" id="tecnologia">
         <div className="mt-8 bg-white p-4 rounded-lg shadow-sm mb-4">
           <h4 className="text-lg">Crear un nuevo consultor</h4>
           <form className="mt-4">
@@ -299,27 +353,35 @@ class Validators extends Component {
               </label>
               <input
                 type="text"
-                placeholder="Username"
-                id="formGridUsername"
-                name="newUser.username"
+                id="username"
+                name="username"
                 value={newUser.username}
-                onChange={(e) => this.handleOnChangeInputForm(e)}
-                className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+                onChange={this.handleOnChangeInputForm}
+                className={`block w-full border ${
+                  errors.username ? "border-red-500" : "border-gray-300"
+                } rounded px-3 py-2 mt-1 focus:outline-none`}
               />
-            </div>
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+              )}
+              </div>
             <div className="mb-4">
               <label htmlFor="formGridEmail" className="block font-semibold">
                 Email
               </label>
               <input
-                type="text"
-                placeholder="Email"
-                id="formGridEmail"
-                name="newUser.email"
+                type="email"
+                id="email"
+                name="email"
                 value={newUser.email}
-                onChange={(e) => this.handleOnChangeInputForm(e)}
-                className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+                onChange={this.handleOnChangeInputForm}
+                className={`block w-full border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } rounded px-3 py-2 mt-1 focus:outline-none`}
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}    
             </div>
             <div className="mb-4">
               <label
@@ -330,7 +392,7 @@ class Validators extends Component {
               </label>
               <select
                 id="formGridValidatorType"
-                name="newUser.subRole"
+                name="subRole"
                 value={newUser.subRole}
                 onChange={(e) => this.handleOnChangeInputForm(e)}
                 className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
@@ -366,20 +428,22 @@ class Validators extends Component {
               onClick={() => this.setState({ showModal: false })}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="button"
               onClick={() => this.confirmDeleteUser()}
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
             >
-              Delete
+              Eliminar 
             </button>
           </Modal.Footer>
         </Modal>
         <Modal
           show={this.state.showModalCreate}
           onHide={() => this.setState({ showModalCreate: false })}
+          size="lg"
+          style={{ maxWidth: "fit-content", margin: "auto", position:"absolute", left:"25%" }} 
         >
           <Modal.Header closeButton>
             <Modal.Title>Confirmar datos de nuevo usuario</Modal.Title>
@@ -423,7 +487,7 @@ class Validators extends Component {
             <button
               type="button"
               onClick={() => this.confirmCreateUser()}
-              className="bg-green-700 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-[#6e6c35] border-1 border-dark hover:bg-[#6e6c35] border-1 border-dark text-white font-bold py-2 px-4 rounded"
             >
               Confirmar
             </button>

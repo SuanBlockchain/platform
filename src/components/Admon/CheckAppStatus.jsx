@@ -50,7 +50,6 @@ const AppTable = () => {
       try {
         setLoading(true);
         const [admins, apps] = await Promise.all([loadAdmins(), fetchData()]);
-        console.log(admins, 'admins')
         const linkedData = await linkAdminsToApps(apps, admins);
         setData(linkedData);
       } catch (err) {

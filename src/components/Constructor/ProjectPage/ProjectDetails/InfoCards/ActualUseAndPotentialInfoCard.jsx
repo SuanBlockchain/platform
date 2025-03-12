@@ -161,7 +161,6 @@ export default function ActualUseAndPotentialInfoCard(props) {
           id: usesPfID,
           value: `[${values.join(", ")}]`,
         };
-        console.log("newProductFeature:", updatedProductFeature);
         await API.graphql(
           graphqlOperation(updateProductFeature, {
             input: updatedProductFeature,
@@ -173,7 +172,6 @@ export default function ActualUseAndPotentialInfoCard(props) {
           productID: projectData.projectInfo.id,
           value: `[${values.join(", ")}]`,
         };
-        console.log("newProductFeature:", newProductFeature);
         const response = await API.graphql(
           graphqlOperation(createProductFeature, { input: newProductFeature })
         );
@@ -592,7 +590,7 @@ export default function ActualUseAndPotentialInfoCard(props) {
         {autorizedUser && (
           <div className="d-flex justify-content-center">
             <button
-              className="p-2 text-white bg-green-700 rounded-md"
+              className="p-2 text-white bg-[#6e6c35] border-1 border-dark rounded-md"
               onClick={() => handleSaveBtn()}
             >
               Guardar

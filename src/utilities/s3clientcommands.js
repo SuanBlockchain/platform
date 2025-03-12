@@ -47,16 +47,13 @@ export const copyOnPublic = async (s3Client, bucketName, pathArr) => {
   let sourceFile = pathArr.join('/');
   pathArr.splice(2, 0, "public")
   const destionationPath = pathArr.join("/")
-  console.log(destionationPath,'destionationPath')
     try {
         const copyParams = {
             Bucket: bucketName,
             CopySource: `${bucketName}/${sourceFile}`,
             Key: destionationPath,
         };
-        console.log(copyParams, 'copyParams')
         await s3Client.send(new CopyObjectCommand(copyParams));
-        console.log(`File copied to ${destionationPath}`);
   
         return true
     } catch (error) {
@@ -66,13 +63,11 @@ export const copyOnPublic = async (s3Client, bucketName, pathArr) => {
 
 
 export const uploadToPublic = async (s3Client, bucketName, pathArr, copy) => {
-  console.log(pathArr)
   if(copy){
     copyOnPublic(s3Client, bucketName, pathArr)
   }else{
     pathArr.splice(2, 0, "public")
     const fileOnPublicPath = pathArr.join("/")
-    console.log(fileOnPublicPath,'fileOnPublicPath')
     
     const deleteParams = {
       Bucket: bucketName,
@@ -98,7 +93,6 @@ export const uploadFile = async (s3Client, bucketName, urlPath, file) =>{
 
   try {
     const uploadImageResult = await s3Client.send(command);
-    console.log("Archivo subido:", uploadImageResult);
   } catch (error) {
     console.error(error)
   }
@@ -111,7 +105,6 @@ export const deleteFile = async (s3Client, bucketName, urlPath) =>{
         Key: urlPath,
     };
     await s3Client.send(new DeleteObjectCommand(deleteParams));
-    console.log(`File deleted from ${urlPath}`);
     return { status: 'success', msg: 'Borrado exitoso', urlPath };
 } catch (error) {
     return { status: 'error', msg: 'Error al borrar el archivo', urlPath: null };

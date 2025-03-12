@@ -226,10 +226,13 @@ export const getUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -761,10 +764,13 @@ export const getVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1138,10 +1144,13 @@ export const getDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1788,10 +1797,13 @@ export const getCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1863,6 +1875,8 @@ export const getProperty = /* GraphQL */ `
     getProperty(id: $id) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -2074,6 +2088,71 @@ export const getProperty = /* GraphQL */ `
         updatedAt
         __typename
       }
+      userLegalID
+      userLegal {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
       propertyFeatures {
         items {
           id
@@ -2150,6 +2229,8 @@ export const listProperties = /* GraphQL */ `
       items {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -2205,6 +2286,25 @@ export const listProperties = /* GraphQL */ `
           updatedAt
           __typename
         }
+        userLegalID
+        userLegal {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
         propertyFeatures {
           nextToken
           __typename
@@ -2233,6 +2333,8 @@ export const getPropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -2271,6 +2373,25 @@ export const getPropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -2421,10 +2542,13 @@ export const listPropertyFeatures = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2829,10 +2953,13 @@ export const getProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -6814,6 +6941,15 @@ export const verificationsByUserVerifierID = /* GraphQL */ `
           __typename
         }
         verificationComments {
+          items {
+            id
+            comment
+            isCommentByVerifier
+            verificationID
+            createdAt
+            updatedAt
+            __typename
+          }
           nextToken
           __typename
         }
@@ -6913,6 +7049,15 @@ export const verificationsByUserVerifiedID = /* GraphQL */ `
           __typename
         }
         verificationComments {
+          items {
+            id
+            comment
+            isCommentByVerifier
+            verificationID
+            createdAt
+            updatedAt
+            __typename
+          }
           nextToken
           __typename
         }
@@ -7491,6 +7636,8 @@ export const propertiesByProductID = /* GraphQL */ `
       items {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -7529,6 +7676,25 @@ export const propertiesByProductID = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -7579,6 +7745,8 @@ export const propertiesByCampaignID = /* GraphQL */ `
       items {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -7634,6 +7802,25 @@ export const propertiesByCampaignID = /* GraphQL */ `
           updatedAt
           __typename
         }
+        userLegalID
+        userLegal {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
         propertyFeatures {
           nextToken
           __typename
@@ -7667,6 +7854,8 @@ export const propertiesByUserID = /* GraphQL */ `
       items {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -7705,6 +7894,134 @@ export const propertiesByUserID = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        propertyFeatures {
+          nextToken
+          __typename
+        }
+        status
+        reason
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const propertiesByUserLegalID = /* GraphQL */ `
+  query PropertiesByUserLegalID(
+    $userLegalID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelPropertyFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    propertiesByUserLegalID(
+      userLegalID: $userLegalID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        description
+        department
+        cadastralNumber
+        productID
+        product {
+          id
+          name
+          description
+          isActive
+          isActiveOnPlatform
+          showOn
+          order
+          status
+          timeOnVerification
+          projectReadiness
+          tokenClaimedByOwner
+          tokenGenesis
+          categoryID
+          marketplaceID
+          campaignID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaignID
+        campaign {
+          id
+          userID
+          name
+          description
+          initialDate
+          endDate
+          available
+          images
+          createdAt
+          updatedAt
+          __typename
+        }
+        userID
+        user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -7763,10 +8080,13 @@ export const propertyFeaturesByPropertyID = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -7838,10 +8158,13 @@ export const propertyFeaturesByFeatureID = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt

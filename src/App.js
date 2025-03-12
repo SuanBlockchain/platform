@@ -33,11 +33,16 @@ import PQRForm from "components/views/landingPage/PQRForm";
 import Property from "components/Property/Property";
 import { PropertyDataProvider } from "context/PropertyDataContext";
 import AnalitycsAdmon from "components/Admon/Analitic/AnalitycsAdmon";
+import './App.css';
+import { S3ClientProvider } from "context/s3ClientContext";
+import LegalAdmon from "components/Legal/LegalAdmon";
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+      <div className="app-container">
+      <div className="main-content">
         <Routes>
           <Route path="/" element={<LandingPage />} exact />
           <Route
@@ -51,7 +56,7 @@ function App() {
                 <ProjectPage />
               </ProjectDataProvider>
               </RoleMiddleware>
-            }
+            } 
             exact
           />
           <Route path="/admindash" element={<Dashboard />} exact />
@@ -68,7 +73,7 @@ function App() {
             exact
           />
           <Route path="/products" element={<Products />} />
-          <Route path="/PQR" element={<PQRForm />} />
+          <Route path="/PQRS" element={<PQRForm />} />
           <Route
             path="/products/:id"
             element={
@@ -118,10 +123,18 @@ function App() {
             }
           />
           <Route
-            path="/validator_admon"
+            path="/consultor_admon"
             element={
               <RoleMiddleware allowedRoles={["validator"]} redirectPath="/">
                 <ValidatorAdmon />
+              </RoleMiddleware>
+            }
+          />
+          <Route
+            path="/legal_admon"
+            element={
+              <RoleMiddleware allowedRoles={["legal"]} redirectPath="/">
+                <LegalAdmon />
               </RoleMiddleware>
             }
           />
@@ -139,12 +152,17 @@ function App() {
             path="/property/:id"
             element={
               <RoleMiddleware
-                allowedRoles={["constructor", "admon", "investor", "validator"]}
+                allowedRoles={["constructor", "admon", "investor", "validator", "legal"]}
                 redirectPath="/"
               >
+                
+                <ProjectDataProvider>
                 <PropertyDataProvider>
+                <S3ClientProvider>
                   <Property/>
+                </S3ClientProvider>
                 </PropertyDataProvider>
+                </ProjectDataProvider>
               </RoleMiddleware>
             }
             exact
@@ -160,7 +178,9 @@ function App() {
           {/* <Route path="/lists3" element={<ListS3 />} /> */}
           <Route path="/*" element={<Error />} />
         </Routes>
+        </div>
         <Footer />
+        </div>
       </BrowserRouter>
     </AuthProvider>
   );

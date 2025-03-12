@@ -226,10 +226,13 @@ export const onCreateUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -470,10 +473,13 @@ export const onUpdateUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -714,10 +720,13 @@ export const onDeleteUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1437,10 +1446,13 @@ export const onCreateVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1718,10 +1730,13 @@ export const onUpdateVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1999,10 +2014,13 @@ export const onDeleteVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2437,10 +2455,13 @@ export const onCreateDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2645,10 +2666,13 @@ export const onUpdateDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2853,10 +2877,13 @@ export const onDeleteDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -3812,10 +3839,13 @@ export const onCreateCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -3934,10 +3964,13 @@ export const onUpdateCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -4056,10 +4089,13 @@ export const onDeleteCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -4080,6 +4116,8 @@ export const onCreateProperty = /* GraphQL */ `
     onCreateProperty(filter: $filter) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -4223,6 +4261,71 @@ export const onCreateProperty = /* GraphQL */ `
       }
       userID
       user {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userLegalID
+      userLegal {
         id
         name
         dateOfBirth
@@ -4316,6 +4419,8 @@ export const onUpdateProperty = /* GraphQL */ `
     onUpdateProperty(filter: $filter) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -4522,6 +4627,71 @@ export const onUpdateProperty = /* GraphQL */ `
         updatedAt
         __typename
       }
+      userLegalID
+      userLegal {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
       propertyFeatures {
         items {
           id
@@ -4552,6 +4722,8 @@ export const onDeleteProperty = /* GraphQL */ `
     onDeleteProperty(filter: $filter) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -4695,6 +4867,71 @@ export const onDeleteProperty = /* GraphQL */ `
       }
       userID
       user {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userLegalID
+      userLegal {
         id
         name
         dateOfBirth
@@ -4798,6 +5035,8 @@ export const onCreatePropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -4836,6 +5075,25 @@ export const onCreatePropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -4979,6 +5237,8 @@ export const onUpdatePropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -5017,6 +5277,25 @@ export const onUpdatePropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -5160,6 +5439,8 @@ export const onDeletePropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -5198,6 +5479,25 @@ export const onDeletePropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -5685,10 +5985,13 @@ export const onCreateProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -6063,10 +6366,13 @@ export const onUpdateProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -6441,10 +6747,13 @@ export const onDeleteProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt

@@ -16,6 +16,10 @@ import { formatArea } from "../ProjectPage/mappers";
 import { onUpdateProperty } from "graphql/subscriptions";
 import { WindowFullscreen } from "react-bootstrap-icons";
 import ModalEditImage from "./ModalEditImage";
+import Imagen from "../../common/_images/Campaña.png";
+import ModalAssignProperty from "./ModalAssignProperty";
+
+
 
 export default function Campaign() {
   const [campaign, setCampaign] = useState(null);
@@ -30,6 +34,8 @@ export default function Campaign() {
   const [registeredProperties, setRegisteredProperties] = useState(0);
   const [chosenProperties, setChosenProperties] = useState(0);
   const [totalChosenProperties, setTotalChosenProperties] = useState(0);
+  const [showModalAssignProperty, setShowModalAssignProperty] = useState(false);
+
 
   const handleCloseNewProperty = () => setShowModalNewProperty(false);
   const handleShowNewProperty = () => setShowModalNewProperty(true);
@@ -59,7 +65,6 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
     try {
       const data = await API.graphql(graphqlOperation(getCampaign, { id }));
 
-      console.log(data.data.getCampaign);
       setCampaign(data.data.getCampaign);
       const campaign = data.data.getCampaign;
       const product = campaign.products.items[0];
@@ -69,7 +74,6 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
         .map((userProduct) => {
           return { id: userProduct.user.id, name: userProduct.user.name };
         });
-      console.log("campaign", campaign);
       setRegisteredProperties(campaign.properties.items.length);
       setChosenProperties(
         campaign.properties.items.filter((camp) => camp.status === "APPROVED")
@@ -168,7 +172,11 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
           <article className="flex flex-col lg:flex-row gap-8">
           <div className="relative w-full lg:w-1/2 flex justify-center items-center">
   <img
-    src={JSON.parse(campaign.images)[0]}
+    src={
+      campaign.images && JSON.parse(campaign.images).length > 0
+        ? JSON.parse(campaign.images)[0] 
+        : Imagen 
+    }
     alt="Imagen de la campaña"
     className="object-cover w-full h-auto rounded-lg shadow-md"
   />
@@ -236,53 +244,68 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
                 ))}
               </div>
 
-              <div className="mt-6">
-                {campaign.available ? (
-                  <button
-                    onClick={() => 
-                      editable
-                        ? handleShowEndCampaign()
-                        : userLogged
-                        ? handleShowNewProperty()
-                        : redirectToLoginPage(campaign.id)
-                    }
-                    className={`w-full lg:w-3/6 py-3 font-semibold rounded-md text-white shadow-md transition-all duration-300 ${
-                      editable
-                        ? "bg-red-500 hover:bg-red-600"
-                        : "bg-green-500 hover:bg-green-600"
-                    }`}
-                  >
-                    {editable ? "Cerrar convocatoria ahora" : "Postular predio"}
-                  </button>
-                ) : (
-                  <>
-                    <div className="bg-gray-400 py-3 font-semibold text-white text-center rounded-md shadow-md">
-                      Convocatoria cerrada
-                    </div>
-                    <button
-                      onClick={() =>
-                        handleClickSeeProject(campaign.products.items[0].id)
-                      }
-                      className="w-full lg:w-3/6 mt-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md shadow-md transition-all"
-                    >
-                      Ver proyecto
-                    </button>
-                  </>
-                )}
-              </div>
+              <div className="mt-6 flex flex-col lg:flex-row gap-4">
+  {campaign.available ? (
+    <>
+      {/* Botón de Cerrar Convocatoria */}
+      <button
+        onClick={() => 
+          editable
+            ? handleShowEndCampaign()
+            : userLogged
+            ? handleShowNewProperty()
+            : redirectToLoginPage(campaign.id)
+        }
+        className={`w-full lg:w-3/6 py-3 font-semibold rounded-md text-white shadow-md transition-all duration-300 ${
+          editable
+            ? "bg-red-500 hover:bg-red-600"
+            : "bg-green-500 hover:bg-green-600"
+        }`}
+      >
+        {editable ? "Cerrar convocatoria ahora" : "Postular predio"}
+      </button>
+
+      {/* 🔹 Botón de Asignar Predio (Solo si el usuario es el dueño de la campaña) */}
+      {/* {editable && (
+        <button
+          onClick={() => setShowModalAssignProperty(true)}
+          className="w-full lg:w-3/6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md shadow-md transition-all"
+        >
+          Asignar Predio
+        </button>
+      )} */}
+    </>
+  ) : (
+    <>
+      {/* Estado cuando la convocatoria está cerrada */}
+      <div className="bg-gray-400 py-3 font-semibold text-white text-center rounded-md shadow-md">
+        Convocatoria cerrada
+      </div>
+      <button
+        onClick={() =>
+          handleClickSeeProject(campaign.products.items[0].id)
+        }
+        className="w-full lg:w-3/6 mt-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md shadow-md transition-all"
+      >
+        Ver proyecto
+      </button>
+    </>
+  )}
+</div>
+
             </section>
           </article>
 
           {projectVerifiers.length > 0 && (
             <section className="mt-8">
               <h3 className="text-md font-semibold text-gray-700 mb-4">
-                Validadores asignados:
+              Consultor de la campaña
               </h3>
               <div className="flex flex-wrap gap-3">
                 {projectVerifiers.map((pvn, index) => (
                   <div
                     key={index}
-                    className="bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-md shadow"
+                      className="bg-[#74742c] text-white text-sm font-medium px-4 py-2 rounded-md shadow"
                   >
                     Consultor {index + 1}: {pvn.name}
                   </div>
@@ -333,6 +356,20 @@ const handleCloseEditImage = () => setShowModalEditImage(false);
 />
 
       <ToastContainer />
+      <ModalAssignProperty
+  showModal={showModalAssignProperty}
+  handleClose={() => setShowModalAssignProperty(false)}
+  campaignId={campaign.id}
+  fetchCampaign={fetchCampaign}
+/>
+
+      <ModalAssignProperty
+  showModal={showModalAssignProperty}
+  handleClose={() => setShowModalAssignProperty(false)}
+  campaignId={campaign.id}
+  fetchCampaign={fetchCampaign}
+/>
+
     </div>
   );
 }

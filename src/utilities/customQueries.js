@@ -446,6 +446,13 @@ query ListProperties(
       items {
         id
         name
+        description
+        userLegalID
+        userLegal {
+          id
+          name
+        }
+        department
         userID
         productID
         product {
@@ -470,6 +477,7 @@ query ListProperties(
             documents {
               items {
                 id
+                data
                 status
                 signed
                 signedHash
@@ -508,7 +516,7 @@ query ListProperties(
       nextToken
     }
   }
-  `
+`;
 
   export const getCampaign = /* GraphQL */ `
   query GetCampaign($id: ID!) {

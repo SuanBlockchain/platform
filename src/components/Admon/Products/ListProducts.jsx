@@ -67,7 +67,10 @@ export default class ListProducts extends Component {
       this.handleHideModalProductImages.bind(this);
     this.handleDeleteProductFeature =
       this.handleDeleteProductFeature.bind(this);
+    this.checkRequirementsCompleted = this.checkRequirementsCompleted.bind(this);
+    this.ProductAction = this.ProductAction.bind(this);
   }
+  
   componentDidMount = async () => {
     await this.loadProductFeatureResults();
   };
@@ -247,7 +250,6 @@ export default class ListProducts extends Component {
         // Check if the product is associated with a campaign
         const campaign = productFeature.product.campaign;
         if (campaign) {
-          console.log("Deleting campaign:", campaign.id, campaign.name);
   
           // Delete the campaign
           const inputCampaignToDelete = {
@@ -259,7 +261,6 @@ export default class ListProducts extends Component {
             })
           );
   
-          console.log("Campaign deleted successfully:", campaign.name);
         }
   
         this.handleHideModalDeleteProductFeatureConfirmation();
@@ -297,6 +298,84 @@ export default class ListProducts extends Component {
       theme: "light",
     });
   };
+
+  checkRequirementsCompleted = (product) => {
+    const features = product.productFeatures.items;
+  
+    // Validar información del postulante
+    const hasApplicantInfo = ["A_postulante_name", "A_postulante_email", "A_postulante_id"].every((id) =>
+      features.some((feature) => feature.featureID === id && feature.value)
+    );
+  
+    // Validar aceptación de condiciones financieras
+    const ownerAcceptsConditions = features.some(
+      (feature) => feature.featureID === "GLOBAL_OWNER_ACCEPTS_CONDITIONS" && feature.value === "true"
+    );
+  
+    // Validar verificación de documentos
+    const hasValidatedDocuments = features.some(
+      (feature) =>
+        feature.featureID === "GLOBAL_PROJECT_VALIDATOR_FILES" &&
+        feature.documents.items.some((doc) => doc.isApproved)
+    );
+  
+    // Validar oficialización de información técnica
+    const hasTechnicalApproval = features.some(
+      (feature) =>
+        feature.featureID === "GLOBAL_VALIDATOR_SET_TECHNICAL_CONDITIONS" &&
+        feature.value === "true"
+    );
+  
+    // Validar oficialización de información financiera
+    const hasFinancialApproval = features.some(
+      (feature) =>
+        feature.featureID === "GLOBAL_VALIDATOR_SET_FINANCIAL_CONDITIONS" &&
+        feature.value === "true"
+    );
+  
+    // Validar distribución de tokens
+    const hasTokenDistribution = features.some(
+      (feature) => feature.featureID === "GLOBAL_TOKEN_AMOUNT_DISTRIBUTION" && feature.value
+    );
+  
+    // Validar publicación en el Marketplace
+    const isVisibleOnMarketplace = product.isActive ;
+  
+    // Evaluar todos los requisitos
+    return (
+      hasApplicantInfo &&
+      ownerAcceptsConditions &&
+      hasValidatedDocuments &&
+      hasTechnicalApproval &&
+      hasFinancialApproval &&
+      hasTokenDistribution &&
+      isVisibleOnMarketplace
+    );
+  };
+  
+  
+  // Mostrar o no el botón
+  ProductAction = ({ product }) => {
+    const canBeDeleted = !this.checkRequirementsCompleted(product);
+  
+    return canBeDeleted ? (
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={() =>
+          this.setState({
+            showModalDeleteProduct: true,
+            selectedProductToShow: product,
+          })
+        }
+      >
+        Eliminar
+      </Button>
+    ) : null;
+  };
+  
+  
+  
   // RENDER
   render() {
     let { products, urlS3Image, listPF } = this.props;
@@ -313,7 +392,6 @@ export default class ListProducts extends Component {
       selectedProductFeatureToDeleteHasVerifications,
       selectedProductFeatureToDeleteHasVerificationComments,
     } = this.state;
-    console.log("que trae",selectedProductToShow)
     // Render Products
     let productsData = products.map((product) => {
       product.toCertified = false;
@@ -341,41 +419,26 @@ export default class ListProducts extends Component {
           <Table striped bordered hover>
             <thead>
               <tr>
-                <th>Delete</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Description</th>
-                <th>Images</th>
-                <th>Product Features</th>
-                <th>Verifications</th>
+                <th>Eliminar</th>
+                <th>Nombre</th>
+                <th>Categoria</th>
+                <th>Estadp</th>
+                <th>Descripción</th>
+                <th>Imagen</th>
+                <th>Características</th>
+                <th>Verificaciones</th>
                 <th>Oficialización Técnica</th>
                 <th>Oficialización Financiera</th>
-                <th>Is Active</th>
-                <th>Action</th>
-                <th>Certify</th>
+                <th>¿Está activo?</th>
+                <th>Acción</th>
+                <th>Certificado</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
                 <tr key={product.id}>
                   <td>
-                    {product.unverified ? (
-                      <Button
-                        variant={"danger"}
-                        size="sm"
-                        onClick={(e) =>
-                          this.setState({
-                            showModalDeleteProduct: true,
-                            selectedProductToShow: product,
-                          })
-                        }
-                      >
-                        Delete
-                      </Button>
-                    ) : (
-                      ""
-                    )}
+                  {this.ProductAction({ product })}
                   </td>
                   <td>
                     <a
@@ -430,7 +493,7 @@ export default class ListProducts extends Component {
                         )
                       }
                     >
-                      Description
+                      Descripción
                     </Button>
                     {/* {product.description} */}
                   </td>
@@ -446,7 +509,7 @@ export default class ListProducts extends Component {
                         )
                       }
                     >
-                      Images
+                      Imagen
                     </Button>
                   </td>
                   <td>
@@ -461,7 +524,7 @@ export default class ListProducts extends Component {
                         )
                       }
                     >
-                      Product Features
+                      Características del producto
                     </Button>
                   </td>
                   <td>
@@ -476,7 +539,7 @@ export default class ListProducts extends Component {
                         )
                       }
                     >
-                      Verifications
+                      Verification
                     </Button>
                   </td>
                   <td>
@@ -528,8 +591,8 @@ export default class ListProducts extends Component {
                       onClick={(e) => this.handleLoadEditProduct(product, e)}
                     >
                       {product.status === "on_block_chain"
-                        ? "Can not Edit"
-                        : "Edit"}
+                        ? "No se puede editar"
+                        : "Editar"}
                     </Button>
                   </td>
                   <td>
@@ -634,7 +697,6 @@ export default class ListProducts extends Component {
           }
         }
         if (productFeaturesCopy.length > 0) {
-          console.log(productFeaturesCopy, "productFeaturesCopy");
           return (
             <Modal
               show={isRenderModalProductFeatures}
@@ -751,23 +813,31 @@ export default class ListProducts extends Component {
                 variant="secondary"
                 onClick={() => this.setState({ showModalDeleteProduct: false })}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button
-                variant="danger"
-                onClick={async () => {
-                  try {
-                    await deleteAllInfoProduct(this.state.selectedProductToShow);
-                    this.setState({ showModalDeleteProduct: false });
-                    this.notify("Producto eliminado exitosamente.");
-                  } catch (error) {
-                    console.error("Error al eliminar el producto:", error);
-                    this.notifyError("Error al eliminar el producto. Intente nuevamente.");
-                  }
-                }}
-              >
-                Delete
-              </Button>
+            variant="danger"
+            disabled={this.state.isLoading} // Deshabilitar durante la carga
+            onClick={async () => {
+              this.setState({ isLoading: true }); // Iniciar carga
+              try {
+                await deleteAllInfoProduct(this.state.selectedProductToShow);
+                this.setState({
+                  showModalDeleteProduct: false,
+                  isLoading: false, // Finalizar carga
+                });
+                this.notify("Producto eliminado exitosamente.");
+              } catch (error) {
+                console.error("Error al eliminar el producto:", error);
+                this.setState({ isLoading: false }); // Finalizar carga en caso de error
+                this.notifyError(
+                  "Error al eliminar el producto. Intente nuevamente."
+                );
+              }
+            }}
+          >
+            {this.state.isLoading ? "Confirmando..." : "Confirmar"}
+          </Button>
             </Modal.Footer>
           </Modal>
         );
@@ -798,7 +868,6 @@ export default class ListProducts extends Component {
           }
         }
         if (productFeaturesCopy.length > 0) {
-          console.log(productFeaturesCopy);
           return (
             <Modal
               show={isRenderModalVerifications}
@@ -958,7 +1027,7 @@ export default class ListProducts extends Component {
     };
     return (
       <>
-        <h1>Product List</h1>
+        <h1>Lista de proyectos</h1>
         {renderProducts()}
         {modalProductImages()}
         {modalProductFeatures()}
