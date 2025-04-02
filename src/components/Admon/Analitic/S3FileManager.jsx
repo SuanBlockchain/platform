@@ -175,7 +175,6 @@ const S3FileManager = ({ userId, products }) => {
       });
 
       await s3Client.send(command);
-      console.log(`Archivo ${key} subido correctamente.`);
     } catch (error) {
       console.error(`Error al subir el archivo pequeño (${key}):`, error);
       throw error;
@@ -271,7 +270,6 @@ const S3FileManager = ({ userId, products }) => {
   const pauseUpload = (key) => {
     if (activeUploads.has(key)) {
       activeUploads.get(key).paused = true;
-      console.log(`Carga pausada para ${key}`);
     }
   };
 
@@ -279,7 +277,6 @@ const S3FileManager = ({ userId, products }) => {
   const resumeUpload = (key) => {
     if (activeUploads.has(key)) {
       activeUploads.get(key).paused = false;
-      console.log(`Carga reanudada para ${key}`);
     }
   };
 
@@ -290,7 +287,6 @@ const S3FileManager = ({ userId, products }) => {
       const { uploadId } = activeUploads.get(key);
       await abortMultipartUpload(key, uploadId);
       activeUploads.delete(key);
-      console.log(`Carga cancelada para ${key}`);
     }
   };
 
@@ -501,7 +497,7 @@ const S3FileManager = ({ userId, products }) => {
           >
             <AddFolderIcon />
           </button>
-          <label className="p-2 text-white bg-blue-600 rounded-md">
+          <label className="p-2 text-white bg-blue-600 rounded-md" style={{backgroundColor:"#74742c"}}>
             Subir Carpeta
             <input
               type="file"
@@ -511,7 +507,7 @@ const S3FileManager = ({ userId, products }) => {
               className="hidden"
             />
           </label>
-          <label className="p-2 text-white bg-blue-600 rounded-md">
+          <label className="p-2 text-white bg-blue-600 rounded-md" style={{backgroundColor:"#74742c"}}  >
             Subir Archivos
             <input
               type="file"
@@ -552,7 +548,6 @@ const S3FileManager = ({ userId, products }) => {
           {items
             .filter((obj) => obj.name !== "")
             .map((item, index) => {
-              console.log("item", item);
               const fileUrl = `https://${bucketName}.s3.amazonaws.com/${item.Key}`;
               return (
                 <tr

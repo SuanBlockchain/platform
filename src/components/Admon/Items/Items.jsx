@@ -23,7 +23,7 @@ class Items extends Component {
     super(props);
     this.state = {
       categorys: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newCategory: { name: "", type: "" },
     };
@@ -113,12 +113,10 @@ class Items extends Component {
   async handleCRUDCategory() {
     let tempNewCategory = this.state.newCategory;
 
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       const response = await API.graphql(
         graphqlOperation(createProductItem, { input: tempNewCategory })
       );
-      console.log(tempNewCategory);
-      console.log(response);
       await this.cleanCategoryOnCreate();
     }
 
@@ -173,9 +171,6 @@ class Items extends Component {
           })
         );
       });
-      console.log("oldName", oldName);
-      console.log("productFeatures", productFeatures);
-      console.log("productFeaturesFiltered", productFeaturesFiltered);
     }
   }
 
@@ -190,7 +185,7 @@ class Items extends Component {
 
   async cleanCategoryOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newCategory: { name: "", type: "" },
     });
@@ -208,9 +203,9 @@ class Items extends Component {
             <table className="w-full border-collapse border rounded-lg">
               <thead className="bg-gray-200">
                 <tr>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Type</th>
-                  <th className="px-4 py-2">Action</th>
+                  <th className="px-4 py-2">Nombre</th>
+                  <th className="px-4 py-2">Tipo</th>
+                  <th className="px-4 py-2">Acción</th>
                 </tr>
               </thead>
               <tbody>

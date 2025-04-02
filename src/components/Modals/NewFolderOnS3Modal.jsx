@@ -28,7 +28,6 @@ export default function NewFolderOnS3Modal(props) {
 
   const handleCreateFolderOnS3 = async (folderName) => {
     const folderPath = `projects/${uploadRoute}/${folderName}/`;
-    console.log(folderPath)
     let result;
     try {
       result = await makeFolderOnS3(s3Client, bucketName, folderPath);

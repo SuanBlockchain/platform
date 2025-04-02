@@ -84,7 +84,6 @@ export default function CadastralRecordsInfoCard(props) {
       const predialData = await getPredialDataByCadastralNumber(
         cadastralNumbersArray
       ); // Llamada a la función getData
-      console.log("predialData", predialData);
       setPredialFetchedData(predialData);
 
       // Área total del predio
@@ -105,7 +104,6 @@ export default function CadastralRecordsInfoCard(props) {
     }
     if (multipleData.length > 0 && executedOnce) {
       const obj = multipleData.filter((data) => data.editing === true)[0];
-      console.log(obj);
 
       if (obj) {
         let cadastralNumberLength = obj.cadastralNumber.length;
@@ -250,8 +248,7 @@ export default function CadastralRecordsInfoCard(props) {
           contentType: "*/*",
         });
 
-        console.log("Archivo seleccionado:", fileToSave);
-        console.log("Archivo subido:", uploadImageResult);
+
       } catch (error) {
         notify({
           msg: "Ups!, parece que algo ha fallado al intentar subir el archivo",
@@ -265,7 +262,6 @@ export default function CadastralRecordsInfoCard(props) {
         id: oldDocument.pfID,
         value: fileToSave.name,
       };
-      console.log("updatedProductFeature:", updatedProductFeature);
       await API.graphql(
         graphqlOperation(updateProductFeature, { input: updatedProductFeature })
       );
@@ -284,9 +280,6 @@ export default function CadastralRecordsInfoCard(props) {
       );
     } else {
       // Crear pf y document
-      console.log(s3Client, 's3client 284')
-      console.log(urlPath, 'urlPath cadastral 284')
-      console.log(fileToSave, 'fileToSave cadastral 285')
 
       const command = new PutObjectCommand({
         Bucket: bucketName,
@@ -297,12 +290,9 @@ export default function CadastralRecordsInfoCard(props) {
 
       try {
         const uploadImageResult = await s3Client.send(command);
-        console.log(uploadImageResult, 'uploadImageResult')
         /* const uploadImageResult = await Storage.put(urlPath, fileToSave, {
         }); */
 
-        console.log("Archivo seleccionado:", fileToSave);
-        console.log("Archivo subido:", uploadImageResult);
       } catch (error) {
         console.error(error)
         notify({
@@ -317,7 +307,6 @@ export default function CadastralRecordsInfoCard(props) {
         productID: projectData.projectInfo.id,
         value: fileToSave.name,
       };
-      console.log("newProductFeature:", newProductFeature);
       const createProductFeatureResponse = await API.graphql(
         graphqlOperation(createProductFeature, { input: newProductFeature })
       );
@@ -368,11 +357,6 @@ export default function CadastralRecordsInfoCard(props) {
       let documentID = multipleData[indexToSave].documentID;
       let docID = null;
       if (certificate) {
-        console.log('certificate 371',
-
-          certificate,
-          documentID
-        )
         docID = await saveFileOnDB(
           certificate,
           documentID !== undefined ? documentID : null
@@ -535,7 +519,6 @@ export default function CadastralRecordsInfoCard(props) {
     const documentToDelete = projectData.projectFiles.find(
       (item) => item.id === multipleData[indexToDelete].documentID
     );
-    console.log('documentToDelete', documentToDelete)
     if (documentToDelete) {
       // Borrar de S3
       const getFilePathRegex = /\/projects\/(.+)$/;
@@ -543,7 +526,6 @@ export default function CadastralRecordsInfoCard(props) {
       const fileToDeleteName = decodeURIComponent(
         documentToDelete.url.match(getFilePathRegex)[1]
       );
-      console.log(fileToDeleteName, 'filetodelete')
       /* try {
         await Storage.remove(fileToDeleteName);
       } catch (error) {
@@ -747,7 +729,7 @@ export default function CadastralRecordsInfoCard(props) {
                         </td>
                         <td className="flex justify-end gap-1">
                           <button
-                            className="p-2 text-white rounded-md bg-green-700"
+                            className="p-2 text-white rounded-md bg-[#6e6c35] border-1 border-dark"
                             onClick={() => handleSaveHistoricalData(index)}
                           >
                             <SaveDiskIcon />

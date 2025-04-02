@@ -3,7 +3,7 @@ import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import { API, Auth, graphqlOperation } from "aws-amplify";
 import { createProperty, createPropertyFeature } from "graphql/mutations";
 import { TrashIcon } from "components/common/icons/TrashIcon";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router"; 
 import { getPredialDataByCadastralNumber } from "services/getPredialDataByCadastralNumber";
 import { CheckIcon } from "components/common/icons/CheckIcon";
 import { XIcon } from "components/common/icons/XIcon";
@@ -12,10 +12,19 @@ const initialForm = {
   userID: "",
   campaignID: "",
   name: "",
-  cadastralNumbers: [""],
+  description: "",
+  department: "",
   status: "PENDING",
   files: JSON.stringify([]),
 };
+
+const departments = [
+  "Amazonas", "Antioquia", "Arauca", "Atlántico", "Bolívar", "Boyacá", "Caldas", "Caquetá",
+  "Casanare", "Cauca", "Cesar", "Chocó", "Córdoba", "Cundinamarca", "Guainía", "Guaviare",
+  "Huila", "La Guajira", "Magdalena", "Meta", "Nariño", "Norte de Santander", "Putumayo",
+  "Quindío", "Risaralda", "San Andrés y Providencia", "Santander", "Sucre", "Tolima", "Valle del Cauca",
+  "Vaupés", "Vichada"
+];
 
 export default function ModalNewProperty({
   showModal,
@@ -28,7 +37,7 @@ export default function ModalNewProperty({
   const [errorModal, setErrorModal] = useState({ show: false, message: "" }); // Estado para el modal de error
   const userID = useRef(null);
   const navigate = useNavigate();
-  const [predialFetchedData, setPredialFetchedData] = useState(null);
+  //const [predialFetchedData, setPredialFetchedData] = useState(null);
   const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => {
@@ -58,23 +67,29 @@ export default function ModalNewProperty({
       const result = await API.graphql(
         graphqlOperation(
           `
-          query CheckPropertyName($name: String!, $campaignID: ID!) {
-            listProperties(filter: { name: { eq: $name }, campaignID: { eq: $campaignID } }) {
+          query CheckPropertyName($name: String!, $userID: ID!) {
+            listProperties(filter: { name: { eq: $name }, userID: { eq: $userID } }) {
+          query CheckPropertyName($name: String!, $userID: ID!) {
+            listProperties(filter: { name: { eq: $name }, userID: { eq: $userID } }) {
               items {
                 id
               }
             }
           }
           `,
-          { name, campaignID: campaignId }
+          { name, userID: userID.current }
         )
       );
+  
+  
       return result.data.listProperties.items.length > 0;
     } catch (error) {
       console.error("Error verifying property name:", error);
       return false;
     }
   };
+  
+  
 
   const showError = (message) => {
     setErrorModal({ show: true, message }); // Mostrar el popup de error
@@ -82,94 +97,118 @@ export default function ModalNewProperty({
 
   const handleSave = async () => {
     setLoading(true);
-
+  
+    // Validación del nombre del predio
+  
+    // Validación del nombre del predio
     if (formData.name.trim() === "") {
       showError("El nombre del predio es obligatorio.");
       setLoading(false);
       return;
     }
-
-    const isDuplicate = await isPropertyNameDuplicate(formData.name.trim());
-    if (isDuplicate) {
-      showError("El nombre del predio ya existe en esta campaña.");
+  
+    // Validación de identificadores catastrales
+    if (formData.description.trim() === "") {
+      showError("La descripción es obligatoria.");
       setLoading(false);
       return;
     }
 
-    const duplicatedCadastralNumbers = findFirstDuplicate(
-      formData.cadastralNumbers
-    );
-    if (duplicatedCadastralNumbers) {
-      showError(`Número cadastral repetido. Nro: ${duplicatedCadastralNumbers}`);
+    if (formData.department === "") {
+      showError("Debe seleccionar un departamento.");
       setLoading(false);
       return;
     }
-
+  
+    // Validar duplicado solo si hay una campaña asociada
+    if (campaignId) {
+      const isDuplicate = await isPropertyNameDuplicate(formData.name.trim());
+      if (isDuplicate) {
+        showError("El nombre del predio ya existe en esta campaña.");
+        setLoading(false);
+        return;
+      }
+    }
+  
+    // Validar identificadores catastrales duplicados
+   // const duplicatedCadastralNumbers = findFirstDuplicate(formData.cadastralNumbers);
+    //if (duplicatedCadastralNumbers) {
+    //  showError(`Número catastral repetido. Nro: ${duplicatedCadastralNumbers}`);
+   //   setLoading(false);
+    //  return;
+   // }
+  
     try {
+      // Crear objeto de predio sin incluir campaignID o productID si no existen
       const newProperty = {
         name: formData.name,
-        cadastralNumber: JSON.stringify(formData.cadastralNumbers),
-        campaignID: campaignId,
-        productID: productId,
+        description: formData.description,
+        department: formData.department,
         userID: userID.current,
         status: formData.status,
       };
 
-      const predialData = await getPredialDataByCadastralNumber(
-        formData.cadastralNumbers
-      );
-      setPredialFetchedData(predialData);
-
+  
+      if (campaignId) newProperty.campaignID = campaignId;
+      if (productId) newProperty.productID = productId;
+  
+      // Obtener datos prediales
+    //  const predialData = await getPredialDataByCadastralNumber(formData.cadastralNumbers);
+    //  setPredialFetchedData(predialData);
+  
       let totalArea = 0;
-      const allGood = formData.cadastralNumbers.every((cadNum) => {
-        if (predialData.hasOwnProperty(cadNum)) {
-          totalArea += predialData[cadNum].AREA_TERRENO;
-          return true;
-        }
-        return false;
-      });
-
-      if (!allGood) {
-        showError("Identificador catastral no encontrado.");
-        return;
-      }
-
+   //   const allGood = formData.cadastralNumbers.every((cadNum) => {
+   //     if (predialData.hasOwnProperty(cadNum)) {
+   //       totalArea += predialData[cadNum].AREA_TERRENO;
+   //       return true;
+   //     }
+    //    return false;
+   //   });
+  
+    //  if (!allGood) {
+    //    showError("Identificador catastral no encontrado.");
+    //    return;
+    //  }
+  
+      // Crear predio en la base de datos
       const result = await API.graphql(
         graphqlOperation(createProperty, { input: newProperty })
       );
       const propertyId = result.data.createProperty.id;
-
-      const cadastralNumbers = formData.cadastralNumbers.map((cadNum) => ({
-        cadastralNumber: cadNum,
-      }));
-
-      const tempPropertyFeature = {
-        value: JSON.stringify(cadastralNumbers),
-        isToBlockChain: false,
-        isOnMainCard: false,
-        propertyID: propertyId,
-        featureID: "A_predio_ficha_catastral",
-      };
-      await API.graphql(
-        graphqlOperation(createPropertyFeature, { input: tempPropertyFeature })
-      );
-
-      const tempPropertyFeature2 = {
-        value: totalArea,
-        isToBlockChain: false,
-        isOnMainCard: false,
-        propertyID: propertyId,
-        featureID: "D_area",
-      };
-      await API.graphql(
-        graphqlOperation(createPropertyFeature, { input: tempPropertyFeature2 })
-      );
-
-      await fetchCampaign();
-      setPredialFetchedData(null);
+  
+      // Guardar identificadores catastrales como feature
+   //   const cadastralNumbers = formData.cadastralNumbers.map((cadNum) => ({
+   //     cadastralNumber: cadNum,
+   //   }));
+  
+    //  const tempPropertyFeature = {
+    //    value: JSON.stringify(cadastralNumbers),
+    //    isToBlockChain: false,
+    //    isOnMainCard: false,
+    //    propertyID: propertyId,
+    //    featureID: "A_predio_ficha_catastral",
+    //  };
+    //  await API.graphql(graphqlOperation(createPropertyFeature, { input: tempPropertyFeature }));
+  
+      // Guardar área total como feature
+   //   const tempPropertyFeature2 = {
+   //     value: totalArea,
+   //     isToBlockChain: false,
+   //     isOnMainCard: false,
+   //     propertyID: propertyId,
+   //     featureID: "D_area",
+   //   };
+   //   await API.graphql(graphqlOperation(createPropertyFeature, { input: tempPropertyFeature2 }));
+  
+      // Si se postuló dentro de una campaña, actualizar datos
+      if (campaignId) {
+        await fetchCampaign();
+      }
+  
+  //    setPredialFetchedData(null);
       setFormData(initialForm);
       handleClose();
-
+  
       setTimeout(() => {
         navigate(`/property/${propertyId}`);
       }, 3000);
@@ -179,7 +218,7 @@ export default function ModalNewProperty({
       setLoading(false);
     }
   };
-
+  
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -235,7 +274,7 @@ export default function ModalNewProperty({
                 required
               />
             </Form.Group>
-            <Form.Group className="pb-4" controlId="cadastralNumbers">
+        {/*    <Form.Group className="pb-4" controlId="cadastralNumbers">
               <Form.Label>Identificadores catastrales</Form.Label>
               {formData.cadastralNumbers.map((cadastralNumber, index) => (
                 <div key={index} className="flex w-100 align-items-center mb-2">
@@ -270,8 +309,50 @@ export default function ModalNewProperty({
               >
                 Agregar identificador
               </button>
+              <div className="mt-3">
+    <p className="text-muted">
+      ¿No sabes cómo sacar tu número catastral?{" "}
+      <a
+        href="https://terrasacha.gitbook.io/terrasacha/guia-de-usuario-plataforma/rol-propietario/como-obtener-el-numero-catastral-de-un-predio"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary"
+      >
+        Mira esta guía
+      </a>
+    </p>
+  </div>
+            </Form.Group>
+ */}
+  <Form.Group className="pb-4" controlId="description">
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="pb-4" controlId="department">
+              <Form.Label>Departamento</Form.Label>
+              <Form.Control
+                as="select"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Seleccione un departamento</option>
+                {departments.map((dept, index) => (
+                  <option key={index} value={dept}>{dept}</option>
+                ))}
+              </Form.Control>
             </Form.Group>
           </Form>
+         
         </Modal.Body>
          {/* <Form.Group className='pb-4' controlId="images">
             <Form.Label>Certificado de tradición</Form.Label>
@@ -316,3 +397,4 @@ export default function ModalNewProperty({
     </>
   );
 }
+

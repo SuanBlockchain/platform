@@ -94,7 +94,7 @@ export default function TableEdit({
                 <td className="text-end">
                   {row.editing ? (
                     <button
-                      className={`p-2 text-white bg-green-700 rounded-md  hover:bg-green-800 `}
+                      className={`p-2 text-white bg-[#6e6c35] border-1 border-dark rounded-md  hover:bg-green-800 `}
                       onClick={() => handleSaveHistoricalData(index)}
                     >
                       <SaveDiskIcon />

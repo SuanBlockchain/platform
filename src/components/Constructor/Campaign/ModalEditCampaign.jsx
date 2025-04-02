@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Spinner } from 'react-bootstrap';
 import { API, graphqlOperation } from 'aws-amplify';
 import { updateCampaign } from 'graphql/customMutations';
+import { toast } from 'react-toastify';
 
 export default function ModalEditCampaign({ showModal, handleClose, campaign, fetchCampaign }) {
   const [name, setName] = useState(campaign.name || '');
@@ -21,13 +22,19 @@ export default function ModalEditCampaign({ showModal, handleClose, campaign, fe
 
   const handleSave = async () => {
     setLoading(true);
+    const duplicates = await checkDuplicateCampaignName(name);
+      if (duplicates.length > 0 && duplicates[0].id !== campaign.id) {
+        toast.error("El nombre de la campaña ya existe. Por favor, elige otro.");
+        setLoading(false);
+        return;
+      }
     try {
       const timestampData = {
         id: campaign.id,
         name,
         description,
         endDate: endDate ? Math.floor(new Date(endDate).getTime() / 1000) : null,
-      };
+      };      
 
       await API.graphql(graphqlOperation(updateCampaign, { input: timestampData }));
       await fetchCampaign();
@@ -38,6 +45,34 @@ export default function ModalEditCampaign({ showModal, handleClose, campaign, fe
       setLoading(false);
     }
   };
+
+  const checkDuplicateCampaignName = async (name) => {
+    const query = `
+      query CheckDuplicateCampaign($filter: ModelCampaignFilterInput) {
+        listCampaigns(filter: $filter) {
+          items {
+            id
+            name
+          }
+        }
+      }
+    `;
+  
+    try {
+      const result = await API.graphql(
+        graphqlOperation(query, {
+          filter: {
+            name: { eq: name },
+          },
+        })
+      );
+      return result.data.listCampaigns.items;
+    } catch (error) {
+      console.error("Error verificando nombres duplicados:", error);
+      return [];
+    }
+  };
+  
 
   return (
     <Modal aria-labelledby="contained-modal-title-vcenter" centered show={showModal} onHide={handleClose}>

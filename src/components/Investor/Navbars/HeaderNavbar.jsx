@@ -1,127 +1,150 @@
-import React, { Component } from "react";
-// Bootstrap
-import { Container, Nav, Navbar } from "react-bootstrap";
-import Offcanvas from "react-bootstrap/Offcanvas";
-import s from "./HeaderNavbar.module.css";
-// Import images
-import LOGO from "../../common/_images/suan_logo.png";
+import React, { useState, useEffect } from "react";
+import { Container, Nav, Navbar, Modal, Button, Offcanvas } from "react-bootstrap";
+import { BellFill } from "react-bootstrap-icons";
 import { Auth } from "aws-amplify";
+import { useNavigate } from "react-router-dom"; // Para redirección sin recargar la página
+import TerrasachaLogo from "../../common/TerrasachaLogo";
 
-export default class HeaderNavbar extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      user: null
-    };
-    this.handleChangeNavBar = this.handleChangeNavBar.bind(this);
-    this.handleSignOut = this.handleSignOut.bind(this);
-  }
-  componentDidMount(){
-    Auth.currentAuthenticatedUser().then(data => this.setState({user: data})).catch(err => console.log(err))
-  }
-  async handleChangeNavBar(pRequest) {
-    console.log("handleChangeNavBar: ", pRequest);
-    this.props.changeHeaderNavBarRequest(pRequest);
-  }
+const HeaderNavbar = ({ logOut, changeHeaderNavBarRequest }) => {
+  const [user, setUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
 
-  async handleSignOut() {
-    this.props.logOut();
-  }
+  useEffect(() => {
+    Auth.currentAuthenticatedUser()
+      .then((data) => setUser(data))
+      .catch((err) => console.log(err));
+  }, []);
 
-  findLastAuthUserKey() {
-    for (let key in localStorage) {
-      if (
-        key.includes("CognitoIdentityServiceProvider") &&
-        key.includes(".LastAuthUser")
-      ) {
-        const userlog = localStorage[key];
-        return userlog;
-      }
+  const handleSignOut = () => {
+    logOut();
+  };
+
+  const handleShowNotifications = () => {
+    if (!user) return;
+
+    const role = user.attributes["custom:role"];
+    const userId = user.attributes.sub;
+
+    if (role === "validator" || role === "constructor") {
+      fetchPendingMessages(userId, role);
     }
-    return null;
-  }
+    setShowNotifications(true);
+  };
 
-  render() {
-    let role = this.state.user?.attributes['custom:role'] || ''
-    let userlog = this.state.user?.username || ''
-    return (
-      <>
-        <Navbar key="sm" bg="light" expand="lg" fixed="top">
-          <Container>
-            <Navbar.Brand href="/" style={{ marginLeft: "2%" }}>
-              <img src={LOGO} className="w-8 h-auto" alt="ATP" />
-            </Navbar.Brand>
-            <Navbar.Toggle />
-            <Navbar.Offcanvas placement="end">
-              <Offcanvas.Header closeButton>
-                <Offcanvas.Title>
-                  <a href="/">
-                    <img src={LOGO} className="w-8 h-auto" alt="ATP" />
-                  </a>
-                </Offcanvas.Title>
-              </Offcanvas.Header>
-              <Offcanvas.Body>
-                <Nav
-                  className="me-auto my-2 my-lg-0"
-                  style={{ maxHeight: "100px" }}
-                  navbarScroll
-                ></Nav>
-                <Nav>
-                  <Nav className={s.navGroup}>
-                    <Nav.Link
-                      href="#profile"
-                      onClick={(e) =>
-                        this.props.changeHeaderNavBarRequest(
-                          "product_documents"
-                        )
-                      }
+  const fetchPendingMessages = async (userId, role) => {
+    setMessages([
+      { id: 1, text: "Nueva verificación pendiente" },
+      { id: 2, text: "Comentario agregado a un predio" },
+    ]);
+  };
+
+  const roleDisplayNames = {
+    admon: "Administrador",
+    validator: "Consultor",
+    analyst: "Analista",
+    constructor: "Propietario",
+    legal: "Legal",
+  };
+
+  const role = user?.attributes?.["custom:role"] || "";
+  const displayRole = roleDisplayNames[role] || "Sin Rol";
+
+  return (
+    <>
+      <Navbar expand="lg" bg="light" fixed="top" className="shadow-md py-2">
+        <Container className="flex justify-between items-center">
+          {/* Logo */}
+          <Navbar.Brand href="/" className="flex items-center">
+            <TerrasachaLogo className="w-48 h-auto" />
+          </Navbar.Brand>
+
+          {/* Botón de menú en móviles */}
+          <Navbar.Toggle aria-controls="offcanvasNavbar" />
+
+          {/* Menú Offcanvas */}
+          <Navbar.Offcanvas id="offcanvasNavbar" placement="end">
+            <Offcanvas.Header closeButton>
+              <Offcanvas.Title>
+                <a href="/">
+                  <TerrasachaLogo className="w-48 h-auto" />
+                </a>
+              </Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+              <Nav className="ms-auto flex items-center gap-6">
+                {role === "validator" && (
+                  <div className="flex items-center gap-4">
+                    {/* Botón Crear Campaña */}
+                    <a
+                      hre f="/new_campaign"
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-600 transition flex items-center"
                     >
-                    
-                    </Nav.Link>
-                    {localStorage.getItem("role") ? (
-                      <div className="flex">
-                        <button
-                          className={s.signing}
-                          onClick={() => this.handleSignOut()}
-                        >
-                          Desconectar
-                        </button>
-                        <button className="role flex flex-col">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            height="24"
-                            viewBox="0 -960 960 960"
-                            width="24"
-                            fill="#fff"
-                          >
-                            <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z" />
-                          </svg>
-                          {userlog}
-                          <br></br>
-                          <p className="role_btn">
-                            {role === "validator"
-                              ? "Consultor"
-                              : role === "constructor"
-                              ? "Propietario"
-                              : role}
-                          </p>
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        className={s.signing}
-                        onClick={() => (window.location.href = "/login")}
-                      >
-                        Ingresar
-                      </button>
-                    )}
-                  </Nav>
-                </Nav>
-              </Offcanvas.Body>
-            </Navbar.Offcanvas>
-          </Container>
-        </Navbar>
-      </>
-    );
-  }
-}
+                      Crear Campaña
+                    </a>
+
+                    {/* Notificaciones */}
+                    <div className="relative cursor-pointer" onClick={handleShowNotifications}>
+                      <BellFill className="w-6 h-6 text-gray-800" />
+                      {messages.length > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2">
+                          {messages.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Botón de sesión */}
+                {role ? (
+                  <div className="flex items-center gap-4">
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
+                      onClick={handleSignOut}
+                    >
+                      Desconectar
+                    </button>
+                    <span className="text-gray-800 font-semibold">{displayRole}</span>
+                  </div>
+                ) : (
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+                    onClick={() => navigate("/login")}
+                  >
+                    Ingresar
+                  </button>
+                )}
+              </Nav>
+            </Offcanvas.Body>
+          </Navbar.Offcanvas>
+        </Container>
+      </Navbar>
+
+      {/* Modal de Notificaciones */}
+      <Modal show={showNotifications} onHide={() => setShowNotifications(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Notificaciones</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {messages.length > 0 ? (
+            <ul className="list-disc pl-4">
+              {messages.map((msg) => (
+                <li key={msg.id}>{msg.text}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No tienes notificaciones pendientes.</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowNotifications(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
+
+export default HeaderNavbar;

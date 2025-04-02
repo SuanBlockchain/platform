@@ -37,7 +37,7 @@ export default function FileManager(props) {
         // const actualFolder = currentPath.length === 0 ? rootFolder : currentPath.join("/");
         setS3Objects(data);
         if (currentPath.length === 0) {
-          setSelectedFolder(data[rootFolder].data);
+          setSelectedFolder(data[rootFolder]?.data);
           setCurrentPath([rootFolder]);
         } else {
           let currentData = data;
@@ -67,7 +67,7 @@ export default function FileManager(props) {
       if (response.Contents) {
         const objectKeys = response.Contents.map((object)=> object.Key);
         const filteredObjectKeys = foldersToShow[0]!== "*" ? objectKeys.filter(item => foldersToShow.includes(item.split('/')[2])) : objectKeys
-        console.log(objectKeys, 'objectKeys,')
+        
       return processPathList(filteredObjectKeys)
       }
     } catch (error) {
@@ -131,9 +131,6 @@ export default function FileManager(props) {
       return s3Objects[rootFolder].data;
     }
     const selectedItem = object[propertyName];
-    /* console.log(selectedItem, "selectedItem");
-    console.log(object, "object");
-    console.log(propertyName, "propertyName"); */
     if (selectedItem.type === "folder") {
       return object[propertyName].data;
     } else if (selectedItem.type === "file") {
@@ -148,7 +145,6 @@ export default function FileManager(props) {
       setCurrentPath([...currentPath, propertyName]);
     } else if (selectedItem.type === "file") {
       handleDownload(selectedFolder);
-      console.log(`Archivo ${propertyName}:`, selectedItem);
     }
   };
 
@@ -226,7 +222,6 @@ export default function FileManager(props) {
   };
   const handleDeleteFolder = async (folder) => {
     const folderToDelete = currentPath.join("/") + "/" + folder;
-    console.log(folderToDelete);
     const updatedDocsData =
       projectData.projectFilesValidators.projectValidatorDocuments.filter(
         (file, index) => !file.filePathS3.includes(folderToDelete)
@@ -274,12 +269,12 @@ export default function FileManager(props) {
     let result;
     try {
       result = await moveFile(s3Client, bucketName, key, 'backup', currentPath)
-      console.log(result.sourceFilePath, 'result.sourceFilePath')
+
       const updatedDocsData =
         projectData.projectFilesValidators.projectValidatorDocuments.filter(
           (file, index) => file.filePathS3 !== result.sourceFilePath
         );
-      console.log(updatedDocsData,'updatedDocsData result.sourceFilePath')
+
       await handleUpdateContextProjectFileValidators({
         projectValidatorDocuments: updatedDocsData,
       });
@@ -288,7 +283,7 @@ export default function FileManager(props) {
         projectData.projectFilesValidators.projectValidatorDocuments.filter(
           (file) => file.filePathS3 === result.sourceFilePath
         )[0].id;
-        console.log(fileToDeleteID,'fileToDeleteID result.sourceFilePath')
+
       let docToDelete = {
         id: fileToDeleteID,
       };
@@ -330,14 +325,10 @@ export default function FileManager(props) {
 
   const getVisibleStatus = (key) => {
     let path = `projects/${currentPath.join('/')}/${key}`
-    console.log(key, 'getVisibleStatus')
-    console.log(path, 'getVisibleStatus path')
-    console.log(projectData.projectFilesValidators.projectValidatorDocuments, 'getVisibleStatus')
     const file =
       projectData.projectFilesValidators.projectValidatorDocuments.filter(
         (file) => file.filePathS3 === path
       )[0];
-      console.log(file, 'getVisibleStatus file')
     if (file) {
       if (file.visible) {
         return (

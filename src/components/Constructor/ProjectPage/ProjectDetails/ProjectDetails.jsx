@@ -53,7 +53,6 @@ export default function ProjectDetails({ visible }) {
             projectData?.projectInfo.id,
             user.subrole
           );
-          console.log(obj, "progress");
           setProgressObj(obj);
         } catch (error) {
           console.error("Error al obtener datos:", error);
@@ -157,7 +156,7 @@ export default function ProjectDetails({ visible }) {
           <div className="col">
             <PropertyInfoCard autorizedUser={autorizedUser} />
           </div>
-          <div className="col">
+          <div className="col mb-5">
             <RelationsInfoCard autorizedUser={autorizedUser} />
           </div> */}
           <div className="col-12 col-xl-12">

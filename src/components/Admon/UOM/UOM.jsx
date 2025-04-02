@@ -20,7 +20,7 @@ class UOM extends Component {
     super(props);
     this.state = {
       unitOfMeasures: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newUnitOfMeasure: {
         id: "",
@@ -121,7 +121,7 @@ class UOM extends Component {
   async handleCRUDUnitOfMeasure() {
     let tempNewUnitOfMeasure = this.state.newUnitOfMeasure;
 
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       await API.graphql(
         graphqlOperation(createUnitOfMeasure, { input: tempNewUnitOfMeasure })
       );
@@ -151,7 +151,7 @@ class UOM extends Component {
 
   async cleanUnitOfMeasureOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newUnitOfMeasure: {
         id: "",
@@ -217,14 +217,14 @@ class UOM extends Component {
     return (
       <div className="container mt-8 mx-auto bg-white p-4 rounded-lg shadow-sm mb-4">
         <div className="mt-8 mb-8">
-          <h2 className="text-2xl">{CRUDButtonName} Unit of Measure</h2>
+          <h2 className="text-2xl">{CRUDButtonName} Unidad de medida</h2>
           <form className="mt-4">
             <div className="mb-4">
               <label
                 htmlFor="formGridEngineeringUnit"
                 className="block font-semibold"
               >
-                Engineering Unit
+                Unidad de Ingeniería
               </label>
               <input
                 type="text"
@@ -241,7 +241,7 @@ class UOM extends Component {
                 htmlFor="formGridDescription"
                 className="block font-semibold"
               >
-                Description
+                Descripción
               </label>
               <input
                 type="text"
@@ -254,7 +254,7 @@ class UOM extends Component {
               />
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Is Float?</label>
+              <label className="block font-semibold">¿Es Float?</label>
               <br />
               <button
                 type="button"
@@ -263,7 +263,7 @@ class UOM extends Component {
                   newUnitOfMeasure.isFloat ? "bg-blue-700" : ""
                 }`}
               >
-                {newUnitOfMeasure.isFloat ? "YES" : "NO"}
+                {newUnitOfMeasure.isFloat ? "SI" : "NO"}
               </button>
             </div>
             <button

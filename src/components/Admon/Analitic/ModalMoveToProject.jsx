@@ -10,7 +10,6 @@ export default function ModalMoveToProject({
   const [loading, setLoading] = useState(false);
   const [errorModal, setErrorModal] = useState({ show: false, message: "" }); // Estado para el modal de error
   const [selectedProject, setSelectedProject] = useState(null);
-  console.log('products', products)
 
   return (
     <>

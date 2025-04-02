@@ -1,6 +1,471 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const createNotification = /* GraphQL */ `
+  mutation CreateNotification(
+    $input: CreateNotificationInput!
+    $condition: ModelNotificationConditionInput
+  ) {
+    createNotification(input: $input, condition: $condition) {
+      id
+      userOriginID
+      userOrigin {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userID
+      user {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      message
+      type
+      resourceID
+      isRead
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateNotification = /* GraphQL */ `
+  mutation UpdateNotification(
+    $input: UpdateNotificationInput!
+    $condition: ModelNotificationConditionInput
+  ) {
+    updateNotification(input: $input, condition: $condition) {
+      id
+      userOriginID
+      userOrigin {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userID
+      user {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      message
+      type
+      resourceID
+      isRead
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteNotification = /* GraphQL */ `
+  mutation DeleteNotification(
+    $input: DeleteNotificationInput!
+    $condition: ModelNotificationConditionInput
+  ) {
+    deleteNotification(input: $input, condition: $condition) {
+      id
+      userOriginID
+      userOrigin {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userID
+      user {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      message
+      type
+      resourceID
+      isRead
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
 export const createUser = /* GraphQL */ `
   mutation CreateUser(
     $input: CreateUserInput!
@@ -79,6 +544,22 @@ export const createUser = /* GraphQL */ `
           isFavorite
           userID
           productID
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      notifications {
+        items {
+          id
+          userOriginID
+          userID
+          message
+          type
+          resourceID
+          isRead
           createdAt
           updatedAt
           __typename
@@ -229,10 +710,13 @@ export const createUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -333,6 +817,22 @@ export const updateUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      notifications {
+        items {
+          id
+          userOriginID
+          userID
+          message
+          type
+          resourceID
+          isRead
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
       documents {
         items {
           id
@@ -476,10 +976,13 @@ export const updateUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -580,6 +1083,22 @@ export const deleteUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      notifications {
+        items {
+          id
+          userOriginID
+          userID
+          message
+          type
+          resourceID
+          isRead
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
       documents {
         items {
           id
@@ -723,10 +1242,13 @@ export const deleteUser = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -785,6 +1307,10 @@ export const createWallet = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -953,6 +1479,10 @@ export const updateWallet = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -1118,6 +1648,10 @@ export const deleteWallet = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -1277,6 +1811,10 @@ export const createVerification = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -1339,6 +1877,10 @@ export const createVerification = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -1456,10 +1998,13 @@ export const createVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1559,6 +2104,10 @@ export const updateVerification = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -1621,6 +2170,10 @@ export const updateVerification = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -1738,10 +2291,13 @@ export const updateVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -1841,6 +2397,10 @@ export const deleteVerification = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -1903,6 +2463,10 @@ export const deleteVerification = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -2020,10 +2584,13 @@ export const deleteVerification = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2464,10 +3031,13 @@ export const createDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2535,6 +3105,10 @@ export const createDocument = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -2675,10 +3249,13 @@ export const updateDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2746,6 +3323,10 @@ export const updateDocument = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -2886,10 +3467,13 @@ export const deleteDocument = /* GraphQL */ `
         property {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -2957,6 +3541,10 @@ export const deleteDocument = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -3794,6 +4382,10 @@ export const createCampaign = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -3863,10 +4455,13 @@ export const createCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -3919,6 +4514,10 @@ export const updateCampaign = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -3988,10 +4587,13 @@ export const updateCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -4044,6 +4646,10 @@ export const deleteCampaign = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -4113,10 +4719,13 @@ export const deleteCampaign = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -4140,6 +4749,8 @@ export const createProperty = /* GraphQL */ `
     createProperty(input: $input, condition: $condition) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -4308,6 +4919,79 @@ export const createProperty = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userLegalID
+      userLegal {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -4379,6 +5063,8 @@ export const updateProperty = /* GraphQL */ `
     updateProperty(input: $input, condition: $condition) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -4547,6 +5233,79 @@ export const updateProperty = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userLegalID
+      userLegal {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -4618,6 +5377,8 @@ export const deleteProperty = /* GraphQL */ `
     deleteProperty(input: $input, condition: $condition) {
       id
       name
+      description
+      department
       cadastralNumber
       productID
       product {
@@ -4786,6 +5547,79 @@ export const deleteProperty = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
+          nextToken
+          __typename
+        }
+        documents {
+          nextToken
+          __typename
+        }
+        companies {
+          nextToken
+          __typename
+        }
+        payments {
+          nextToken
+          __typename
+        }
+        marketplaceID
+        marketplace {
+          id
+          name
+          oracleTokenName
+          oracleWalletID
+          adminWalletID
+          createdAt
+          updatedAt
+          __typename
+        }
+        campaigns {
+          nextToken
+          __typename
+        }
+        properties {
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      userLegalID
+      userLegal {
+        id
+        name
+        dateOfBirth
+        isProfileUpdated
+        isValidatedStep1
+        isValidatedStep2
+        addresss
+        cellphone
+        role
+        subrole
+        status
+        email
+        wallets {
+          nextToken
+          __typename
+        }
+        verifierVerifications {
+          nextToken
+          __typename
+        }
+        verifiedVerifications {
+          nextToken
+          __typename
+        }
+        userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -4865,6 +5699,8 @@ export const createPropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -4903,6 +5739,25 @@ export const createPropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -5047,6 +5902,8 @@ export const updatePropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -5085,6 +5942,25 @@ export const updatePropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -5229,6 +6105,8 @@ export const deletePropertyFeature = /* GraphQL */ `
       property {
         id
         name
+        description
+        department
         cadastralNumber
         productID
         product {
@@ -5267,6 +6145,25 @@ export const deletePropertyFeature = /* GraphQL */ `
         }
         userID
         user {
+          id
+          name
+          dateOfBirth
+          isProfileUpdated
+          isValidatedStep1
+          isValidatedStep2
+          addresss
+          cellphone
+          role
+          subrole
+          status
+          email
+          marketplaceID
+          createdAt
+          updatedAt
+          __typename
+        }
+        userLegalID
+        userLegal {
           id
           name
           dateOfBirth
@@ -5757,10 +6654,13 @@ export const createProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -6138,10 +7038,13 @@ export const updateProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -6519,10 +7422,13 @@ export const deleteProduct = /* GraphQL */ `
         items {
           id
           name
+          description
+          department
           cadastralNumber
           productID
           campaignID
           userID
+          userLegalID
           status
           reason
           createdAt
@@ -10068,6 +10974,10 @@ export const createUserProduct = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -10247,6 +11157,10 @@ export const updateUserProduct = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -10423,6 +11337,10 @@ export const deleteUserProduct = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -11554,6 +12472,10 @@ export const createPayment = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -11746,6 +12668,10 @@ export const updatePayment = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -11935,6 +12861,10 @@ export const deletePayment = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }
@@ -12403,6 +13333,10 @@ export const createCompany = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -12583,6 +13517,10 @@ export const updateCompany = /* GraphQL */ `
           nextToken
           __typename
         }
+        notifications {
+          nextToken
+          __typename
+        }
         documents {
           nextToken
           __typename
@@ -12760,6 +13698,10 @@ export const deleteCompany = /* GraphQL */ `
           __typename
         }
         userProducts {
+          nextToken
+          __typename
+        }
+        notifications {
           nextToken
           __typename
         }

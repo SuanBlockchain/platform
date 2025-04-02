@@ -47,8 +47,6 @@ export default function DynamicForm(props) {
         ...prevFormData,
         ...formDataFields,
       }));
-      console.log(formDataFields);
-      console.log(data);
     }
   }, [data]);
 
@@ -113,7 +111,6 @@ export default function DynamicForm(props) {
 
   const validateFormData = () => {
     const errors = {};
-    console.log("validatingFormData", formData);
     for (const fieldName in formData) {
       // toDo evaluate constraints too
       const value = formData[fieldName];
@@ -123,8 +120,6 @@ export default function DynamicForm(props) {
         fieldName
       );
       if (fieldName === "C_ubicacion") {
-        console.log("required", required);
-        console.log("required_message", required_message);
       }
       const isRequired = required === "yes";
 
@@ -141,7 +136,6 @@ export default function DynamicForm(props) {
     setIsLoading(true);
 
     const errors = validateFormData();
-    console.log("errors", errors);
     setFormDataErrors(errors);
 
     const firstErrorField = document.querySelector(
@@ -149,8 +143,6 @@ export default function DynamicForm(props) {
     );
     if (firstErrorField) {
       firstErrorField.focus();
-      console.log("Datos del formulario:", formData);
-      console.log("Errores:", errors);
       notify({
         msg: "Hicieron falta algunos campos por completar",
         type: "error",

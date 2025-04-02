@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { API, Auth, graphqlOperation } from "aws-amplify";
 
@@ -558,7 +559,7 @@ export default function TokenSettingsCard(props) {
                 </button>
               )}
               <button
-                className={`p-2 text-white bg-green-700 rounded-md  hover:bg-green-800 ml-2`}
+                className={`p-2 text-white bg-[#6e6c35] border-1 border-dark rounded-md  hover:bg-green-800 ml-2`}
                 disabled={!editTokenHistoricalData}
                 onClick={() => saveHistoricalData()}
               >

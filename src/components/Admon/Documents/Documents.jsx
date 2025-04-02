@@ -142,7 +142,6 @@ class Documents extends Component {
           tempNewDocument.data = JSON.stringify({empty: ''})
           tempNewDocument.userID = this.state.actualUserID
           await API.graphql(graphqlOperation(createDocument , { input: tempNewDocument }))
-          console.log('document created')
           this.cleanState()
     }
     handleHideModalDocument() {
@@ -173,7 +172,6 @@ class Documents extends Component {
     
   render() {
     let {userProductsDoc, productToShow, productFeatureToAddDoc, showProductsWithoutDoc, showAllDocuments} = this.state
-    console.log(userProductsDoc,'userProductsDoc')
     const listDocumentationStatus = () => {
         if(showAllDocuments && userProductsDoc){
             return(

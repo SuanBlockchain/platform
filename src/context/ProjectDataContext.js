@@ -16,7 +16,7 @@ export function ProjectDataProvider({ children }) {
       console.error("Page parameter is missing.");
       return;
     }
-    console.log("pID", pID);
+ 
     setProjectID(pID);
     await fetchProjectData(pID);
   };
@@ -25,7 +25,6 @@ export function ProjectDataProvider({ children }) {
     const project_id = projectID || pID;
     if (project_id) {
       const data = await fetchProjectDataByProjectID(project_id);
-      console.log("Mapped Project Data: ", data);
       setProjectData(data);
 
       return data;
@@ -35,26 +34,25 @@ export function ProjectDataProvider({ children }) {
   };
 
   const handleUpdateContextProjectData = async (data) => {
-    console.log('Entro en: 1')
+  
     fetchProjectData();
     return;
   };
 
   const handleUpdateContextProjectInfo = async (data) => {
-    console.log('Entro en: 2')
+
     fetchProjectData();
     return;
   };
 
   const handleUpdateContextProjectOwners = async (data) => {
-    console.log('Entro en: 3')
     fetchProjectData();
     return;
   };
 
   const handleUpdateContextProjectCadastralRecordsData = async (data) => {
     
-    console.log('Entro en: 4')
+   
     fetchProjectData();
     return;
 
@@ -62,7 +60,7 @@ export function ProjectDataProvider({ children }) {
 
   const handleUpdateContextProjectRestrictions = async (data) => {
     
-    console.log('Entro en: 5')
+
     fetchProjectData();
     return;
 
@@ -70,7 +68,7 @@ export function ProjectDataProvider({ children }) {
 
   const handleUpdateContextProjectRelations = async (data) => {
     
-    console.log('Entro en: 6')
+   
     fetchProjectData();
     return;
 
@@ -78,7 +76,7 @@ export function ProjectDataProvider({ children }) {
 
   const handleUpdateContextProjectEcosystem = async (data, obj = null) => {
     
-    console.log('Entro en: 7')
+    
     fetchProjectData();
     return;
 
@@ -86,7 +84,7 @@ export function ProjectDataProvider({ children }) {
 
   const handleUpdateContextProjectInfoLocation = async (data) => {
     
-    console.log('Entro en: 8')
+   
     fetchProjectData();
     return;
 
@@ -94,7 +92,7 @@ export function ProjectDataProvider({ children }) {
 
   const handleUpdateContextVerifiers = async (data) => {
     
-    console.log('Entro en: 9')
+   
     fetchProjectData();
     return;
 
@@ -102,45 +100,40 @@ export function ProjectDataProvider({ children }) {
 
   const handleUpdateContextDocumentStatus = async (fileIndex, data) => {
     
-    console.log('Entro en: 10')
+ 
     fetchProjectData();
     return;
 
   };
 
   const handleUpdateContextProjectFile = async (docID, data) => {
-    console.log('Entro en: 11')
+
     fetchProjectData();
     return;
 
   };
 
   const handleSetContextProjectFile = async (updatedProjectFiles) => {
-    console.log('Entro en: 12')
     fetchProjectData();
     return;
   };
 
   const handleUpdateContextProjectTokenData = async (data) => {
-    console.log('Entro en: 13')
     fetchProjectData();
     return;
   };
 
   const handleUpdateContextFileVerification = async (fileIndex, data) => {
-    console.log('Entro en: 14')
     fetchProjectData();
     return;
   };
 
   const handleUpdateContextProjectFileValidators = async (data) => {
-    console.log('Entro en: 15')
     fetchProjectData();
     return;
   };
 
   const refresh = async () => {
-    console.log('Entro en: 16')
     fetchProjectData();
     return;
   };

@@ -16,7 +16,6 @@ export function S3ClientProvider({ children }) {
   const initializeS3Client = async () => {
     try {
       const credentials = await Auth.currentCredentials();
-      console.log(credentials, 'credentials')
       const s3Client = new S3Client({
         region: 'us-east-1',
         credentials: {
@@ -25,7 +24,6 @@ export function S3ClientProvider({ children }) {
           sessionToken: credentials.sessionToken,
         },
       });
-      console.log(s3Client, 's3ClientContext')
       setS3Client(s3Client)
     } catch (error) {
       console.error("Error al inicializar el cliente S3:", error);

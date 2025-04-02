@@ -17,7 +17,7 @@ class FeaturesType extends Component {
     super(props);
     this.state = {
       date: new Date(),
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       featureTypes: [],
       newFeatureType: {
@@ -62,7 +62,7 @@ class FeaturesType extends Component {
   async handleCRUDFeatureType() {
     let tempNewFeatureType = this.state.newFeatureType;
 
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       const newFeatureTypeId = this.state.newFeatureType.name;
       tempNewFeatureType.id = newFeatureTypeId;
       await API.graphql(
@@ -94,7 +94,7 @@ class FeaturesType extends Component {
 
   async cleanFeatureTypeOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newFeatureType: {
         id: "",
@@ -149,19 +149,19 @@ class FeaturesType extends Component {
       <div className="container mx-auto  bg-white p-4 rounded-lg shadow-sm mb-4">
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">
-            {CRUDButtonName} Feature Type: {newFeatureType.name}
+            {CRUDButtonName} Tipo de Característica: {newFeatureType.name}
           </h2>
           <form className="space-y-4">
             <div className="flex flex-col space-y-4">
               <div className="w-full">
                 <label htmlFor="formGridNewFeatureName" className="block">
-                  Name
+                  Nombre
                 </label>
                 <input
                   type="text"
                   id="formGridNewFeatureName"
                   className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
-                  placeholder="Name..."
+                  placeholder="Nombre..."
                   name="featureType.name"
                   value={newFeatureType.name}
                   onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -172,13 +172,13 @@ class FeaturesType extends Component {
                   htmlFor="formGridNewFeatureDescription"
                   className="block"
                 >
-                  Description
+                  Descripción
                 </label>
                 <input
                   type="text"
                   id="formGridNewFeatureDescription"
                   className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
-                  placeholder="Description..."
+                  placeholder="Descripción..."
                   name="featureType.description"
                   value={newFeatureType.description}
                   onChange={(e) => this.handleOnChangeInputForm(e)}

@@ -96,7 +96,7 @@ export default function ValidatorFilesInfoCard(props) {
           </Table>
         ) : (
           <div className="text-center">
-            Aún no se han subido documentos por parte de los validadores
+            Aún no se han subido documentos por parte de los Consultores
           </div>
         )}
       </Card.Body>
