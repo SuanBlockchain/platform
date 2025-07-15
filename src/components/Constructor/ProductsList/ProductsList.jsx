@@ -1,309 +1,220 @@
 import React, { useState } from "react";
-// Import hooks
 import useUserProjects from "hooks/useUserProjects";
 import useUserProperties from "hooks/useUserProperties";
 import useUserCampaigns from "hooks/useUserCampaigns";
-// Import utilities
-import { getImagesCategories, getYearFromAWSDatetime } from "../ProjectPage/utils";
-// Import placeholder image
-import vacio from "../../views/_images/caja-vacia-gris.png";
 import ModalNewProperty from "../Campaign/ModalNewProperty";
+import {
+  FaBullhorn,
+  FaFilter,
+  FaThumbsUp,
+  FaHourglassHalf,
+  FaThumbsDown,
+  FaEye,
+} from "react-icons/fa";
 
-// Status color mapping
-const statusColor = {
-  PENDING: "bg-gray-600",
-  APPROVED: "bg-green-600",
-  REJECTED: "bg-red-600",
-} 
-const statusEs = {
-  PENDING: "Pendiente",
-  APPROVED: "Aprobado",
-  REJECTED: "Rechazado",
-
-}
-
-
-
-const CampaignCard = ({ campaign }) => {
-  let campaignImages = [];
-  try {
-    campaignImages = campaign?.images ? JSON.parse(campaign.images) : [];
-  } catch (error) {
-    console.error("Error al parsear las imágenes de la campaña:", error);
-  }
-
-  const campaignImage =
-    campaignImages.length > 0
-      ? campaignImages[0]
-      : getImagesCategories(campaign?.products?.items?.[0]?.categoryID);
-
-  return (
-    <div className="p-4">
-  <div className="bg-white shadow-md rounded-lg overflow-hidden">
-    <img
-      className="h-40 w-full object-cover"
-      src={campaignImage}
-      alt="Imagen de la campaña"
-    />
-    <div className="p-4">
-      <div className="flex space-x-2 mb-2">
-        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded" style={{backgroundColor:"#74742c"}}>
-          {getYearFromAWSDatetime(campaign?.products?.items?.[0]?.createdAt)}
-        </span>
-        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded" style={{backgroundColor:"#74742c"}}>
-          {campaign?.products?.items?.[0]?.categoryID}
-        </span>
-      </div>
-      <h3 className="text-lg font-bold mb-2">{campaign?.name}</h3>
-      <p className="text-gray-600 text-sm mb-4">{campaign?.description}</p>
-      <div className="flex justify-between items-center mt-3 space-x-4">
-        <a
-          href={`campaign/${campaign?.id}`}
-          className="inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
-          style={{backgroundColor:"#74742c"}}
-        >
-          Ver Campaña
-        </a>
-        <a
-    href={`project/${campaign?.products?.items?.[0]?.id}`}
-    className="inline-block bg-[#4DBC5E] text-white text-sm px-4 py-2 rounded hover:bg-green-600"
-  >
-    Ver Proyecto
-  </a>
-      </div>
-    </div>
-  </div>
-</div>
-
-  );
+const statusStyles = {
+  PENDING: "bg-yellow-100 text-yellow-700",
+  DOC_UPLOADED: "bg-blue-100 text-blue-700",
+  SELECTABLE: "bg-green-100 text-green-700",
+  NOT_SELECTABLE: "bg-red-100 text-red-700",
+  APPROVED: "bg-green-100 text-green-700",
+  REJECTED: "bg-red-100 text-red-700",
 };
 
-// Property card component
-const PropertyCard = ({ property }) => (
-  <div className="p-4">
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-      <div className="p-4">
-        <h3 className="text-lg font-bold mb-2">{property?.name}</h3>
-        <p className="text-gray-600 text-sm mb-2">{property?.campaign?.name}</p>
-        <div className="flex flex-wrap gap-2 mb-6">
-          <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded w-fit">
-            {getYearFromAWSDatetime(property?.createdAt)}
-          </span>
-          <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded w-fit">
-            {property?.department}
-          </span>
+const statusLabels = {
+  PENDING: "Pendiente",
+  DOC_UPLOADED: "Documentos subidos",
+  SELECTABLE: "Elegible",
+  NOT_SELECTABLE: "No elegible",
+  APPROVED: "Aprobado",
+  REJECTED: "Rechazado",
+};
 
-          <span className={`${statusColor[property.status]} text-white text-xs font-medium px-2 py-1 rounded w-fit`}>
-            {statusEs[property.status]}
-          </span>
-        </div>
-    <a
-  href={`property/${property?.id}`}
-  className="w-full inline-flex bg-blue-500 text-white text-sm justify-center font-bold px-4 py-2 rounded hover:bg-blue-600 transition"
->
-  Ver más
-</a>
-
-      </div>
-    </div>
-  </div>
-);
-
-// Project card component
-const ProjectCard = ({ project }) => (
-  <div className="p-4">
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-      <img
-        className="h-40 w-full object-cover"
-        src={getImagesCategories(project?.product?.categoryID)}
-        alt="Imagen del proyecto"
-      />
-      <div className="p-4">
-        <div className="flex space-x-2 mb-2">
-          <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
-            {getYearFromAWSDatetime(project?.product?.createdAt)}
-          </span>
-          <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
-            {project?.product?.categoryID}
-          </span>
-        </div>
-        <h3 className="text-lg font-bold mb-2">{project?.product?.name}</h3>
-        <p className="text-gray-600 text-sm mb-4">{project?.product?.description}</p>
-        <a
-          href={`project/${project?.product?.id}`}
-          className="inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Ver más
-        </a>
-      </div>
-    </div>
-  </div>
-);
-
-// Main component
 export default function ProductsList() {
   const { userProjects } = useUserProjects();
   const { userProperties } = useUserProperties();
-  const sortedProperties = [...userProperties].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const { userCampaigns } = useUserCampaigns();
   const [showModal, setShowModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("ALL");
 
-   // Filtrar predios asignados y no asignados
-   const assignedProperties = sortedProperties .filter((property) => property.campaignID);
-   const unassignedProperties = sortedProperties .filter((property) => !property.campaignID);
- 
-  
-  const projectsWithoutCampaigns = userProjects.filter(
-    (project) => project.product && !project.product.campaign
+  const handleStatusFilter = (status) => {
+    setSelectedStatus(status);
+  };
+
+  const sortedProperties = [...userProperties].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
-  const userProjectsFiltered = projectsWithoutCampaigns.filter(
-    (project) => project.product?.isActiveOnPlatform
+  const filteredProperties = sortedProperties.filter((p) =>
+    selectedStatus === "ALL" ? true : p.status === selectedStatus
   );
+
+  const assignedProperties = filteredProperties.filter((p) => p.campaignID);
+  const unassignedProperties = filteredProperties.filter((p) => !p.campaignID);
+
+  const getButtonClass = (status) =>
+    `flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full transition ${
+      selectedStatus === status
+        ? status === "ALL"
+          ? "bg-indigo-500 text-white shadow-sm"
+          : status === "APPROVED"
+          ? "bg-green-600 text-white"
+          : status === "PENDING"
+          ? "bg-yellow-500 text-white"
+          : status === "REJECTED"
+          ? "bg-red-600 text-white"
+          : "bg-gray-300 text-white"
+        : status === "APPROVED"
+        ? "text-green-600 hover:bg-green-50"
+        : status === "PENDING"
+        ? "text-yellow-600 hover:bg-yellow-50"
+        : status === "REJECTED"
+        ? "text-red-600 hover:bg-red-50"
+        : "text-gray-600 hover:bg-gray-100"
+    }`;
 
   return (
-    <>
-     {/*
-      <section>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Tus Campañas</h2>
-        {userCampaigns.length === 0 ? (
-          <div className="py-12 text-center">
-            <img
-              src={vacio}
-              className="w-32 h-32 mx-auto mb-4"
-              alt="Sin campañas"
-            />
-            <p className="text-gray-500 mb-4">
-              No tienes campañas aún. Para crear la primera, da click en Crear Campaña.
-            </p>
-            <a
-              href="/new_campaign"
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
-              style={{backgroundColor:"#74742c"}}
-            >
-              Crear Campaña
-            </a>
+    <div className="px-4 sm:px-6 py-10 max-w-screen-xl mx-auto w-full">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
+          Tus Predios Postulados
+        </h2>
+
+        <div className="flex flex-wrap items-center gap-2 justify-start md:justify-end w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm border">
+            <button onClick={() => handleStatusFilter("ALL")} className={getButtonClass("ALL")}>
+              <FaFilter /> Todos
+            </button>
+            <button onClick={() => handleStatusFilter("APPROVED")} className={getButtonClass("APPROVED")}>
+              <FaThumbsUp /> Aprobado
+            </button>
+            <button onClick={() => handleStatusFilter("PENDING")} className={getButtonClass("PENDING")}>
+              <FaHourglassHalf /> Pendiente
+            </button>
+            <button onClick={() => handleStatusFilter("REJECTED")} className={getButtonClass("REJECTED")}>
+              <FaThumbsDown /> Rechazado
+            </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userCampaigns.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} />
-            ))}
-          </div>
-        )}
+
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            + Crear Predio Sin Asignar
+          </button>
+        </div>
+      </div>
+
+      <section className="mb-12">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <FaBullhorn className="text-purple-500" />
+          Predios Asignados a Campañas
+        </h3>
+        <div className="bg-white shadow rounded-lg overflow-x-auto">
+          <table className="min-w-full text-sm text-left text-gray-700">
+            <thead className="bg-gray-100 text-gray-600 font-medium">
+              <tr>
+                <th className="px-6 py-3">Predio</th>
+                <th className="px-6 py-3">Campaña</th>
+                <th className="px-6 py-3">Región</th>
+                <th className="px-6 py-3">Postulación</th>
+                <th className="px-6 py-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignedProperties.map((p) => (
+                <tr key={p.id} className="border-t">
+                  <td className="px-6 py-4 font-medium">{p.name}</td>
+                  <td className="px-6 py-4">{p.campaign?.name}</td>
+                  <td className="px-6 py-4">
+                    {p.department ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {p.department}
+                      </span>
+                    ) : (
+                      <span className="italic text-gray-400">Sin región</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[p.status] || "bg-gray-100 text-gray-700"}`}>
+                      {statusLabels[p.status] || p.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <a
+                      href={`/property/${p.id}`}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-800 transition"
+                    >
+                      <span className="hover:underline">Ver detalles</span>
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100">
+                        <FaEye size={12} />
+                      </span>
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
-      */}
 
-{userProperties.length > 0 ? (
-        <section className="mt-8">
-          <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-              Tus Predios Postulados
-            </h2>
+      <section>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <FaBullhorn className="text-gray-500" />
+          Predios Sin Asignar
+        </h3>
+        <div className="bg-white shadow rounded-lg overflow-x-auto">
+          <table className="min-w-full text-sm text-left text-gray-700">
+            <thead className="bg-gray-100 text-gray-600 font-medium">
+              <tr>
+                <th className="px-6 py-3">Predio</th>
+                <th className="px-6 py-3">Campaña</th>
+                <th className="px-6 py-3">Región</th>
+                <th className="px-6 py-3">Postulación</th>
+                <th className="px-6 py-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unassignedProperties.map((p) => (
+                <tr key={p.id} className="border-t">
+                  <td className="px-6 py-4 font-medium">{p.name}</td>
+                  <td className="px-6 py-4 text-gray-400 italic">Sin campaña asignada</td>
+                  <td className="px-6 py-4">
+                    {p.department ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {p.department}
+                      </span>
+                    ) : (
+                      <span className="italic text-gray-400">Sin región</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[p.status] || "bg-gray-100 text-gray-700"}`}>
+                      {statusLabels[p.status] || p.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <a
+                      href={`/property/${p.id}`}
+                      className="text-blue-600 hover:underline flex items-center justify-end gap-1"
+                    >
+                      Ver Detalles <FaEye size={14} />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-            {/* 📌 Predios Asignados */}
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-700 mb-4">
-                📌 Predios Asignados a Campañas
-              </h3>
-              {assignedProperties.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {assignedProperties.map((property) => (
-                    <PropertyCard key={property.id} property={property} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No tienes predios asignados a campañas.</p>
-              )}
-            </div>
-
-            {/* 🏡 Predios Sin Asignar */}
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-700 mb-4">
-                🏡 Predios Sin Asignar
-              </h3>
-              {unassignedProperties.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {unassignedProperties.map((property) => (
-                    <PropertyCard key={property.id} property={property} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No tienes predios sin asignar.</p>
-              )}
-
-              {/* 🔹 Botón para abrir el modal de creación de predios sin campaña */}
-              <div className="flex justify-center mt-4">
-               <button
-  onClick={() => setShowModal(true)}
-  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
->
-  + Crear Predio Sin Asignar
-</button>
-
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="mt-8 text-center">
-  <div className="flex flex-col items-center justify-center bg-white shadow-lg rounded-lg p-6">
-    <img src={vacio} className="w-32 h-32 mb-4" alt="Sin predios" />
-    <p className="text-gray-500 text-lg font-medium">No tienes predios postulados.</p>
-
-    {/* 🔹 Botón para abrir el modal de creación de predios sin campaña (Siempre Visible) */}
-    <div className="mt-4">
-      <button
-        onClick={() => setShowModal(true)}
-        className="bg-[#74742c] text-white font-bold py-2 px-4 rounded hover:bg-[#5f5f23]"
-      >
-        + Crear Predio Sin Asignar
-      </button>
-    </div>
-  </div>
-</section>
-
-      )}
-
-      {/* 📌 Modal para crear predios sin campaña */}
       <ModalNewProperty
-        showModal={showModal} 
+        showModal={showModal}
         handleClose={() => setShowModal(false)}
-        campaignId={null}  // No pasamos campaña
-        productId={null}  // No pasamos producto
+        campaignId={null}
+        productId={null}
         fetchCampaign={() => {}}
       />
-   
-
-
-      <section>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center"></h2>
-        {userProjectsFiltered.length === 0 ? (
-          <div></div>
-          /* <div className="py-12 text-center">
-            <img
-              src={vacio}
-              className="w-32 h-32 mx-auto mb-4"
-              alt="Sin proyectos"
-            />
-            <p className="text-gray-500 mb-4">
-              No tienes proyectos aún. Para crear el primero, da click en Postular Proyecto.
-            </p>
-            <a
-              href="/new_project"
-              className="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600"
-            >
-              Postular Proyecto
-            </a>
-          </div> */
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userProjectsFiltered.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        )}
-      </section>
-    </>
+    </div>
   );
 }

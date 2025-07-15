@@ -457,7 +457,7 @@ class ConstructorAdmon extends Component {
     };
 
     return (
-      <div className="container-sm" style={{ paddingTop: 60, minHeight: "100vh" }}>
+    <div className="flex flex-col min-h-screen bg-gray-100" >
         <Row>
           <NewHeaderNavbar/>
           {/* <HeaderNavbar
