@@ -26,7 +26,11 @@ import {
   onCreateVerification,
   onDeleteUserProduct,
 } from "../../../graphql/subscriptions";
-import { listProducts, listUserProducts, listUsers } from "../../../graphql/queries";
+import {
+  listProducts,
+  listUserProducts,
+  listUsers,
+} from "../../../graphql/queries";
 import { graphql } from "graphql";
 import { XIcon } from "components/common/icons/XIcon";
 import { notify } from "utilities/notify";
@@ -182,6 +186,7 @@ export default class AssignPF extends Component {
     this.state = {
       validators: [],
       products: [],
+      availableProducts: [],
       userProducts: [],
       selectedValidator: "",
       selectedProduct: "",
@@ -242,6 +247,26 @@ export default class AssignPF extends Component {
     }
   }
 
+  handleSelectValidator = (validatorId) => {
+    const { userProducts, products } = this.state;
+
+    // Obtener los IDs de los productos asignados al consultor seleccionado
+    const assignedProductIds = userProducts
+      .filter((up) => up.user.id === validatorId)
+      .map((up) => up.product.id);
+
+    // Filtrar productos disponibles
+    const availableProducts = products.filter(
+      (product) => !assignedProductIds.includes(product.id)
+    );
+
+    this.setState({
+      selectedValidator: validatorId,
+      availableProducts,
+      selectedProduct: "", // Reiniciar selección de producto
+    });
+  };
+
   handleAssignProduct = async () => {
     const { selectedValidator, selectedProduct } = this.state;
 
@@ -256,7 +281,9 @@ export default class AssignPF extends Component {
     };
 
     try {
-      await API.graphql(graphqlOperation(createUserProduct, { input: payload }));
+      await API.graphql(
+        graphqlOperation(createUserProduct, { input: payload })
+      );
       this.setState({
         selectedValidator: "",
         selectedProduct: "",
@@ -264,6 +291,7 @@ export default class AssignPF extends Component {
         showError: false,
       });
       await this.loadUserProducts();
+      this.handleSelectValidator(selectedValidator);
     } catch (error) {
       console.error("Error al asignar Consultor:", error);
     }
@@ -276,6 +304,9 @@ export default class AssignPF extends Component {
       );
       this.setState({ showDeleteSuccess: true });
       await this.loadUserProducts();
+      if (this.state.selectedValidator) {
+        this.handleSelectValidator(this.state.selectedValidator); // Actualizar productos disponibles
+      }
     } catch (error) {
       console.error("Error al eliminar asignación:", error);
     }
@@ -292,11 +323,10 @@ export default class AssignPF extends Component {
       showError,
       showDeleteSuccess,
     } = this.state;
-    
 
     return (
-      <div className="container-fluid bg-tecnologia p-5" id="tecnologia">
-        <Container className="bg-white p-4 rounded-lg shadow-sm">
+      <div className="container mx-auto mt-20">
+        <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
           <h2 className="text-center mb-4">Asignar Consultor</h2>
 
           {/* Mensajes de alerta */}
@@ -315,7 +345,8 @@ export default class AssignPF extends Component {
               onClose={() => this.setState({ showError: false })}
               dismissible
             >
-              Por favor, seleccione un consultor y un producto antes de continuar.
+              Por favor, seleccione un consultor y un producto antes de
+              continuar.
             </Alert>
           )}
           {showDeleteSuccess && (
@@ -342,27 +373,32 @@ export default class AssignPF extends Component {
                 {validators.map((validator) => (
                   <option key={validator.id} value={validator.id}>
                     {validator.name}
-                    {validator.role === "validator_financial" ? " (Financiero)" : ""}
+                    {validator.role === "validator_financial"
+                      ? " (Financiero)"
+                      : ""}
                   </option>
                 ))}
               </Form.Select>
             </Form.Group>
 
             <Form.Group controlId="selectProduct" className="mb-3">
-  <Form.Label>Seleccionar Producto</Form.Label>
-  <Form.Select
-    value={selectedProduct}
-    onChange={(e) => this.setState({ selectedProduct: e.target.value })}
-  >
-    <option value="">-- Seleccione un producto --</option>
-    {products.map((product) => (
-      <option key={product.id} value={product.id}>
-        {product.name} {product.campaign ? `(${product.campaign.name})` : ""}
-      </option>
-    ))}
-  </Form.Select>
-</Form.Group>
-
+              <Form.Label>Seleccionar Producto</Form.Label>
+              <Form.Select
+                value={selectedProduct}
+                onChange={(e) =>
+                  this.setState({ selectedProduct: e.target.value })
+                }
+                disabled={!selectedValidator} // Deshabilitar si no hay consultor seleccionado
+              >
+                <option value="">-- Seleccione un producto --</option>
+                {this.state.availableProducts.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}{" "}
+                    {product.campaign ? `(${product.campaign.name})` : ""}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
 
             <div className="text-center">
               <Button
@@ -374,11 +410,11 @@ export default class AssignPF extends Component {
               </Button>
             </div>
           </Form>
-        </Container>
+        </div>
 
-        <Container className="bg-white mt-4 p-4 rounded-lg shadow-sm">
-          <h4 className="text-center mb-4">Validadores Asignados</h4>
-          <Table striped bordered hover>
+        <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
+          <h4 className="text-center mb-4">Consultores Asignados</h4>
+          <Table striped bordered hover responsive>
             <thead>
               <tr>
                 <th>Consultor</th>
@@ -392,7 +428,9 @@ export default class AssignPF extends Component {
                   <tr key={up.id}>
                     <td>
                       {up.user.name}
-                      {up.user.role === "validator" ? " (Consultor)" : " (Financiero)"}
+                      {up.user.role === "validator"
+                        ? " (Consultor)"
+                        : " (Financiero)"}
                     </td>
                     <td>{up.product.name}</td>
                     <td>
@@ -409,13 +447,13 @@ export default class AssignPF extends Component {
               ) : (
                 <tr>
                   <td colSpan="3" className="text-center">
-                    No hay validadores asignados.
+                    No hay Consultores asignados.
                   </td>
                 </tr>
               )}
             </tbody>
           </Table>
-        </Container>
+        </div>
       </div>
     );
   }

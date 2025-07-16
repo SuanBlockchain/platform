@@ -1,197 +1,85 @@
-import React, { Component } from "react";
-// Bootstrap
-import { Button, Container, Nav, Navbar, Dropdown } from "react-bootstrap";
-// Import React Bootstrap Icons
-/* import { Filter, InfoCircle } from 'react-bootstrap-icons' */
-// import { InfoCircle, Rulers, Printer, Filter, Percent, ListTask } from 'react-bootstrap-icons'
-
-// Import images
+import React, { useState } from "react";
 import LOGO from "../../common/_images/suan_logo.png";
+import TerrasachaLogo from "components/common/TerrasachaLogo";
 
-export default class HeaderNavbar extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.changeHeaderNavBarRequest =
-      this.props.changeHeaderNavBarRequest.bind(this);
-    this.handleSignOut = this.props.handleSignOut.bind(this);
-    this.handleChangeObjectElement = this.handleChangeObjectElement.bind(this);
-  }
 
-  async handleChangeObjectElement() {
-    console.log("handleChangeObjectElement: ");
-    this.props.handleSignOut();
-  }
 
-  handleOnChangeInputForm = async (event) => {
-    if (event.target.name === "desiredSubscriptionTopic") {
-      await this.setState({ desiredSubscriptionTopic: event.target.value });
+const HeaderNavbar = ({ isActualUserLogged, changeHeaderNavBarRequest, handleSignOut }) => {
+  const [desiredSubscriptionTopic, setDesiredSubscriptionTopic] = useState("");
+  const [desiredPublishTopic, setDesiredPublishTopic] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const role = localStorage.getItem("role");
+
+  const handleOnChangeInputForm = (event) => {
+    const { name, value } = event.target;
+    if (name === "desiredSubscriptionTopic") {
+      setDesiredSubscriptionTopic(value);
     }
-    if (event.target.name === "desiredPublishTopic") {
-      await this.setState({ desiredPublishTopic: event.target.value });
+    if (name === "desiredPublishTopic") {
+      setDesiredPublishTopic(value);
     }
   };
-  // RENDER
-  render() {
-    let { isActualUserLogged } = this.props;
-    let role = localStorage.getItem("role");
-    const renderNavBar = () => {
-      if (isActualUserLogged) {
-        return (
-          <Navbar style={{ backgroundColor: "#fff" }} fixed="top">
-            <Container>
-              <Navbar.Brand href="/">
-                <img src={LOGO} className="w-8 h-auto" alt="ATP" />
-              </Navbar.Brand>
-              <Navbar.Toggle aria-controls="navbarScroll" />
-              <Navbar.Collapse id="navbarScroll">
-                <Nav
-                  className="me-auto my-2 my-lg-0"
-                  style={{ maxHeight: "100px" }}
-                  navbarScroll
-                >
-                  <Nav.Link
-                    href="#products"
-                    onClick={(e) =>
-                      this.changeHeaderNavBarRequest("products", e)
-                    }
-                  >
-                    Proyectos
-                  </Nav.Link>
-                  {/* 
-                  <Nav.Link
-                    href="#documents"
-                    onClick={(e) =>
-                      this.changeHeaderNavBarRequest("documents", e)
-                    }
-                  >
-                    Documentos
-                  </Nav.Link>
 
-                  <Nav.Link
-                    href="#formulas"
-                    onClick={(e) =>
-                      this.changeHeaderNavBarRequest("formulas", e)
-                    }
-                  >
-                    E Fórmulas
-                  </Nav.Link>
+  const handleChangeObjectElement = () => {
+    handleSignOut();
+  };
 
-                  <Nav.Link
-                    href="#results"
-                    onClick={(e) =>
-                      this.changeHeaderNavBarRequest("results", e)
-                    }
-                  >
-                    Resultados
-                  </Nav.Link> */}
-                  <Nav.Link
-                    href="#categorys"
-                    onClick={(e) =>
-                      this.changeHeaderNavBarRequest("categorys", e)
-                    }
-                  >
-                    Categorías
-                  </Nav.Link>
-                  <Nav.Link
-                    href="#items"
-                    onClick={(e) => this.changeHeaderNavBarRequest("items", e)}
-                  >
-                    Items de proyectos
-                  </Nav.Link>
-                  <Nav.Link
-                    href="#features"
-                    onClick={(e) =>
-                      this.changeHeaderNavBarRequest("features", e)
-                    }
-                  >
-                    Features
-                  </Nav.Link>
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
 
-                  <Nav.Link
-                    href="#uom"
-                    onClick={(e) => this.changeHeaderNavBarRequest("uom", e)}
-                  >
-                    UOM
-                  </Nav.Link>
-                </Nav>
-                <Nav>
-                <div style={{ fontWeight: "700", color: "#FE4849", border: '3px solid #FE4849', padding: '.2rem 2rem', marginRight: '1rem'}}>
-                    {process.env.REACT_APP_ENV}
-                  </div>
-                  <div style={{ fontWeight: "700", color: "#FE4849", padding: '.2rem 2rem' }}>
-                    {role ? role : ""}
-                  </div>
-                  <Dropdown align={'end'}>
-                    <Dropdown.Toggle variant="secondary" id="dropdown-basic" style={{ margin:'0 2rem'}}>
-                      Más acciones
-                    </Dropdown.Toggle>
+  const handleMenuItemClick = (e, request) => {
+    changeHeaderNavBarRequest(request, e);
+    setDropdownOpen(false); // Cerrar el dropdown al seleccionar una opción
+  };
 
-                    <Dropdown.Menu>
-                      {/* <Dropdown.Item href="/new_project">Crear proyecto</Dropdown.Item> */}
-                      <Dropdown.Item
-                        href="#assign_pf"
-                        onClick={(e) =>
-                          this.changeHeaderNavBarRequest("assign_pf", e)
-                        }
-                      >
-                        Asignar Validadores
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                      href="#assign_analyst"
-                      onClick={(e) => this.changeHeaderNavBarRequest("assign_analyst", e)}
-                      >
-                      Asignar Analista
-                        </Dropdown.Item>
+  if (!isActualUserLogged) return null;
 
-                      <Dropdown.Item
-                        href="#validators"
-                        onClick={(e) =>
-                          this.changeHeaderNavBarRequest("validators", e)
-                        }
-                      >
-                        Validadores
-                      </Dropdown.Item>
-                      {/* Nueva entrada para Analistas */}
-                      <Dropdown.Item
-                        href="#analysts"
-                        onClick={(e) =>
-                          this.changeHeaderNavBarRequest("analysts", e)
-                        }
-                      >
-                        Analistas
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        href="#marketplace_admin"
-                        onClick={(e) =>
-                          this.changeHeaderNavBarRequest("marketplace_admin", e)
-                        }
-                      >
-                        Crear marketplace admin
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        href="#apps_status"
-                        onClick={(e) =>
-                          this.changeHeaderNavBarRequest("apps_status", e)
-                        }
-                      >
-                        Apps status
-                      </Dropdown.Item>
-                      <Dropdown.Divider />
-                      <Dropdown.Item onClick={(e) => this.handleChangeObjectElement()}>
-                        Sign Out
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </Nav>
-              </Navbar.Collapse>
-            </Container>
-          </Navbar>
-        );
-      }
-    };
+  return (
+    <nav className="bg-white fixed top-0 w-full shadow-md z-10">
+      <div className="mx-auto flex justify-between items-center p-4">
+        <a href="/" className="flex items-center flex-none">
+      <TerrasachaLogo className={"w-48 h-auto"} />
+        </a>
+        <div className="flex items-center space-x-4">
+          <div className="hidden md:block font-bold text-red-500 border-2 border-red-500 px-4 py-1">{process.env.REACT_APP_ENV}</div>
+          <div className="hidden md:block font-bold text-red-500">{role === "admon" ? "Administrador" : role || ""}</div>
+          <div className="relative">
+            <button onClick={toggleDropdown} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md focus:outline-none">Menu</button>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg">
+              <div className="block md:hidden font-bold text-red-500 border-red-500 px-4 py-1 mt-2">Env: {process.env.REACT_APP_ENV}</div>
+              <div className="block md:hidden font-bold text-red-500 border-red-500 px-4 py-1">Rol: {role === "admon" ? "Administrador" : role || ""}</div>
+                <div className="block md:hidden border-t my-2"></div>
+                <div className="px-4 py-2 font-bold text-gray-800">Navegación Principal</div>
+                <a href="#products" onClick={(e) => handleMenuItemClick(e, "products")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Proyectos</a>
+                <a href="#categorys" onClick={(e) => handleMenuItemClick(e, "categorys")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Categorías</a>
+                <a href="#items" onClick={(e) => handleMenuItemClick(e, "items")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Items de proyectos</a>
+                <a href="#features" onClick={(e) => handleMenuItemClick(e, "features")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Características</a>
+                <a href="#uom" onClick={(e) => handleMenuItemClick(e, "uom")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Unidad de medida</a>
+                
+                <div className="border-t my-2"></div>
+                
+                <div className="px-4 py-2 font-bold text-gray-800">Acciones</div>
+                <a href="#assign_pf" onClick={(e) => handleMenuItemClick(e, "assign_pf")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Asignar Consultores</a>
+                <a href="#assign_analyst" onClick={(e) => handleMenuItemClick(e, "assign_analyst")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Asignar Analista</a>
+              {/*  <a href="#assign_Legales" onClick={(e) => handleMenuItemClick(e, "assign_Legales")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Asignar Legales</a>*/  }
+                <a href="#validators" onClick={(e) => handleMenuItemClick(e, "validators")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Consultores</a>
+                <a href="#analysts" onClick={(e) => handleMenuItemClick(e, "analysts")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Analistas</a>
+                <a href="#legales" onClick={(e) => handleMenuItemClick(e, "legales")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Legales</a>
+                <a href="#marketplace_admin" onClick={(e) => handleMenuItemClick(e, "marketplace_admin")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Crear marketplace admin</a>
+                <a href="#apps_status" onClick={(e) => handleMenuItemClick(e, "apps_status")} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Estado de las aplicaciones</a>
+                
+                <div className="border-t my-2"></div>
+                
+                <button onClick={handleChangeObjectElement} className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Cerrar sesión</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
 
-    // RENDER
-    return <>{renderNavBar()}</>;
-  }
-}
+export default HeaderNavbar;

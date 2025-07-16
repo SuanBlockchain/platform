@@ -5,7 +5,6 @@ export default function getCampaignsByUserID({userID} = {}) {
   return API.graphql(graphqlOperation(listCampaigns))
     .then((res) => {
       if (!res.data.listCampaigns) throw new Error("Response is NOT ok");
-      console.log(res.data.listCampaigns)
       return res.data.listCampaigns.items
     })
     .then((res) => {

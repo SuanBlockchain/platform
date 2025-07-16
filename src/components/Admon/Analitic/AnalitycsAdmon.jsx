@@ -1,19 +1,20 @@
 import React, { Component } from "react";
 
 //Bootstrap
-import { Button, Card, Container, Stack, Badge } from "react-bootstrap";
+import { Button, Card, Container, Stack, Badge, Table, Modal } from "react-bootstrap";
 import HeaderNavbar from "../../Investor/Navbars/HeaderNavbar";
 // GraphQL
 import { API, Auth, graphqlOperation, Storage } from "aws-amplify";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { listProducts } from "../../../utilities/customQueries";
+import { listProducts, listProperties } from "../../../utilities/customQueries";
 import {
   getImagesCategories,
   getYearFromAWSDatetime,
 } from "../../Constructor/ProjectPage/utils";
 import S3FileManager from "./S3FileManager";
 import { S3ClientProvider } from "context/s3ClientContext";
+import TerrasachaLogo from "components/common/TerrasachaLogo";
 
 export const listDocuments = /* GraphQL */ `
   query ListDocuments(
@@ -149,6 +150,10 @@ class AnalitycsAdmon extends Component {
       selectedProductVerificationID: null,
       creatingVerification: false,
       users: [],
+      properties: [],
+      showFileManager: false,
+      selectedItem: null,
+      fileManagerType: null, // 'project' o 'property'
       verification: {
         id: "",
         createdOn: "",
@@ -167,6 +172,8 @@ class AnalitycsAdmon extends Component {
     };
     this.changeHeaderNavBarRequest = this.changeHeaderNavBarRequest.bind(this);
     this.logOut = this.logOut.bind(this);
+    this.handleShowFileManager = this.handleShowFileManager.bind(this);
+    this.handleCloseFileManager = this.handleCloseFileManager.bind(this);
   }
 
   componentDidMount = async () => {
@@ -175,6 +182,7 @@ class AnalitycsAdmon extends Component {
     this.setState({ actualUser: actualUser });
 
     await this.loadVerifierProducts();
+    await this.loadProperties();
   };
 
   async loadVerifierProducts() {
@@ -191,6 +199,17 @@ class AnalitycsAdmon extends Component {
 
     this.setState({ products: verifierAssignedProducts });
   }
+
+  async loadProperties() {
+    try {
+      const response = await API.graphql(graphqlOperation(listProperties));
+      this.setState({ properties: response.data.listProperties.items });
+    } catch (error) {
+      console.error("Error loading properties:", error);
+      toast.error("Error al cargar los predios");
+    }
+  }
+
   async changeHeaderNavBarRequest(pRequest) {
     if (pRequest === "product_documents") {
       this.setState({
@@ -211,8 +230,146 @@ class AnalitycsAdmon extends Component {
     localStorage.removeItem("role");
   }
 
+  handleShowFileManager = (item, type) => {
+    this.setState({
+      showFileManager: true,
+      selectedItem: item,
+      fileManagerType: type
+    });
+  };
+
+  handleCloseFileManager = () => {
+    this.setState({
+      showFileManager: false,
+      selectedItem: null,
+      fileManagerType: null
+    });
+  };
+
   render() {
-    const { products } = this.state;
+    const { products, properties, showFileManager, selectedItem, fileManagerType } = this.state;
+
+    console.log('properties', properties);
+    console.log('products', products);
+
+    const renderProjectsTable = () => {
+      return (
+        <div className="mt-5">
+          <h2>Proyectos</h2>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Marketplace</th>
+                <th>Fecha de Creación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.id}>
+                  <td>{product.name}</td>
+                  <td>{product.categoryID}</td>
+                  <td>
+                    <Stack direction="horizontal" gap={2}>
+                      {product.isActive && (
+                        <Badge bg="success">Activo</Badge>
+                      )}
+                      {product.projectReadiness && (
+                        <Badge bg="primary">Listo</Badge>
+                      )}
+                    </Stack>
+                  </td>
+                  <td>{product.showOn || "No asignado"}</td>
+                  <td>{getYearFromAWSDatetime(product.createdAt)}</td>
+                  <td>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      href={`project/${product.id}`}
+                      className="me-2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Ver
+                    </Button>
+                    <Button
+                      variant="info"
+                      size="sm"
+                      onClick={() => this.handleShowFileManager(product, 'project')}
+                    >
+                      Archivos
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      );
+    };
+
+    const renderProjectsAndPropertiesTable = () => {
+      return (
+        <div className="mt-5">
+          <h2>Proyectos y Predios</h2>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Proyecto</th>
+                <th>Predio</th>
+                <th>Departamento</th>
+                <th>Estado</th>
+                <th>Propietario</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => {
+                const productProperties = properties.filter(
+                  (prop) => prop.productID === product.id
+                );
+                
+                return productProperties.map((property, index) => (
+                  <tr key={`${product.id}-${property.id}`}>
+                    <td>{index === 0 ? product.name : ""}</td>
+                    <td>{property.name}</td>
+                    <td>{property.department}</td>
+                    <td>
+                      <Badge bg={property.status === "APPROVED" ? "success" : "warning"}>
+                        {property.status}
+                      </Badge>
+                    </td>
+                    <td>{property.user?.name || "No asignado"}</td>
+                    <td>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        href={`property/${property.id}`}
+                        className="me-2"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Ver
+                      </Button>
+                      <Button
+                        variant="info"
+                        size="sm"
+                        onClick={() => this.handleShowFileManager(property, 'property')}
+                      >
+                        Archivos
+                      </Button>
+                    </td>
+                  </tr>
+                ));
+              })}
+            </tbody>
+          </Table>
+        </div>
+      );
+    };
 
     const renderUploadFiles = () => {
       return (
@@ -223,7 +380,6 @@ class AnalitycsAdmon extends Component {
     };
 
     const renderValidatingProjects = () => {
-      console.log("products", products);
       if (products) {
         return (
           <>
@@ -282,52 +438,50 @@ class AnalitycsAdmon extends Component {
             )}
             <div className="row row-cols-1 row-cols-sm-3 g-2 m-4">
               {products.length > 0 &&
-                products
-                  .filter((prod) => prod.campaignID === null)
-                  .map((product, index) => {
-                    return (
-                      <div key={index} className="p-3">
-                        <Card key={product.id} className="p-0">
-                          <img
-                            variant="top"
-                            src={getImagesCategories(product.categoryID)}
-                            style={{ height: "150px" }}
-                            alt="Hola"
-                          />
-                          <Card.Body>
-                            <div className="d-flex">
-                              <Stack direction="horizontal" gap={2}>
-                                <Badge bg="primary">
-                                  {getYearFromAWSDatetime(product.createdAt)}
+                products.map((product, index) => {
+                  return (
+                    <div key={index} className="p-3">
+                      <Card key={product.id} className="p-0">
+                        <img
+                          variant="top"
+                          src={getImagesCategories(product.categoryID)}
+                          style={{ height: "150px" }}
+                          alt="Hola"
+                        />
+                        <Card.Body>
+                          <div className="d-flex">
+                            <Stack direction="horizontal" gap={2}>
+                              <Badge bg="primary">
+                                {getYearFromAWSDatetime(product.createdAt)}
+                              </Badge>
+                              <Badge bg="primary">{product.categoryID}</Badge>
+                              {product.isActive && (
+                                <Badge bg="success">Publicado</Badge>
+                              )}
+                              {product.showOn && (
+                                <Badge bg="secondary">
+                                  Marketplace {product.showOn}
                                 </Badge>
-                                <Badge bg="primary">{product.categoryID}</Badge>
-                                {product.isActive && (
-                                  <Badge bg="success">Publicado</Badge>
-                                )}
-                                {product.showOn && (
-                                  <Badge bg="secondary">
-                                    Marketplace {product.showOn}
-                                  </Badge>
-                                )}
-                              </Stack>
-                            </div>
-                            <p className="fs-5 my-2">{product.name}</p>
-                            <hr className="mb-2" />
-                            <p className="fs-6 my-2 text-h">
-                              {product.description}
-                            </p>
-                          </Card.Body>
-                          <Card.Footer>
-                            <div className="d-flex justify-content-center align-items-center">
-                              <a href={"project/" + product.id}>
-                                <Button>Ver más</Button>
-                              </a>
-                            </div>
-                          </Card.Footer>
-                        </Card>
-                      </div>
-                    );
-                  })}
+                              )}
+                            </Stack>
+                          </div>
+                          <p className="fs-5 my-2">{product.name}</p>
+                          <hr className="mb-2" />
+                          <p className="fs-6 my-2 text-h">
+                            {product.description}
+                          </p>
+                        </Card.Body>
+                        <Card.Footer>
+                          <div className="d-flex justify-content-center align-items-center">
+                            <a href={"project/" + product.id}>
+                              <Button>Ver más</Button>
+                            </a>
+                          </div>
+                        </Card.Footer>
+                      </Card>
+                    </div>
+                  );
+                })}
             </div>
           </>
         );
@@ -335,6 +489,7 @@ class AnalitycsAdmon extends Component {
         return <div>is loading ...</div>;
       }
     };
+
     return (
       <Container style={{ paddingTop: 70, minHeight: "100vh" }}>
         <HeaderNavbar
@@ -342,8 +497,33 @@ class AnalitycsAdmon extends Component {
           changeHeaderNavBarRequest={this.changeHeaderNavBarRequest}
         ></HeaderNavbar>
         <ToastContainer />
-        {renderUploadFiles()}
-        {renderValidatingProjects()}
+        {renderProjectsTable()}
+        {renderProjectsAndPropertiesTable()}
+
+        <Modal
+          show={showFileManager}
+          onHide={this.handleCloseFileManager}
+          size="xl"
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {fileManagerType === 'project' 
+                ? `Archivos del Proyecto: ${selectedItem?.name}`
+                : `Archivos del Predio: ${selectedItem?.name}`}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <S3ClientProvider>
+              <S3FileManager
+                userId={this.state.actualUser}
+                products={products}
+                selectedItem={selectedItem}
+                type={fileManagerType}
+              />
+            </S3ClientProvider>
+          </Modal.Body>
+        </Modal>
       </Container>
     );
   }

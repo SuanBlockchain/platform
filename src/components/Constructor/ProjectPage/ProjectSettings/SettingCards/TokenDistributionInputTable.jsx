@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { API, graphqlOperation } from "aws-amplify";
-import TableEdit from "components/common/TableEdit";
+import TokenDistributionTable from "./TokenDistributionTable";
 import Card from "../../../../common/Card";
 import { useProjectData } from "../../../../../context/ProjectDataContext";
 import {
@@ -8,14 +8,19 @@ import {
   updateProductFeature,
 } from "../../../../../graphql/mutations";
 import { notify } from "../../../../../utilities/notify";
+import useFetchPropertiesProject from "hooks/useFetchPropertiesProject";
+import { getAreaFromPf } from "../../mappers";
 
 export default function TokenDistributionInputTable(props) {
   const { className, title, fID, financialInfoType, canEdit, conceptOptions } =
     props;
 
   const { projectData, fetchProjectData } = useProjectData();
+  const { properties } = useFetchPropertiesProject();
   const [revenuesByProduct, setRevenuesByProduct] = useState([]);
   const [pfID, setPfID] = useState(null);
+  const [tokensAvailableDistribution, setTokensAvailableDistribution] =
+    useState(0);
 
   const totalTokensPF = JSON.parse(
     projectData.projectFeatures.find(
@@ -37,10 +42,14 @@ export default function TokenDistributionInputTable(props) {
     (sum, item) => sum + parseInt(item.CANTIDAD),
     0
   );
-  console.log("totalTokens", totalTokens);
-  console.log("totalDistributedTokens", totalDistributedTokens);
 
-  const tokensAvailableDistribution = totalTokens - totalDistributedTokens;
+  useEffect(() => {
+    const currentDistributed = revenuesByProduct.reduce(
+      (sum, item) => sum + (parseInt(item.TOKENS, 10) || 0),
+      0
+    );
+    setTokensAvailableDistribution(totalTokens - currentDistributed);
+  }, [revenuesByProduct, totalTokens]);
 
   useEffect(() => {
     if (projectData.projectFinancialInfo[financialInfoType]) {
@@ -49,22 +58,76 @@ export default function TokenDistributionInputTable(props) {
           `${financialInfoType}ID`
         ] || null
       );
-      setRevenuesByProduct(
+      const rawData =
         projectData.projectFinancialInfo[financialInfoType][
           financialInfoType
-        ] || []
+        ] || [];
+      setRevenuesByProduct(
+        rawData.map((item) => {
+          const newItem = {
+            STAKEHOLDER: item.CONCEPTO,
+            TOKENS: item.CANTIDAD,
+          };
+          if (item.CONCEPTO === 'PROPIETARIO') {
+            const savedDistribution = item.propertyDistribution;
+            if (savedDistribution && savedDistribution.length > 0) {
+              newItem.propertyDistribution = savedDistribution;
+            } else {
+              const totalArea = properties.reduce((sum, p) => sum + parseFloat(getAreaFromPf(p) || 0), 0);
+              newItem.propertyDistribution = properties.map(p => {
+                const area = parseFloat(getAreaFromPf(p) || 0);
+                const percentage = totalArea > 0 ? ((area / totalArea) * 100).toFixed(2) : '0.00';
+                return {
+                  propertyId: p.id,
+                  name: p.name,
+                  percentage: percentage,
+                  tokens: (parseFloat(percentage) / 100) * (parseFloat(item.CANTIDAD) || 0)
+                };
+              });
+            }
+          }
+          return newItem;
+        })
       );
     }
-  }, [projectData]);
+  }, [projectData, properties]);
 
   const handleChangeInputValue = async (e) => {
     const { name, value } = e.target;
     if (name.includes("input-")) {
       const [_, column, indexRow] = name.split("-");
       setRevenuesByProduct((prevState) =>
-        prevState.map((item, index) =>
-          index === parseInt(indexRow) ? { ...item, [column]: value } : item
-        )
+        prevState.map((item, index) => {
+          if (index === parseInt(indexRow)) {
+            const updatedItem = { ...item, [column]: value };
+            if (column === 'STAKEHOLDER') {
+              if (value === 'PROPIETARIO') {
+                const totalArea = properties.reduce((sum, p) => sum + parseFloat(getAreaFromPf(p) || 0), 0);
+                const tokensValue = parseFloat(item.TOKENS) || 0;
+                updatedItem.propertyDistribution = properties.map(p => {
+                    const area = parseFloat(getAreaFromPf(p) || 0);
+                    const percentage = totalArea > 0 ? ((area / totalArea) * 100).toFixed(2) : '0.00';
+                    return {
+                        propertyId: p.id,
+                        name: p.name,
+                        percentage: percentage,
+                        tokens: (parseFloat(percentage) / 100) * tokensValue
+                    };
+                });
+              } else {
+                delete updatedItem.propertyDistribution;
+              }
+            } else if (column === 'TOKENS' && item.STAKEHOLDER === 'PROPIETARIO' && updatedItem.propertyDistribution) {
+                const newTokensValue = parseFloat(value) || 0;
+                updatedItem.propertyDistribution = updatedItem.propertyDistribution.map(dist => ({
+                    ...dist,
+                    tokens: (parseFloat(dist.percentage) / 100) * newTokensValue
+                }));
+            }
+            return updatedItem;
+          }
+          return item;
+        })
       );
     }
   };
@@ -109,7 +172,11 @@ export default function TokenDistributionInputTable(props) {
       return;
     }
     let revenueByProductToUpload = revenuesByProduct.map((rbp) => {
-      return { CONCEPTO: rbp.CONCEPTO, CANTIDAD: rbp.CANTIDAD };
+      const { STAKEHOLDER, TOKENS } = rbp;
+      return {
+        CONCEPTO: STAKEHOLDER,
+        CANTIDAD: TOKENS,
+      };
     });
     if (
       revenuesByProduct[indexToSave].CONCEPTO &&
@@ -139,7 +206,6 @@ export default function TokenDistributionInputTable(props) {
           id: pfID,
           value: JSON.stringify(revenueByProductToUpload),
         };
-        console.log(tempProductFeature, "ya existe");
         const response = await API.graphql(
           graphqlOperation(updateProductFeature, { input: tempProductFeature })
         );
@@ -153,7 +219,6 @@ export default function TokenDistributionInputTable(props) {
           productID: projectData.projectInfo.id,
           featureID: fID,
         };
-        console.log(tempProductFeature, "no existe");
 
         const response = await API.graphql(
           graphqlOperation(createProductFeature, { input: tempProductFeature })
@@ -179,64 +244,129 @@ export default function TokenDistributionInputTable(props) {
   };
 
   const handleDeleteHistoricalData = async (indexToDelete) => {
+    setRevenuesByProduct((prevState) => prevState.filter((_, index) => index !== indexToDelete));
+  };
+
+  const handleAddCashFlow = async () => {
+    setRevenuesByProduct((prevState) => [
+      ...prevState,
+      {
+        STAKEHOLDER: "",
+        TOKENS: "0",
+      },
+    ]);
+  };
+
+  const handleSaveAll = async () => {
     let error = false;
+    // Validar que no haya conceptos vacíos
+    if (revenuesByProduct.some(row => !row.STAKEHOLDER || row.STAKEHOLDER === "")) {
+      notify({
+        msg: "No puedes guardar si algún concepto está vacío.",
+        type: "error",
+      });
+      return false;
+    }
 
-    const tempRevenuesByProduct = revenuesByProduct.filter(
-      (_, index) => index !== indexToDelete
+    // Validar que no haya conceptos duplicados
+    const concepts = revenuesByProduct.map(row => row.STAKEHOLDER).filter(Boolean);
+    const hasDuplicateConcept = new Set(concepts).size !== concepts.length;
+    if (hasDuplicateConcept) {
+      notify({
+        msg: "No puedes guardar stakeholders duplicados.",
+        type: "error",
+      });
+      return false;
+    }
+
+    // Validar suma de tokens
+    const updatedTotalDistributedTokensAmount = revenuesByProduct.reduce(
+      (sum, item) => sum + parseInt(item.TOKENS),
+      0
     );
-
-    const updatedRevenuesByProduct = tempRevenuesByProduct.map((item) => {
-      const { editing, ...rest } = item;
-      return rest;
+    if (parseInt(totalTokens) < updatedTotalDistributedTokensAmount) {
+      notify({
+        msg: "La suma de los tokens distribuidos no concuerda con el volumen de tokens",
+        type: "error",
+      });
+      return false;
+    }
+    // Guardar toda la tabla (crear o actualizar el productFeature)
+    let revenueByProductToUpload = revenuesByProduct.map((rbp) => {
+      const itemToUpload = {
+        CONCEPTO: rbp.STAKEHOLDER,
+        CANTIDAD: rbp.TOKENS,
+      };
+      if (rbp.STAKEHOLDER === 'PROPIETARIO') {
+        itemToUpload.propertyDistribution = rbp.propertyDistribution || [];
+      }
+      return itemToUpload;
     });
-    setRevenuesByProduct(tempRevenuesByProduct);
-
-    if (pfID) {
+    const existingFeature = projectData.projectFeatures.find(
+      (item) => item.featureID === "GLOBAL_TOKEN_AMOUNT_DISTRIBUTION"
+    );
+    if (existingFeature) {
       let tempProductFeature = {
-        id: pfID,
-        value: JSON.stringify(updatedRevenuesByProduct),
+        id: existingFeature.id,
+        value: JSON.stringify(revenueByProductToUpload),
       };
       const response = await API.graphql(
         graphqlOperation(updateProductFeature, { input: tempProductFeature })
       );
-
       if (!response.data.updateProductFeature) error = true;
-      await fetchProjectData();
+    } else {
+      let tempProductFeature = {
+        value: JSON.stringify(revenueByProductToUpload),
+        isToBlockChain: false,
+        isOnMainCard: false,
+        productID: projectData.projectInfo.id,
+        featureID: "GLOBAL_TOKEN_AMOUNT_DISTRIBUTION",
+      };
+      const response = await API.graphql(
+        graphqlOperation(createProductFeature, { input: tempProductFeature })
+      );
+      if (!response.data.createProductFeature) error = true;
     }
-
+    await fetchProjectData();
     if (!error) {
       notify({
-        msg: "Valores borrados exitosamente",
+        msg: "Distribución de tokens guardada exitosamente",
         type: "success",
       });
+      return true
     }
   };
 
-  const handleAddCashFlow = async () => {
-    let isEditingSomeHistoryData = false;
-    if (revenuesByProduct.length > 0) {
-      isEditingSomeHistoryData = revenuesByProduct.some(
-        (tokenHD) => tokenHD.editing === true
-      );
-    }
-    if (!isEditingSomeHistoryData) {
-      setRevenuesByProduct((prevState) => {
-        return [
-          ...prevState,
-          {
-            CONCEPTO: "",
-            CANTIDAD: "0",
-            editing: true,
-          },
-        ];
-      });
-    } else {
-      notify({
-        msg: "Guarda primero los datos antes de agregar una nueva fila",
-        type: "error",
-      });
-    }
+  const handleOwnerDistributionChange = (rowIndex, newDistribution) => {
+    setRevenuesByProduct(prevState =>
+      prevState.map((row, index) => {
+        if (index === rowIndex) {
+          const totalOwnerTokens = parseFloat(row.TOKENS) || 0;
+          const totalPercentage = newDistribution.reduce((sum, owner) => sum + (parseFloat(owner.percentage) || 0), 0);
+          if (totalPercentage > 100) {
+            notify({
+              msg: "El porcentaje total de propietarios no puede exceder el 100%",
+              type: "error",
+            });
+            return row; // No actualizar si excede
+          }
+          return { ...row, ownerDistribution: newDistribution };
+        }
+        return row;
+      })
+    );
   };
+
+  const handlePropertyDistributionChange = useCallback((rowIndex, newDistribution) => {
+    setRevenuesByProduct(prevState =>
+      prevState.map((row, index) => {
+        if (index === rowIndex) {
+          return { ...row, propertyDistribution: newDistribution };
+        }
+        return row;
+      })
+    );
+  }, []);
 
   return (
     <>
@@ -249,16 +379,18 @@ export default function TokenDistributionInputTable(props) {
               Tokens disponibles para distribución:{" "}
               {parseFloat(tokensAvailableDistribution).toLocaleString("es-ES")}
             </p>
-            <TableEdit
+            <TokenDistributionTable
               canEdit={canEdit}
               conceptOptions={conceptOptions}
-              columns={["CONCEPTO", "CANTIDAD"]}
+              columns={["STAKEHOLDER", "TOKENS"]}
               infoTable={revenuesByProduct}
               handleEditValue={handleEditValue}
               handleChangeInputValue={handleChangeInputValue}
               handleAddCashFlow={handleAddCashFlow}
-              handleSaveHistoricalData={handleSaveHistoricalData}
               handleDeleteHistoricalData={handleDeleteHistoricalData}
+              handleSaveAll={handleSaveAll}
+              properties={properties}
+              handlePropertyDistributionChange={handlePropertyDistributionChange}
             />
           </div>
         </Card.Body>

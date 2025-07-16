@@ -16,7 +16,6 @@ export function PropertyDataProvider({ children }) {
       console.error("Page parameter is missing.");
       return;
     }
-    console.log("pID", pID);
     setPropertyID(pID);
     await fetchPropertyData(pID);
   };
@@ -25,7 +24,6 @@ export function PropertyDataProvider({ children }) {
     const property_id = propertyID || pID;
     if (property_id) {
       const data = await fetchPropertyDataByPropertyID(property_id);
-      console.log("Mapped Project Data: ", data);
       setPropertyData(data);
 
       return data;

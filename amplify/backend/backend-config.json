@@ -18,7 +18,7 @@
     }
   },
   "auth": {
-    "platformauth": {
+    "platform": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {
@@ -44,7 +44,7 @@
     }
   },
   "storage": {
-    "platformstorage": {
+    "platform": {
       "dependsOn": [],
       "providerPlugin": "awscloudformation",
       "service": "S3"

@@ -13,7 +13,7 @@ export default class CRUDProductFeatures extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            CRUDButtonName: 'ADD',
+            CRUDButtonName: 'AGREGAR',
             isCRUDButtonDisable: true,
             newProductFeature: {
                 id: '',
@@ -85,14 +85,13 @@ export default class CRUDProductFeatures extends Component {
     async handleCRUDProductFeature() {
         let tempNewProductFeature = this.state.newProductFeature
 
-        if (this.state.CRUDButtonName === 'ADD') {
+        if (this.state.CRUDButtonName === 'AGREGAR') {
             if(tempNewProductFeature.order === '') tempNewProductFeature.order = 0
             tempNewProductFeature.id = uuidv4().replaceAll('-','_')
             tempNewProductFeature.productID = this.props.CRUD_Product.id
             tempNewProductFeature.featureID = this.props.selectedFeature.id
             
             const pF = await API.graphql(graphqlOperation(createProductFeature, { input: tempNewProductFeature }) )
-            console.log(pF, "pf")
             let constructorID = ''
             pF.data.createProductFeature.product.userProducts.items.map( uP => {
                 if (uP.user.role === 'constructor') {
@@ -134,7 +133,7 @@ export default class CRUDProductFeatures extends Component {
 
     async cleanProductFeatureCreate() {
         this.setState({
-            CRUDButtonName: 'ADD',
+            CRUDButtonName: 'AGREGAR',
             isCRUDButtonDisable: true,
             newProductFeature: {
                 id: '',
@@ -177,15 +176,15 @@ export default class CRUDProductFeatures extends Component {
     const renderCRUDProductFeatures = () => {
         return (
             <>
-            <Table striped bordered hover>
+            <Table striped bordered hover responsive>
                 <thead>
                 <tr>
-                    <th>Feature</th>
-                    <th>Value</th>
-                    <th>Order</th>
-                    <th>Is on Main Card</th>
-                    <th>Is to BlockChain</th>
-                    <th>Is verifable</th>
+                    <th>Característica</th>
+                    <th>Valor</th>
+                    <th>Orden</th>
+                    <th>¿Está en la tarjeta principal?</th>
+                    <th>¿Es a BlockChain?</th>
+                    <th>¿Es verificable?</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -194,6 +193,7 @@ export default class CRUDProductFeatures extends Component {
                             <Form.Group as={Col} controlId='formGridCRUD_ProductFeature'>
                                     <Select 
                                         options={featuresSelectList}
+                                        placeholder="Seleccionar ..."
                                         onChange={this.handleOnSelectFeature} />
                                         {this.state.CRUDButtonName === 'UPDATE'?
                                             <Alert key="idx_key_1" variant='success' size='sm'>
@@ -227,10 +227,10 @@ export default class CRUDProductFeatures extends Component {
                                     <Form.Select  name='isOnMainCardProductFeature' onChange={(e) => this.handleCreateProductFeature(e)} >
                                         <option>-</option>
                                         <option value='no'>No</option>
-                                        <option value='yes'>Yes</option>
+                                        <option value='yes'>Si</option>
                                     </Form.Select>
                                     <Alert key="idx_key_1" variant='success'>
-                                            {this.state.newProductFeature.isOnMainCard? 'Yes' : 'No'}
+                                            {this.state.newProductFeature.isOnMainCard? 'Si' : 'No'}
                                         </Alert>
                                 </Form.Group>
                         </td>
@@ -239,10 +239,10 @@ export default class CRUDProductFeatures extends Component {
                                     <Form.Select  name='isToBlockChain' onChange={(e) => this.handleCreateProductFeature(e)} >
                                         <option>-</option>
                                         <option value='no'>No</option>
-                                        <option value='yes'>Yes</option>
+                                        <option value='yes'>Si</option>
                                     </Form.Select>
                                     <Alert key="idx_key_1" variant='success'>
-                                            {this.state.newProductFeature.isToBlockChain? 'Yes' : 'No'}
+                                            {this.state.newProductFeature.isToBlockChain? 'Si' : 'No'}
                                         </Alert>
                                 </Form.Group>
                         </td>
@@ -251,10 +251,10 @@ export default class CRUDProductFeatures extends Component {
                                     <Form.Select  name='isVerifable' onChange={(e) => this.handleCreateProductFeature(e)} >
                                         <option>-</option>
                                         <option value='no' >No</option>
-                                        <option value='yes'>Yes</option>
+                                        <option value='yes'>Si</option>
                                     </Form.Select>
                                     <Alert key="idx_key_1" variant='success'>
-                                            {this.state.newProductFeature.isVerifable? 'Yes' : 'No'}
+                                            {this.state.newProductFeature.isVerifable? 'Si' : 'No'}
                                         </Alert>
                                 </Form.Group>
                         </td>
@@ -323,7 +323,7 @@ export default class CRUDProductFeatures extends Component {
     }
     return (
       <>
-        <h2>Product Features</h2>
+        <h2>Características del producto</h2>
         {renderCRUDProductFeatures()}
         {renderProductFeatures()}
       </>

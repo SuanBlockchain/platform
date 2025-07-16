@@ -7,6 +7,18 @@ input AMPLIFY {
 } # FOR TESTING ONLY!
 # Auth Models
 
+type Notification @model {
+  id: ID!
+  userOriginID: ID! @index(name: "byUserOrigin")
+  userOrigin: User @belongsTo(fields: ["userOriginID"])
+  userID: ID! @index(name: "byUser")
+  user: User @belongsTo(fields: ["userID"])
+  message: String
+  type: String! # Tipo de notificación
+  resourceID: ID # ID del recurso relacionado (por ejemplo, ID de la propiedad)
+  isRead: Boolean!
+}
+
 type User @model {
   id: ID!
   name: String!
@@ -26,6 +38,7 @@ type User @model {
   verifiedVerifications: [Verification]
     @hasMany(indexName: "byVerifiedUser", fields: ["id"])
   userProducts: [UserProduct] @hasMany(indexName: "byUser", fields: ["id"])
+  notifications: [Notification] @hasMany(indexName: "byUser", fields: ["id"])
   documents: [Document] @hasMany(indexName: "byUser", fields: ["id"])
   companies: [Company] @hasMany(indexName: "byUser", fields: ["id"])
   payments: [Payment] @hasMany(indexName: "byUser", fields: ["id"])
@@ -144,6 +157,9 @@ type Campaign @model {
 
 enum PropertyStatusType {
   PENDING
+  DOC_UPLOADED
+  SELECTABLE
+  NOT_SELECTABLE
   APPROVED
   REJECTED
 }
@@ -151,6 +167,8 @@ enum PropertyStatusType {
 type Property @model {
   id: ID!
   name: String
+  description: String
+  department: String
   cadastralNumber: AWSJSON
   productID: ID @index(name: "byProduct")
   product: Product @belongsTo(fields: ["productID"])
@@ -158,6 +176,8 @@ type Property @model {
   campaign: Campaign @belongsTo(fields: ["campaignID"])
   userID: ID! @index(name: "byUser")
   user: User @belongsTo(fields: ["userID"])
+  userLegalID: ID @index(name: "byUserLegal")
+  userLegal: User @belongsTo(fields: ["userLegalID"])
   propertyFeatures: [PropertyFeature]
     @hasMany(indexName: "byProperty", fields: ["id"])
   status: PropertyStatusType

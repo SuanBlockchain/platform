@@ -154,7 +154,6 @@ componentWillUnmount() {
   async handleAssignProduct(){
     let existUP = false
     const userProducts = this.state.userProducts
-    console.log(userProducts)
     for(let i = 0; i < userProducts.length; i++){
       if(userProducts[i].userID === this.state.userSelected.id && userProducts[i].productID === this.state.productSelected.id){
         existUP = true

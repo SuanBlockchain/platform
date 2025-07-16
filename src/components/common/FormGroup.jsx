@@ -158,7 +158,7 @@ export default class FormGroup extends Component {
       }
       if (inputType === "radio" || inputType === "checkbox") {
         return (
-          <>
+          <>  
             {optionList.map(({ label, value }) => (
               <div key={`opt-${label}`}>
                 <input
@@ -227,7 +227,7 @@ export default class FormGroup extends Component {
                   disabled={saveBtnDisabled}
                   variant="success"
                   onClick={onClickSaveBtn}
-                  className={`p-2 text-white rounded-md ${
+                  className={`p-2 text-white rounded-md bg-[#6e6c35] border-1 border-dark ${
                     saveBtnDisabled
                       ? "bg-[#6ab190] cursor-not-allowed "
                       : "bg-green-600 text-white"

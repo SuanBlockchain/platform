@@ -15,17 +15,17 @@ export default class CRUDProductImages extends Component {
 
     const renderCRUDProductImages = () => {
         return (
-            <Table striped bordered hover>
+            <Table striped bordered hover responsive>
                 <thead>
                 <tr>
-                    <th>Upload</th>
-                    <th>Image</th>
+                    <th>Cargar</th>
+                    <th>Imagen</th>
                     <th>URL</th>
-                    <th>Title</th>
-                    <th>Order</th>
-                    <th>Is On Carousel</th>
-                    <th>Carousel Label</th>
-                    <th>Carousel Description</th>
+                    <th>Titulo</th>
+                    <th>Orden</th>
+                    <th>¿Está On Carouse?l</th>
+                    <th>Etiqueta Carrusel</th>
+                    <th>Carousel Descripción </th>
                 </tr>
                 </thead>
                 <tbody>

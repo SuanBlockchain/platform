@@ -9,7 +9,7 @@ import Card from "components/common/Card";
 import FormGroup from "components/common/FormGroup";
 
 export default function Relations(props) {
-  const { className, autorizedUser } = props;
+  const { className, autorizedUser, setHasUnsavedChanges, handleFieldChange , updateFormCompletion } = props;
   const { propertyData, refresh } = usePropertyData();
   const { user } = useAuth();
 
@@ -18,6 +18,27 @@ export default function Relations(props) {
   const [asistenciaPfID, setAsistenciaPfID] = useState(null);
   const [aliadosPfID, setAliadosPfID] = useState(null);
   const [grupoPfID, setGrupoPfID] = useState(null);
+   const [changedFields, setChangedFields] = useState({});
+
+   const productFeaturesGroup = [
+    "projectRelationsTechnicalAssitance",
+    "projectRelationsStrategicAllies",
+    "projectRelationsCommunityGroups",
+  ];
+
+  /** ✅ Verifica si todos los campos están completos */
+  const checkFormCompletion = () => {
+    if (!executedOnce) return;
+    const hasAnyData = productFeaturesGroup.some((feature) => formData[feature]?.trim() !== "");
+    updateFormCompletion(hasAnyData); // ✅ Se envía `true` si hay datos, sino `false`
+  };
+  
+
+  useEffect(() => {
+      if (executedOnce && Object.keys(formData).length > 0) {
+        checkFormCompletion();
+      }
+    }, [formData, executedOnce]);
 
   useEffect(() => {
     if (propertyData && propertyData.propertyFeatures && user && !executedOnce) {
@@ -52,117 +73,84 @@ export default function Relations(props) {
     }
   }, [propertyData, user]);
 
-  const handleChangeInputValue = async (e) => {
+  const handleChangeInputValue = (e) => {
     const { name, value } = e.target;
-    if (name === "projectRelationsTechnicalAssitance") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectRelationsTechnicalAssitance: value,
-      }));
-      return;
-    }
-    if (name === "projectRelationsStrategicAllies") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectRelationsStrategicAllies: value,
-      }));
-      return;
-    }
-    if (name === "projectRelationsCommunityGroups") {
-      setFormData((prevState) => ({
-        ...prevState,
-        projectRelationsCommunityGroups: value,
-      }));
-      return;
-    }
+  
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  
+    setChangedFields((prev) => {
+      const newChangedFields = { ...prev, [name]: true };
+      return newChangedFields;
+    });
+  
+    setHasUnsavedChanges(true);
+    handleFieldChange(name, true);
+    checkFormCompletion();
   };
-  const handleSaveBtn = async (toSave) => {
-    if (toSave === "projectRelationsTechnicalAssitance") {
-      if (asistenciaPfID) {
-        const updatedPropertyFeature = {
-          id: asistenciaPfID,
-          value: formData.projectRelationsTechnicalAssitance,
-        };
-        await API.graphql(
-          graphqlOperation(updatePropertyFeature, {
-            input: updatedPropertyFeature,
-          })
-        );
-      } else {
-        const newPropertyFeature = {
-          propertyID: propertyData.propertyInfo.id,
-          featureID: "H_asistance_desc",
-          value: formData.projectRelationsTechnicalAssitance,
-        };
+  
 
-        const response = await API.graphql(
-          graphqlOperation(createPropertyFeature, {
-            input: newPropertyFeature,
-          })
-        );
-        setAsistenciaPfID(response.data.createPropertyFeature.id);
+  const handleSaveBtn = async () => {
+  try {
+    const updates = [
+      {
+        id: asistenciaPfID,
+        featureID: "H_asistance_desc",
+        value: formData.projectRelationsTechnicalAssitance,
+        setID: setAsistenciaPfID,
+      },
+      {
+        id: aliadosPfID,
+        featureID: "H_aliados_estrategicos_desc",
+        value: formData.projectRelationsStrategicAllies,
+        setID: setAliadosPfID,
+      },
+      {
+        id: grupoPfID,
+        featureID: "H_grupo_comunitario_desc",
+        value: formData.projectRelationsCommunityGroups,
+        setID: setGrupoPfID,
+      },
+    ];
+
+    // Recorremos cada campo y actualizamos o creamos el registro según corresponda
+    for (const update of updates) {
+      if (update.value) {
+        if (update.id) {
+          await API.graphql(
+            graphqlOperation(updatePropertyFeature, {
+              input: { id: update.id, value: update.value },
+            })
+          );
+        } else {
+          const response = await API.graphql(
+            graphqlOperation(createPropertyFeature, {
+              input: {
+                propertyID: propertyData.propertyInfo.id,
+                featureID: update.featureID,
+                value: update.value,
+              },
+            })
+          );
+          update.setID(response.data.createPropertyFeature.id);
+        }
       }
-      refresh()
     }
-
-    if (toSave === "projectRelationsStrategicAllies") {
-      if (aliadosPfID) {
-        const updatedPropertyFeature = {
-          id: aliadosPfID,
-          value: formData.projectRelationsStrategicAllies,
-        };
-        await API.graphql(
-          graphqlOperation(updatePropertyFeature, {
-            input: updatedPropertyFeature,
-          })
-        );
-      } else {
-        const newPropertyFeature = {
-          propertyID: propertyData.propertyInfo.id,
-          featureID: "H_aliados_estrategicos_desc",
-          value: formData.projectRelationsStrategicAllies,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createPropertyFeature, {
-            input: newPropertyFeature,
-          })
-        );
-        setAliadosPfID(response.data.createPropertyFeature.id);
-      }
-      refresh()
-    }
-
-    if (toSave === "projectRelationsCommunityGroups") {
-      if (grupoPfID) {
-        const updatedPropertyFeature = {
-          id: grupoPfID,
-          value: formData.projectRelationsCommunityGroups,
-        };
-        await API.graphql(
-          graphqlOperation(updatePropertyFeature, {
-            input: updatedPropertyFeature,
-          })
-        );
-      } else {
-        const newPropertyFeature = {
-          propertyID: propertyData.propertyInfo.id,
-          featureID: "H_grupo_comunitario_desc",
-          value: formData.projectRelationsCommunityGroups,
-        };
-
-        const response = await API.graphql(
-          graphqlOperation(createPropertyFeature, {
-            input: newPropertyFeature,
-          })
-        );
-        setGrupoPfID(response.data.createPropertyFeature.id);
-      }
-      refresh()
-    }
-
+    updateFormCompletion(true);
+    setChangedFields({});
+    Object.keys(changedFields).forEach((key) => handleFieldChange(key, false));
+    setHasUnsavedChanges(false);
     notify({ msg: "Información actualizada", type: "success" });
-  };
+    refresh();
+    checkFormCompletion();
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    notify({ msg: "Error al guardar la información", type: "error" });
+  }
+};
+
 
   return (
     <Card className={className}>
@@ -175,7 +163,6 @@ export default function Relations(props) {
           <div className="col-12 col-lg-12">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
               inputType="textarea"
               label="¿Recibe asistencia técnica en el predio?"
               inputName="projectRelationsTechnicalAssitance"
@@ -190,12 +177,14 @@ export default function Relations(props) {
               onClickSaveBtn={() =>
                 handleSaveBtn("projectRelationsTechnicalAssitance")
               }
+              className={`border rounded-md p-1 ${
+                changedFields["projectRelationsTechnicalAssitance"] ? "border-red-500 bg-red-100" : "border-gray-300"
+              }`}
             />
           </div>
           <div className="col-12 col-lg-12">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
               inputType="textarea"
               label="¿Cuenta con aliados estratégicos?"
               inputName="projectRelationsStrategicAllies"
@@ -210,12 +199,14 @@ export default function Relations(props) {
               onClickSaveBtn={() =>
                 handleSaveBtn("projectRelationsStrategicAllies")
               }
+              className={`border rounded-md p-1 ${
+                changedFields["projectRelationsStrategicAllies"] ? "border-red-500 bg-red-100" : "border-gray-300"
+              }`}
             />
           </div>
           <div className="col-12 col-lg-12">
             <FormGroup
               disabled={!autorizedUser}
-              type={autorizedUser && "flex"}
               inputType="textarea"
               label="¿Pertenece a algún grupo comunitario?"
               inputName="projectRelationsCommunityGroups"
@@ -230,9 +221,22 @@ export default function Relations(props) {
               onClickSaveBtn={() =>
                 handleSaveBtn("projectRelationsCommunityGroups")
               }
+              className={`border rounded-md p-1 ${
+                changedFields["projectRelationsCommunityGroups"] ? "border-red-500 bg-red-100" : "border-gray-300"
+              }`}
             />
           </div>
         </div>
+        {autorizedUser && (
+      <div className="d-flex justify-content-center mt-3">
+        <button
+          className="p-2 text-white bg-green-700 rounded-md"
+          onClick={handleSaveBtn}
+        >
+          Guardar
+        </button>
+      </div>
+    )}
       </Card.Body>
     </Card>
   );

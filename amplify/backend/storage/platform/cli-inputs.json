@@ -1,7 +1,7 @@
 {
-  "resourceName": "platformstorage",
-  "policyUUID": "474d2468",
-  "bucketName": "platformde0a42c18c744a9cae17f9d001d263e9",
+  "resourceName": "platform",
+  "policyUUID": "d23a229d",
+  "bucketName": "platformd9531187bef34a10abb664f2878180ae",
   "storageAccess": "authAndGuest",
   "guestAccess": [
     "CREATE_AND_UPDATE",

@@ -28,7 +28,7 @@ class Features extends Component {
     super(props);
     this.state = {
       date: new Date(),
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       features: [],
       featureTypes: [],
@@ -233,7 +233,7 @@ class Features extends Component {
     let tempNewFeature = this.state.newFeature;
     if (tempNewFeature.unitOfMeasureID === "")
       return this.notifyError("Asegurese de Seleccionar una unidad de medida");
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       let numberType = this.state.UnitOfMeasures.filter(
         (uom) => uom.id === tempNewFeature.unitOfMeasureID
       );
@@ -310,7 +310,7 @@ class Features extends Component {
   };
   async cleanFeatureOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newFeature: {
         id: "",
@@ -334,64 +334,61 @@ class Features extends Component {
     const renderFeatures = () => {
       if (features.length > 0) {
         return (
-          <div className="container mx-auto max-h-screen overflow-y-scroll ">
-            <h2 className="text-xl font-semibold">Features</h2>
-            <table className="w-full border-collapse border mt-4">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border p-2">ID</th>
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Description</th>
-                  <th className="border p-2">Default value</th>
-                  <th className="border p-2">Type</th>
-                  <th className="border p-2">Unit of Measure</th>
-                  <th className="border p-2">Is template</th>
-                  <th className="border p-2">Is verifiable</th>
-                  <th className="border p-2">Editar</th>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border p-2">ID</th>
+                <th className="border p-2">Nombre</th>
+                <th className="border p-2">Descripción</th>
+                <th className="border p-2">Valor por defecto</th>
+                <th className="border p-2">Tipo</th>
+                <th className="border p-2">Unidad de medida</th>
+                <th className="border p-2">¿Es plantilla?</th>
+                <th className="border p-2">¿Es verificable?</th>
+                <th className="border p-2">Editar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {features.map((feature) => (
+                <tr key={feature.id} className="bg-white">
+                  <td className="border p-2">{feature.id}</td>
+                  <td className="border p-2">{feature.name}</td>
+                  <td className="border p-2">{feature.description}</td>
+                  <td className="border p-2">{feature.defaultValue}</td>
+                  <td className="border p-2">{feature.featureTypeID}</td>
+                  <td className="border p-2">{feature.unitOfMeasureID}</td>
+                  <td className="border p-2">
+                    {feature.isTemplate ? "Si" : "No"}
+                  </td>
+                  <td className="border p-2">
+                    {feature.isVerifiable ? "Si" : "No"}
+                  </td>
+                  <td className="border p-2">
+                    <button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                      onClick={(e) => this.handleLoadEditFeature(feature, e)}
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {features.map((feature) => (
-                  <tr key={feature.id} className="bg-white">
-                    <td className="border p-2">{feature.id}</td>
-                    <td className="border p-2">{feature.name}</td>
-                    <td className="border p-2">{feature.description}</td>
-                    <td className="border p-2">{feature.defaultValue}</td>
-                    <td className="border p-2">{feature.featureTypeID}</td>
-                    <td className="border p-2">{feature.unitOfMeasureID}</td>
-                    <td className="border p-2">
-                      {feature.isTemplate ? "Si" : "No"}
-                    </td>
-                    <td className="border p-2">
-                      {feature.isVerifiable ? "Si" : "No"}
-                    </td>
-                    <td className="border p-2">
-                      <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                        onClick={(e) => this.handleLoadEditFeature(feature, e)}
-                      >
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </Table>
         );
       }
     };
 
     return (
-      <div className="container mx-auto">
+      <div className="container mx-auto mt-20">
         <ToastContainer />
-        <div className="mt-8 bg-white p-4 rounded-lg shadow-sm mb-4">
+        <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
           <h2 className="text-2xl">
-            {CRUDButtonName} FeatureID: {newFeature.id}
+            {CRUDButtonName} Característica: {newFeature.id}
           </h2>
           <div className="mt-4">
             <div className="mb-4">
-              <label className="block font-semibold">Name*</label>
+              <label className="block font-semibold">Nombre*</label>
               <input
                 type="text"
                 placeholder="Name..."
@@ -403,7 +400,7 @@ class Features extends Component {
               />
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Description</label>
+              <label className="block font-semibold">Descripción</label>
               <textarea
                 placeholder="Description..."
                 id="formGridNewFeatureDescription"
@@ -414,7 +411,7 @@ class Features extends Component {
               />
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Default value</label>
+              <label className="block font-semibold">Valor por defecto</label>
               <input
                 type="number"
                 placeholder=""
@@ -426,31 +423,31 @@ class Features extends Component {
               />
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Is template</label>
+              <label className="block font-semibold">¿Es plantilla?</label>
               <select
                 name="feature.isTemplate"
                 onChange={(e) => this.handleOnChangeInputForm(e)}
-                value={newFeature.isTemplate ? "yes" : "no"}
+                value={newFeature.isTemplate ? "si" : "no"}
                 className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
               >
                 <option value="no">No</option>
-                <option value="yes">Yes</option>
+                <option value="si">Si</option>
               </select>
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Is verifiable</label>
+              <label className="block font-semibold">¿Es verificable?</label>
               <select
                 name="feature.isVerifable"
                 onChange={(e) => this.handleOnChangeInputForm(e)}
-                value={newFeature.isVerifable ? "yes" : "no"}
+                value={newFeature.isVerifable ? "si" : "no"}
                 className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
               >
                 <option value="no">No</option>
-                <option value="yes">Yes</option>
+                <option value="si">Si</option>
               </select>
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Type*</label>
+              <label className="block font-semibold">Tipo*</label>
               <select
                 name="feature.featureType"
                 onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -466,7 +463,7 @@ class Features extends Component {
               </select>
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Unit Of Measure*</label>
+              <label className="block font-semibold">Unidad de medida*</label>
               <select
                 name="feature.unitOfMeasure"
                 onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -492,7 +489,7 @@ class Features extends Component {
           </div>
         </div>
         {renderFeatures()}
-        {renderFeaturesType()}
+        <div className="mt-8">{renderFeaturesType()}</div>
       </div>
     );
   }

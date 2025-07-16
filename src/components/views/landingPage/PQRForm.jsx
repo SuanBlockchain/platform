@@ -55,8 +55,6 @@ export default class PQRForm extends Component {
         const bucketUrl = `https://${bucketName}.s3.${region}.amazonaws.com/public`;
         const fileUrl = `${bucketUrl}/${result.key}`;
 
-        console.log("Archivo subido correctamente:", fileUrl);
-
         // Asignar URL a la variable correcta según el tipo de archivo
         if (prqFile.type === "application/pdf") {
           pdfUrl = fileUrl;
@@ -82,7 +80,7 @@ export default class PQRForm extends Component {
     };
 
     try {
-      const response = await fetch(process.env['REACT_APP_URL_API_PQR'], {
+      const response = await fetch(process.env["REACT_APP_URL_API_PQR"], {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +148,7 @@ export default class PQRForm extends Component {
             <FaArrowLeft />
             Regresar
           </Button>
-          <h2 className="text-center mb-4">Envía tu PQR</h2>
+          <h2 className="text-center mb-4">Envía tu PQRS</h2>
           <Form onSubmit={this.handlePRQSubmit}>
             <Form.Group controlId="prqDescription" className="mb-3">
               <Form.Label>Descripción de la consulta</Form.Label>
@@ -165,8 +163,12 @@ export default class PQRForm extends Component {
                 minLength="30"
                 placeholder="Describe detalladamente tu consulta"
               />
-              <Form.Text className="text-muted">
-                La descripción debe tener al menos 30 caracteres.
+
+              <Form.Text>
+                <div className="flex justify-between text-muted text-sm m-0">
+                  <p>La descripción debe tener al menos 30 caracteres.</p>
+                  <p>{prqDescription.length} caracteres</p>
+                </div>
               </Form.Text>
             </Form.Group>
             <Form.Group controlId="prqFile" className="mb-3">
@@ -229,7 +231,7 @@ export default class PQRForm extends Component {
               className="w-100 mt-3"
               disabled={isLoading}
             >
-              Enviar PQR
+              Enviar PQRS
             </Button>
           </Form>
 

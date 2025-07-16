@@ -107,7 +107,6 @@ export default function GenericInputTable(props) {
           id: pfID,
           value: JSON.stringify(revenueByProductToUpload),
         };
-        console.log(tempProductFeature, "ya existe");
         const response = await API.graphql(
           graphqlOperation(updateProductFeature, { input: tempProductFeature })
         );
@@ -121,7 +120,6 @@ export default function GenericInputTable(props) {
           productID: projectData.projectInfo.id,
           featureID: fID,
         };
-        console.log(tempProductFeature, "no existe");
 
         const response = await API.graphql(
           graphqlOperation(createProductFeature, { input: tempProductFeature })

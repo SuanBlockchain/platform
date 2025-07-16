@@ -29,7 +29,6 @@ export default function UploadFileModal(props) {
   const { user } = useAuth();
 
   const openModal = () => {
-    console.log(uploadRoute);
     setShowModal(true);
   };
 
@@ -76,11 +75,8 @@ export default function UploadFileModal(props) {
     });
 
     try {
-      console.log(s3Client, 's3client')
       const result = await s3Client.send(command);
       notify('success', 'Archivo subido a S3 👍')
-
-      console.log("document uploaded successfully!");
       return result
     } catch (error) {
       notify('error', 'Hubo un error al intentar subir el archivo a S3 😔. Si crees que esto podría deberse a un problema de permisos, por favor, contacta al equipo de desarrollo.')
@@ -122,7 +118,6 @@ export default function UploadFileModal(props) {
 
         const segments = filePath.split("/");
         const fileName = segments.pop();
-        console.log(awsUrlFullPath, "awsUrlFullPath")
         const tempNewDocument = {
           isApproved: true,
           isUploadedToBlockChain: false,
@@ -189,13 +184,11 @@ export default function UploadFileModal(props) {
     }
 
     const filesS3URL = await uploadFilesToS3(selectedFiles);
-    console.log(filesS3URL, 'filesS3URL')
     const docData = await createDocumentsFromFileURL(
       filesS3URL,
       user.id,
       pfProjectValidatorDocumentsID
     );
-    console.log(docData);
     const updatedDocsData = [
       ...projectData.projectFilesValidators.projectValidatorDocuments,
       ...docData,

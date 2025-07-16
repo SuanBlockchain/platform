@@ -12,13 +12,14 @@ import HeaderNavbar from "../Navbars/HeaderNavbar";
 import Products from "../Products";
 import s from "./LandingPage.module.css";
 import ProductCard from "../../productCard/ProductCard";
-import marketImage from "../_images/market.jpg";
+import marketImage from "../_images/projecto.png";
 import drones from "../_images/drone-con-camara.png";
 import blockchain from "../_images/cadena-de-bloques.png";
 import plataforma from "../_images/diseno-de-respuesta.png";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import DropDownProjects from "components/common/DropDownProjects";
+import NewHeaderNavbar from "components/common/NewHeaderNavbar";
 
 export default class LandingPage extends Component {
   constructor(props) {
@@ -134,7 +135,6 @@ export default class LandingPage extends Component {
     }`;
 
     const listProductsResult = await API.graphql(graphqlOperation(query));
-    console.log(listProductsResult, "listProductsResult");
     /* let tempProductsImagesIsOnCarousel = this.state.productsImagesIsOnCarousel */
     let tempListProductsResult = listProductsResult.data.listProducts.items.map(
       (product) => {
@@ -167,7 +167,24 @@ export default class LandingPage extends Component {
     const urlS3Image = WebAppConfig.url_s3_public_images;
     return (
       <div style={{ minHeight: "100vh" }}>
-        <HeaderNavbar logOut={this.logOut}></HeaderNavbar>
+
+        {/* <HeaderNavbar logOut={this.logOut}></HeaderNavbar> */}
+        <NewHeaderNavbar/>
+        {/*         <Carousel>
+        {this.state.productsImagesIsOnCarousel.map((image, idx) => (
+            <Carousel.Item key={idx}>
+                <img
+                className="d-block w-100"
+                src={urlS3Image+image.imageURL}
+                alt="First slide"
+                />
+                <Carousel.Caption>
+                <h3>{image.carouselLabel}</h3>
+                <p>{image.carouselDescription}</p>
+                </Carousel.Caption>
+                </Carousel.Item>
+        ))}
+        </Carousel> */}
         <div className={s.container}>
           <h1 className='fade-in fade-in-title p-2 mx-2'>
             Aceleramos la transición hacia un<br></br>
@@ -180,10 +197,12 @@ export default class LandingPage extends Component {
           </p>
           <div className='fade-in fade-in-row row'>
             <div className='col p-2 mx-3'>
-              <Button className="" onClick={this.handleShow}>
+            {!this.state.userLogged && (
+              <Button style={{ backgroundColor: "#6B8E0F", color: "white", border: "none" }} onClick={this.handleShow}>
                 Tengo un proyecto
               </Button>
-              <DropDownProjects/>
+            )}
+              <DropDownProjects style={{width:"100vw"}}/>
               <Modal show={this.state.show} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                   <div className="row">
@@ -204,7 +223,7 @@ export default class LandingPage extends Component {
                     <li>Completa la información de tu proyecto</li>
                     <li>
                       Tu proyecto será revisado y complementado por nuestros
-                      validadores
+                      Consultores
                     </li>
                     <li>
                       Revisa la información adicional y aceptala, para que quede
@@ -236,19 +255,21 @@ export default class LandingPage extends Component {
                   proyecto específico de eliminación de carbono.</p>
               </div>
             </div>
-            <div className="col-sm-6 mb-8">
-              <img
-                src={marketImage}
-                alt="imagen plataforma"
-                className="img-market"
-              />
-            </div>
+            <div className="col-12 col-md-6 mb-4">
+  <img
+    src={marketImage}
+    alt="imagen plataforma"
+    className="img-fluid rounded img-market"
+    style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "8px" }}
+  />
+</div>
+
           </div>
         </div>
         <div className={`container-fluid bg-porque p-5`} id="porque">
           <div className={`${s.block}`}>
             <div className="row m-4 p-2">
-              <h2 className="text-center">¿POR QUÉ SUAN?</h2>
+              <h2 className="text-center">¿POR QUÉ TERRASACHA?</h2>
             </div>
             <div className="row">
               <div className="col-12 col-md-6">
@@ -384,7 +405,7 @@ export default class LandingPage extends Component {
                   />
                 </div>
                 <div className="col">
-                  <h4 className="">PLATAFORMA SUAN</h4>
+                  <h4 className="">PLATAFORMA TERRASACHA</h4>
                   <p>
                     Ten control total de tus proyectos y de tus inversiones
                     desde nuestra plataforma, conecta facilmente tu wallet con
@@ -403,9 +424,11 @@ export default class LandingPage extends Component {
             <div className='col'>
               <div className="flex flex-col sm:flex-row">
                 <DropDownProjects className="btn-cta mb-2 sm:mb-0" variant={'transparent'}/>
+                {!this.state.userLogged && (
                 <button className="btn-cta sm:ml-2" onClick={this.handleShow}>
                   Tengo un proyecto
                 </button>
+                )}
               </div>
             </div>
           </div>
@@ -417,7 +440,7 @@ export default class LandingPage extends Component {
               <div className="col-12 sm:col-6">
                 <a
                   className="m-auto d-block btn-landing text-center mb-2 sm:mb-0"
-                  href="https://suan-1.gitbook.io/documentacion-suan-sandbox/"
+                  href="https://terrasacha.gitbook.io/terrasacha/readme/guia-de-usuario"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -427,7 +450,7 @@ export default class LandingPage extends Component {
               <div className="col-12 sm:col-6">
                 <a
                   className="m-auto d-block btn-landing text-center sm:ml-2"
-                  href="https://suan-1.gitbook.io/documentacion-suan/"
+                  href="https://terrasacha.gitbook.io/terrasacha"
                   target="_blank"
                   rel="noreferrer"
                 >

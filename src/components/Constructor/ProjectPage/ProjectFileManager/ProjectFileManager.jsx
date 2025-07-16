@@ -2,10 +2,10 @@ import React, { useContext } from "react";
 import { useProjectData } from "../../../../context/ProjectDataContext";
 import FileManager from "./FileManager";
 const dic = {
-  analyst: ['analyst'],
-  validator: ['other', 'validator'],
-  marketplace_admin: ['images'],
-  owner: ['other'],
+  analyst: ['analista'],
+  validator: ['otros', 'consultor'],
+  marketplace_admin: ['imagenes'],
+  owner: ['otros'],
   admon: ['*']
 }
 export default function ProjectFileManager({ visible, userGroup }) {

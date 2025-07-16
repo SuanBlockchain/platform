@@ -3,24 +3,19 @@ import { Dropdown } from 'react-bootstrap';
 
 export default function DropDownProjects({ style, className, variant }) {
   return (
-    <Dropdown style={style} className={className}>
-      <Dropdown.Toggle variant={variant} id="dropdown-basic">
+    <Dropdown style={style} >
+      <Dropdown.Toggle variant={variant} id="dropdown-basic" >
         Ver Proyectos
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
         <Dropdown.Item 
           style={{ fontWeight: 800 }} 
-          href={process.env.REACT_APP_ENV === 'TEST' ? 'https://test-marketplace-cauca.suan.global' : 'https://marketplace-cauca.suan.global'}
+          href={process.env.REACT_APP_ENV === 'TEST' ? 'https://internal-marketplace.terrasacha.com/' : 'https://marketplace.terrasacha.com/'}
         >
-          Cauca marketplace
+          Terrasacha marketplace
         </Dropdown.Item>
         <Dropdown.Divider />
-        <Dropdown.Item 
-          href={process.env.REACT_APP_ENV === 'TEST' ? 'https://test-marketplace.suan.global' : 'https://marketplace.suan.global'}
-        >
-          Suan marketplace
-        </Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );

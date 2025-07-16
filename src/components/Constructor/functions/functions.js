@@ -129,7 +129,6 @@ async function handleDocuments(e , productFeatureID, userID) {
                   status: 'pending',
                   isUploadedToBlockChain: false,
               }
-              console.log(`url de ${newDocPayLoad.id}`, newDocPayLoad.url)
               await API.graphql(graphqlOperation(createDocument, { input: newDocPayLoad })).then(()=> console.log('documento creado'))
           })
           
@@ -163,7 +162,6 @@ export async function deleteAllProduct(productID){
                                 ...productFeaturesToDeletePromises, ...documentsToDeletePromises, ...verificationsToDeletePromises];
             
         await Promise.all(allPromises);
-        console.log('done')
     } catch (error) {
         console.log(error)
     } 
@@ -362,5 +360,4 @@ export async function updateProyectForm(productOnDraft, state, userID){
       await API.graphql(graphqlOperation(createVerification, { input: { userVerifierID: 'ef21568e-027c-4aaf-8cf4-b1bbce19110b', userVerifiedID: userID, productFeatureID: pfPPProductOnDraft[0].id} }))
     } */
   });
-  console.log('done')
 }

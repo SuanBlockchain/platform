@@ -19,6 +19,11 @@ export const marketplaceURLMapper = {
     TEST: "https://test-marketplace-cauca.suan.global/",
     PROD: "https://marketplace-cauca.suan.global/",
   },
+  terrasacha: {
+    INTERNAL: "https://internal-platform.terrasacha.com/",
+    TEST: "https://test-platform.terrasacha.com/",
+    PROD: "https://platform.terrasacha.com/",
+  },
 };
 
 export const mapGeoData = (validatorDocuments) => {
@@ -40,6 +45,15 @@ export const formatArea = (area) => {
   return parseFloat(area).toLocaleString("es-ES") + " m2";
 };
 
+export const getAreaFromPf = (property) => {
+  const area =
+    property.propertyFeatures.items.filter((item) => {
+      return item.featureID === "D_area";
+    })[0]?.value || "0";
+
+  return area;
+};
+
 const mapProjectVerifiers = async (data) => {
   // const verifiablePF = data.productFeatures.items.filter(
   //   (pf) => pf.feature.isVerifable === true
@@ -50,8 +64,6 @@ const mapProjectVerifiers = async (data) => {
   //     projectVerifiers.push(vf.userVerifierID);
   //   });
   // });
-
-  console.log(data.userProducts);
 
   const projectVerifiers = data.userProducts.items
     .filter((up) => up.user?.role === "validator")
@@ -68,6 +80,7 @@ const mapProductFeatures = (productFeatures) => {
       id: pf.id,
       featureID: pf.featureID,
       value: pf.value,
+      documents: pf.documents
     };
   });
 };
@@ -124,7 +137,7 @@ const mapDocumentsDataFromProperty = async (data, ownersData) => {
   const verifiablePF = data.propertyFeatures.items.filter(
     (pf) => pf.feature.isVerifable === true
   );
-  console.log(verifiablePF, "verifiablePF");
+
   const documentsPromises = verifiablePF.map((pf) =>
     pf.documents.items
       .filter((document) => document.status !== "validatorFile")
@@ -149,7 +162,7 @@ const mapDocumentsDataFromProperty = async (data, ownersData) => {
         };
       })
   );
-  console.log("documentsPromises", documentsPromises);
+
   const documents = await Promise.all(documentsPromises.flat());
   return documents;
 };
@@ -162,7 +175,6 @@ const mapDocumentsData = async (data, ownersData) => {
   const verifiablePF = data.productFeatures.items.filter(
     (pf) => pf.feature.isVerifable === true
   );
-  console.log(verifiablePF, "verifiablePF");
   const documentsPromises = verifiablePF.map((pf) =>
     pf.documents.items
       .filter((document) => document.status !== "validatorFile")
@@ -187,7 +199,6 @@ const mapDocumentsData = async (data, ownersData) => {
         };
       })
   );
-  console.log("documentsPromises", documentsPromises);
   const documents = await Promise.all(documentsPromises.flat());
   return documents;
 };
@@ -245,7 +256,6 @@ const mapPropertyDocumentsData = async (data) => {
       arrayDocs.push(...mappedDocs);
     }
   }
-  console.log(arrayDocs, "arrayDocs 230");
   return arrayDocs;
 };
 const mapLocationData = async (location) => {
@@ -456,7 +466,7 @@ const mapProjectUses = (data) => {
 };
 
 export const mapProjectData = async (data) => {
-  console.log("dataa", data);
+  console.log('data', data)
   const projectID = data.id;
   const projecIsActive = data.isActive;
   const verifierDescription =
@@ -576,7 +586,6 @@ export const mapProjectData = async (data) => {
     })[0]?.value || "[]"
   );
 
-  console.log(tokenHistoricalData, "tokenHistoricalData");
   // const lastTokenHistoricalData =tokenHistoricalData.length > 0 && tokenHistoricalData[tokenHistoricalData.length - 1].periods || []
 
   const periods = tokenHistoricalData.map((tkhd) => {
@@ -807,6 +816,8 @@ export const mapProjectData = async (data) => {
       return item.featureID === "GLOBAL_VALIDATOR_SET_FINANCIAL_CONDITIONS";
     })[0]?.value === "true" || false;
 
+  console.log("raw data", data);
+
   const getCadastralPropertiesNumber = () => {
     const cadastralNumbers = [];
     data.properties?.items.forEach((item) => {
@@ -817,7 +828,6 @@ export const mapProjectData = async (data) => {
         }
       } catch (e) {}
     });
-    console.log(cadastralNumbers, "cadastralNumberscadastralNumbers");
     return cadastralNumbers;
   };
 
@@ -839,8 +849,6 @@ export const mapProjectData = async (data) => {
         });
       }
     });
-  console.log("data.properties.items", data.properties.items);
-  console.log("totalArea", totalArea);
 
   return {
     projectInfo: {
@@ -961,6 +969,8 @@ export const mapProjectData = async (data) => {
 };
 
 export const mapPropertyData = async (data) => {
+
+  console.log('raw property data', data)
   const projectUses =
     data.propertyFeatures.items.filter((item) => {
       return item.featureID === "D_actual_use";
@@ -1043,26 +1053,27 @@ export const mapPropertyData = async (data) => {
     cadastralData.map((cadObj) => cadObj.cadastralNumber) || []
   ).join(", ");
 
-  const projectVerifiers = data.product.userProducts?.items
-    .filter((up) => up.user?.role === "validator")
-    .map((userProduct) => {
-      return userProduct.user.id;
-    });
+  const projectVerifiers =
+    data.product?.userProducts?.items
+      ?.filter((up) => up.user?.role === "validator")
+      ?.map((userProduct) => userProduct.user.id) || [];
 
-  console.log("data", data);
   return {
     propertyInfo: {
       id: data.id,
       projectID: data.productID,
-      campaignID: data.campaign.id,
+      campaignID: data.campaign?.id || null,
       projectAge: getElapsedDays(data.createdAt),
       name: data.name,
       status: data.status,
     },
-    propertyCampaign: {
-      id: data.campaign.id,
-      userId: data.campaign.userID,
-    },
+    propertyCampaign: data.campaign
+      ? {
+          id: data.campaign.id,
+          userId: data.campaign.userID,
+        }
+      : { id: null, userId: null }, // Asignamos `null` si no hay campaña
+
     projectPostulant: {
       id: data.userID,
     },

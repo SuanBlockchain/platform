@@ -6,13 +6,14 @@ import {
   onCreateCategory,
   onUpdateCategory,
 } from "../../../graphql/subscriptions";
+import { Table } from "react-bootstrap";
 
 class Categorys extends Component {
   constructor(props) {
     super(props);
     this.state = {
       categorys: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newCategory: {
         id: "",
@@ -94,7 +95,7 @@ class Categorys extends Component {
   async handleCRUDCategory() {
     let tempNewCategory = this.state.newCategory;
 
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       await API.graphql(
         graphqlOperation(createCategory, { input: tempNewCategory })
       );
@@ -124,7 +125,7 @@ class Categorys extends Component {
 
   async cleanCategoryOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newCategory: {
         id: "",
@@ -141,46 +142,38 @@ class Categorys extends Component {
     const renderCategorys = () => {
       if (categorys.length > 0) {
         return (
-          <div className="container mx-auto">
-            <table className="w-full border-collapse border border-gray-300 mb-4">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2">ID</th>
-                  <th className="border border-gray-300 px-4 py-2">Name</th>
-                  <th className="border border-gray-300 px-4 py-2">Action</th>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categorys.map((category) => (
+                <tr key={category.id}>
+                  <td>{category.id}</td>
+                  <td>{category.name}</td>
+                  <td>
+                    <button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                      onClick={(e) => this.handleLoadEditCategory(category, e)}
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {categorys.map((category) => (
-                  <tr key={category.id}>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {category.id}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {category.name}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        onClick={(e) =>
-                          this.handleLoadEditCategory(category, e)
-                        }
-                      >
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </Table>
         );
       }
     };
 
     return (
-      <div className="container mx-auto mt-8">
-        <div className="container mb-8">
+      <div className="container mx-auto mt-20">
+        <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
           <h2 className="text-2xl mb-4">
             {CRUDButtonName} Categoría: {newCategory.name}
           </h2>
@@ -192,7 +185,7 @@ class Categorys extends Component {
               <input
                 type="text"
                 id="formGridNewCategoryName"
-                placeholder="Ex. NUEVA CATERORIA"
+                placeholder="NUEVA CATEGORIA"
                 name="category.name"
                 value={newCategory.name}
                 onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -211,7 +204,6 @@ class Categorys extends Component {
             </div>
           </div>
         </div>
-        <br />
         {renderCategorys()}
       </div>
     );

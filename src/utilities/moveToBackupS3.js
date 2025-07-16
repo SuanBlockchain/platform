@@ -12,7 +12,6 @@ export async function moveToBackupFolderS3(s3Client, bucketName, sourceKey) {
       };
       
       await s3Client.send(new CopyObjectCommand(copyParams));
-      console.log(`File copied to ${destinationFile}`);
 
       return true
   } catch (error) {
@@ -43,7 +42,6 @@ export async function moveFile(s3Client, bucketName, sourceFile, destinationFold
   const fileName = sourceFile.key
   const sourceFilePath = `projects/${currentPath.join('/')}/${fileName}`;
   const destinationFile = `projects/${currentPath.slice(0, 2).join("/")}/${destinationFolder}/${fileName}`;
-  console.log(sourceFilePath,'sourceFilePath')
   try {
       const copyParams = {
           Bucket: bucketName,
@@ -52,7 +50,6 @@ export async function moveFile(s3Client, bucketName, sourceFile, destinationFold
       };
       
       await s3Client.send(new CopyObjectCommand(copyParams));
-      console.log(`File copied to ${destinationFile}`);
 
       const deleteParams = {
           Bucket: bucketName,
@@ -60,7 +57,6 @@ export async function moveFile(s3Client, bucketName, sourceFile, destinationFold
       };
       
       await s3Client.send(new DeleteObjectCommand(deleteParams));
-      console.log(`File deleted from ${sourceFilePath}`);
       return { status: 'success', msg: 'Borrado exitoso', sourceFilePath };
   } catch (error) {
       return { status: 'error', msg: 'Error al borrar el archivo', sourceFilePath: null };
@@ -70,8 +66,7 @@ export async function moveFile(s3Client, bucketName, sourceFile, destinationFold
 
 export async function removeFolderS3(s3Client, bucketName, currentPath, folderToDelete) {
   const currentPathJoin = 'projects/' + currentPath.join('/');
-  console.log(currentPathJoin);
-  console.log(folderToDelete, 'folderToDelete')
+
   try {
     // List objects in the specified folder
     const listParams = {
@@ -81,7 +76,7 @@ export async function removeFolderS3(s3Client, bucketName, currentPath, folderTo
 
     const listCommand = new ListObjectsV2Command(listParams);
     const listResponse = await s3Client.send(listCommand);
-    console.log(listResponse, "list");
+    
 
     if (listResponse.Contents && listResponse.Contents.length > 0) {
       const deleteParams = {
@@ -99,14 +94,11 @@ export async function removeFolderS3(s3Client, bucketName, currentPath, folderTo
         return { status: 'error', msg: `Error al eliminar la carpeta ${folderToDelete}` };
       }
 
-      console.log(deleteResponse, "Folder removed successfully.");
       return { status: 'success', msg: 'Carpeta eliminada' };
     } else {
-      console.log("No objects found in the specified folder.");
       return { status: 'error', msg: 'No se encontraron objetos en la carpeta especificada.' };
     }
   } catch (error) {
-    console.error("Error removing the folder:", error);
     return { status: 'error', msg: `Error al eliminar la carpeta ${folderToDelete}: ${error.message}` };
   }
 }

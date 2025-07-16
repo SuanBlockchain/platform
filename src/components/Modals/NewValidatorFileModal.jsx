@@ -72,9 +72,6 @@ export default function NewValidatorFileModal(props) {
         });
         urls.push(urlPath);
 
-        console.log("urlPath", urlPath);
-        console.log("file", file);
-        console.log("uploadFileResult", uploadFileResult);
       } catch (error) {
         console.error("Error al subir el archivo:", error);
         throw new Error("Error al subir el archivo");
@@ -158,7 +155,6 @@ export default function NewValidatorFileModal(props) {
 
     const filesS3URL = await uploadFilesToS3(selectedFiles);
     const docData = await createDocumentsFromFileURL(filesS3URL, user.id, pfProjectValidatorDocumentsID);
-    console.log(docData)
     const updatedDocsData = [...projectData.projectFilesValidators.projectValidatorDocuments, ...docData]
 
     await handleUpdateContextProjectFileValidators({projectValidatorDocuments: updatedDocsData})
@@ -175,8 +171,6 @@ export default function NewValidatorFileModal(props) {
     closeModal();
   };
 
-  console.log(selectedFiles);
-  console.log(fileNames);
 
   return (
     <div>

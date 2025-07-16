@@ -69,7 +69,7 @@ class Products extends Component {
       },
       productFeatures: [],
       listPF: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       isImageUploadingFile: false,
       products: [],
@@ -168,7 +168,6 @@ class Products extends Component {
       graphqlOperation(onUpdateDocument)
     ).subscribe({
       next: (updatedDocumentData) => {
-        console.log(updatedDocumentData);
         let tempProductFeatures = this.state.listPF.map((mapPF) => {
           if (
             updatedDocumentData.value.data.onUpdateDocument.productFeatureID ===
@@ -192,7 +191,6 @@ class Products extends Component {
       graphqlOperation(onUpdateProductFeature)
     ).subscribe({
       next: (updatedProductFeatureData) => {
-        console.log("entro el sub");
         let tempProductFeatures = this.state.listPF.map((mapPF) => {
           if (
             updatedProductFeatureData.value.data.onUpdateProductFeature.id ===
@@ -379,7 +377,7 @@ class Products extends Component {
   async handleCRUDProduct() {
     const tempCRUD_Product = this.state.CRUD_Product;
     tempCRUD_Product.id = await checkIfUserExists(tempCRUD_Product.id);
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       const payLoadNewProduct = {
         id: tempCRUD_Product.id,
         name: tempCRUD_Product.name,
@@ -603,11 +601,9 @@ class Products extends Component {
       id: documentID,
       status: status,
     };
-    console.log(tempDocument);
     let result = await API.graphql(
       graphqlOperation(updateDocument, { input: tempDocument })
     );
-    console.log(result);
   };
 
   handleDeleteImageProduct = async (pProduct, pImage, event) => {
@@ -747,7 +743,7 @@ class Products extends Component {
         images: [],
       },
       productFeatures: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       isImageUploadingFile: false, //se borraban los features y categorys
       selectedCategory: null,
@@ -927,7 +923,7 @@ class Products extends Component {
         <form className="bg-white p-4 rounded-lg shadow-sm mb-4">
           <div className="mb-4">
             <h2 className="text-xl font-bold">
-              PROJECT PROPERTIES on {CRUDButtonName}
+            PROPIEDADES DEL PROYECTO en {CRUDButtonName}
             </h2>
           </div>
 
@@ -936,17 +932,18 @@ class Products extends Component {
               className="block text-sm font-bold mb-2"
               htmlFor="formGridCategorySelectList"
             >
-              Category
+              Categoría
             </label>
             <Select
               options={this.state.categorySelectList}
               onChange={this.handleOnSelectCategory}
               className="w-full px-3 py-2 border rounded-md"
+              placeholder="Seleccionar ..."
             />
             <div className="mt-2">
               <Alert key="idx_key_1" variant="success">
                 {selectedCategory === null
-                  ? "Not selected"
+                  ? "No seleccionado"
                   : selectedCategory.name}
               </Alert>
             </div>
@@ -958,11 +955,11 @@ class Products extends Component {
                 className="block text-sm font-bold mb-2"
                 htmlFor="formGridCRUD_ProductName"
               >
-                Name
+                Nombre
               </label>
               <input
                 type="text"
-                placeholder="Ex. Proyecto B"
+                placeholder="Ejemplo: Proyecto B"
                 name="CRUD_ProductName"
                 value={CRUD_Product.name}
                 onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -975,11 +972,11 @@ class Products extends Component {
                 className="block text-sm font-bold mb-2"
                 htmlFor="formGridCRUD_ProductDescription"
               >
-                Description
+                Descripción
               </label>
               <input
                 type="text"
-                placeholder="Ex. Amazing Project B"
+                placeholder="Ejemplo: Descripción del Proyecto B"
                 name="CRUD_ProductDescription"
                 value={CRUD_Product.description}
                 onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -994,15 +991,15 @@ class Products extends Component {
                 className="block text-sm font-bold mb-2"
                 htmlFor="formGridCRUD_ProductStatus"
               >
-                Status
+                Estado
               </label>
               <select
                 name="CRUD_ProductStatus"
-                value={CRUD_Product.status}
+                value={CRUD_Product.status || ""}
                 onChange={(e) => this.handleOnChangeInputForm(e)}
                 className="w-full px-3 py-2 border rounded-md"
               >
-                {["draft", "verified", "in_blockchain", "in_equilibrium"].map(
+                {["", "Prefactibilidad", "Factibilidad", "Documento de diseño del proyecto", "Validación externa", "Registro del proyecto"].map(
                   (op) => (
                     <option value={op} key={op}>
                       {op}
@@ -1013,19 +1010,19 @@ class Products extends Component {
             </div>
 
             <div className="w-full md:w-1/2 px-2 mb-4">
-              <label className="block text-sm font-bold mb-2">Is Active</label>
+              <label className="block text-sm font-bold mb-2">Está activo?</label>
               <div>
                 <button
                   className={`inline-block px-3 py-1 rounded-full ${
                     CRUD_Product.isActive
-                      ? "bg-green-700 text-white"
+                      ? "bg-[#6e6c35] border-1 border-dark text-white"
                       : "bg-red-500 text-white"
                   }`}
                   onClick={(e) =>
                     this.handleOnChangeInputForm(e, "productIsActive")
                   }
                 >
-                  {CRUD_Product.isActive ? "YES" : "NO"}
+                  {CRUD_Product.isActive ? "SI" : "NO"}
                 </button>
               </div>
             </div>
@@ -1036,11 +1033,11 @@ class Products extends Component {
               className="block text-sm font-bold mb-2"
               htmlFor="formGridCRUD_ProductOrder"
             >
-              Order
+              Orden
             </label>
             <input
               type="number"
-              placeholder="Ex. 1"
+              placeholder="Ejemplo: 1"
               name="CRUD_ProductOrder"
               value={CRUD_Product.order}
               onChange={(e) => this.handleOnChangeInputForm(e)}
@@ -1051,7 +1048,7 @@ class Products extends Component {
 
         <div className="pt-4 bg-white p-4 rounded-lg shadow-sm my-4">
           <div className="mb-4">
-            <h2 className="text-xl font-bold">PROJECT Features</h2>
+            <h2 className="text-xl font-bold">Características del proyecto</h2>
           </div>
 
           <CRUDProductFeatures
@@ -1072,7 +1069,7 @@ class Products extends Component {
 
         <div className="pt-4 bg-white p-4 rounded-lg shadow-sm my-4">
           <div className="mb-4">
-            <h2 className="text-xl font-bold">PROJECT Images</h2>
+            <h2 className="text-xl font-bold">Imagenes de proyecto</h2>
           </div>
 
           <div className="mb-4">
@@ -1080,7 +1077,7 @@ class Products extends Component {
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={(e) => this.handleAddNewImageToActualProduct(e)}
             >
-              ADD IMAGE TO ACTUAL PROJECT
+              AGREGAR IMAGEN AL PROYECTO ACTUAL
             </button>
           </div>
 

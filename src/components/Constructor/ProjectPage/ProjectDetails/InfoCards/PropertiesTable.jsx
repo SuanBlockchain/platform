@@ -1,18 +1,9 @@
 import React from "react";
 import Card from "components/common/Card";
 import useFetchPropertiesProject from "hooks/useFetchPropertiesProject";
-import { formatArea } from "../../mappers";
+import { formatArea, getAreaFromPf } from "../../mappers";
 export default function PropertiesTable() {
   const { properties } = useFetchPropertiesProject();
-
-  const getAreaFromPf = (property) => {
-    const area =
-      property.propertyFeatures.items.filter((item) => {
-        return item.featureID === "D_area";
-      })[0]?.value || "0";
-
-    return area;
-  };
 
   return (
     <Card>

@@ -11,18 +11,21 @@ import {
 } from "@aws-sdk/client-s3";
 import { FolderIcon } from "components/common/icons/FolderIcon";
 import { convertAWSDatetimeToDate } from "components/Constructor/ProjectPage/utils";
-import { Dropdown, DropdownButton } from "react-bootstrap";
+import { Dropdown, DropdownButton, Spinner } from "react-bootstrap";
 import { AddFolderIcon } from "components/common/icons/AddFolderIcon";
 import { S3ClientProvider, useS3Client } from "context/s3ClientContext";
 import ModalMoveToProject from "./ModalMoveToProject";
+import { notify } from "utilities/notify";
 
-const S3FileManager = ({ userId, products }) => {
+const S3FileManager = ({ userId, products, selectedItem, type }) => {
   const { s3Client, bucketName } = useS3Client();
   const [currentPath, setCurrentPath] = useState(""); // Ruta actual en la navegación
   const [items, setItems] = useState([]); // Archivos y carpetas en el nivel actual
   const [totalProgress, setTotalProgress] = useState(0); // Progreso total
   const [showModalNewProperty, setShowModalNewProperty] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemToMove, setSelectedItemToMove] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const activeUploads = new Map();
 
@@ -30,12 +33,38 @@ const S3FileManager = ({ userId, products }) => {
   const handleShowNewProperty = () => setShowModalNewProperty(true);
 
   useEffect(() => {
-    if (userId) listItems(); // Carga inicial de archivos
-  }, [userId, currentPath, s3Client]);
+    if (userId && selectedItem && s3Client) {
+      setIsLoading(true);
+      setError(null);
+      listItems().catch(err => {
+        setError(err.message);
+        notify({ msg: 'Error al cargar los archivos', type: 'error' });
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    }
+  }, [userId, currentPath, s3Client, selectedItem]);
+
+  const getBasePath = () => {
+    if (!selectedItem) return '';
+    
+    if (type === 'project') {
+      return `public/projects/${selectedItem.id}`;
+    } else if (type === 'property') {
+      return `public/property/${selectedItem.id}`;
+    }
+    return '';
+  };
 
   const listItems = async () => {
+    if (!s3Client) {
+      throw new Error('Cliente S3 no inicializado');
+    }
+
     try {
-      const prefix = `public/analyst/${userId}/${currentPath}`;
+      const basePath = getBasePath();
+      const prefix = `${basePath}/${currentPath}`;
+      
       const command = new ListObjectsV2Command({
         Bucket: bucketName,
         Prefix: prefix,
@@ -50,10 +79,7 @@ const S3FileManager = ({ userId, products }) => {
 
       if (allFiles) {
         allFiles.forEach((item) => {
-          const relativePath = item.Key.replace(
-            `public/analyst/${userId}/`,
-            ""
-          );
+          const relativePath = item.Key.replace(`${basePath}/`, "");
           const parts = relativePath.replace(currentPath, "").split("/");
 
           if (parts.length > 1) {
@@ -78,6 +104,8 @@ const S3FileManager = ({ userId, products }) => {
       ]);
     } catch (error) {
       console.error("Error al listar archivos y carpetas:", error);
+      notify({ msg: 'Error al listar archivos', type: 'error' });
+      throw error;
     }
   };
 
@@ -97,12 +125,13 @@ const S3FileManager = ({ userId, products }) => {
     const folderName = prompt("Ingresa el nombre de la nueva carpeta:");
 
     if (!folderName) {
-      alert("Debe ingresar un nombre para la carpeta.");
+      notify({ msg: 'Debe ingresar un nombre para la carpeta', type: 'warning' });
       return;
     }
 
     try {
-      const folderPath = `public/analyst/${userId}/${currentPath}${folderName}/`;
+      const basePath = getBasePath();
+      const folderPath = `${basePath}/${currentPath}${folderName}/`;
       const command = new PutObjectCommand({
         Bucket: bucketName,
         Key: folderPath,
@@ -110,12 +139,11 @@ const S3FileManager = ({ userId, products }) => {
       });
 
       await s3Client.send(command);
-
-      alert(`Carpeta '${folderName}' creada exitosamente.`);
+      notify({ msg: `Carpeta '${folderName}' creada exitosamente`, type: 'success' });
       listItems();
     } catch (error) {
       console.error("Error al crear carpeta:", error);
-      alert("No se pudo crear la carpeta. Intenta nuevamente.");
+      notify({ msg: 'No se pudo crear la carpeta', type: 'error' });
     }
   };
 
@@ -134,23 +162,21 @@ const S3FileManager = ({ userId, products }) => {
     let totalLoaded = 0;
     const totalSize = files.reduce((acc, file) => acc + file.size, 0);
 
-    setTotalProgress(1); // Inicializa el progreso total
+    setTotalProgress(1);
 
     for (const file of files) {
       try {
+        const basePath = getBasePath();
         const relativePath = file.webkitRelativePath || file.name;
-        const s3Key = `public/analyst/${userId}/${currentPath}${relativePath}`;
+        const s3Key = `${basePath}/${currentPath}${relativePath}`;
 
         if (file.size > 5 * 1024 * 1024) {
-          // Subir archivo grande con multipart upload
           await uploadFileMultipart(s3Key, file, (fileProgress) => {
-            // Calcula el progreso acumulado basado en los bytes cargados
-            totalLoaded += fileProgress; // Incrementa el total con los bytes reportados
-            const totalProgress = (totalLoaded / totalSize) * 100; // Calcula progreso general
+            totalLoaded += fileProgress;
+            const totalProgress = (totalLoaded / totalSize) * 100;
             setTotalProgress(parseInt(totalProgress) === 0 ? 1 : totalProgress);
           });
         } else {
-          // Subir archivo pequeño
           await uploadSmallFile(s3Key, file);
           totalLoaded += file.size;
           const totalProgress = (totalLoaded / totalSize) * 100;
@@ -158,24 +184,25 @@ const S3FileManager = ({ userId, products }) => {
         }
       } catch (error) {
         console.error(`Error en ${file.name}:`, error);
+        notify({ msg: `Error al subir ${file.name}`, type: 'error' });
       }
     }
 
     listItems();
-    setTotalProgress(0); // Restablece el progreso total al finalizar
+    setTotalProgress(0);
+    notify({ msg: 'Archivos subidos exitosamente', type: 'success' });
   };
 
   const uploadSmallFile = async (key, file) => {
     try {
       const command = new PutObjectCommand({
-        Bucket: bucketName, // Nombre del bucket S3
-        Key: key, // Ruta clave del archivo en el bucket
-        Body: file, // Contenido del archivo
-        ContentType: file.type, // Tipo de contenido (MIME)
+        Bucket: bucketName,
+        Key: key,
+        Body: file,
+        ContentType: file.type,
       });
 
       await s3Client.send(command);
-      console.log(`Archivo ${key} subido correctamente.`);
     } catch (error) {
       console.error(`Error al subir el archivo pequeño (${key}):`, error);
       throw error;
@@ -188,7 +215,7 @@ const S3FileManager = ({ userId, products }) => {
 
     const partSize = 5 * 1024 * 1024; // 5MB
     const parts = Math.ceil(file.size / partSize);
-    let completedBytes = 0; // Bytes cargados acumulados hasta ahora
+    let completedBytes = 0;
     let completedParts = [];
 
     for (let i = 0; i < parts; i++) {
@@ -197,27 +224,20 @@ const S3FileManager = ({ userId, products }) => {
       const partNumber = i + 1;
       const partData = file.slice(start, end);
 
-      // Control de pausa
       while (activeUploads.get(key).paused) {
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Espera activa
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      // Control de cancelación
       if (activeUploads.get(key).aborted) {
         await abortMultipartUpload(key, uploadId);
         activeUploads.delete(key);
         return;
       }
 
-      const partResponse = await uploadPart(
-        key,
-        uploadId,
-        partNumber,
-        partData
-      );
+      const partResponse = await uploadPart(key, uploadId, partNumber, partData);
       completedParts.push(partResponse);
-      completedBytes += end - start; // Incrementa bytes cargados acumulados
-      onProgress(end - start); // Notifica los bytes cargados en esta parte
+      completedBytes += end - start;
+      onProgress(end - start);
     }
 
     if (!activeUploads.get(key).aborted) {
@@ -267,158 +287,12 @@ const S3FileManager = ({ userId, products }) => {
     activeUploads.delete(key);
   };
 
-  // Función para pausar una carga
-  const pauseUpload = (key) => {
-    if (activeUploads.has(key)) {
-      activeUploads.get(key).paused = true;
-      console.log(`Carga pausada para ${key}`);
-    }
-  };
-
-  // Función para reanudar una carga
-  const resumeUpload = (key) => {
-    if (activeUploads.has(key)) {
-      activeUploads.get(key).paused = false;
-      console.log(`Carga reanudada para ${key}`);
-    }
-  };
-
-  // Función para cancelar una carga
-  const cancelUpload = async (key) => {
-    if (activeUploads.has(key)) {
-      activeUploads.get(key).aborted = true;
-      const { uploadId } = activeUploads.get(key);
-      await abortMultipartUpload(key, uploadId);
-      activeUploads.delete(key);
-      console.log(`Carga cancelada para ${key}`);
-    }
-  };
-
-  /* const uploadFiles = async (filesToUpload) => {
-    let totalLoaded = 0;
-
-    for (const file of filesToUpload) {
-      try {
-        const s3Key = `public/analyst/${userId}/${currentPath}${file.name}`;
-        const fileSize = file.size;
-        const partSize = 5 * 1024 * 1024; // 5MB
-        const totalParts = Math.ceil(fileSize / partSize);
-        const uploadId = await initiateMultipartUpload(s3Key);
-
-        const uploadedParts = [];
-        for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-          const start = (partNumber - 1) * partSize;
-          const end = Math.min(start + partSize, fileSize);
-          const partData = file.slice(start, end);
-
-          const part = await uploadPart(s3Key, uploadId, partData, partNumber);
-          uploadedParts.push(part);
-
-          // Actualizar progreso por parte
-          totalLoaded += partData.size;
-          const progressPercent = Math.round((totalLoaded / fileSize) * 100);
-          setTotalProgress(progressPercent);
-        }
-
-        await completeMultipartUpload(s3Key, uploadId, uploadedParts);
-
-        console.log(`Archivo ${file.name} subido exitosamente.`);
-      } catch (error) {
-        console.error("Error al subir archivo:", error);
-      }
-    }
-
-    setTotalProgress(0);
-    listItems();
-  }; */
-
-  const moveItem = async (newPath) => {
-    const isFolder = selectedItem.isFolder;
-    const oldPrefix = `public/analyst/${userId}/${currentPath}${selectedItem.name}`;
-    const newPrefix = `${newPath}${selectedItem.name}`;
-
-    let totalLoaded = 0;
-    setTotalProgress(0);
-
-    try {
-      if (isFolder) {
-        // Listar todos los objetos dentro de la carpeta
-        const listCommand = new ListObjectsV2Command({
-          Bucket: bucketName,
-          Prefix: oldPrefix,
-        });
-
-        const listResponse = await s3Client.send(listCommand);
-        const itemsToMove = listResponse.Contents || [];
-
-        let totalFiles = itemsToMove.length;
-
-        for (const obj of itemsToMove) {
-          const oldKey = obj.Key;
-          const newKey = obj.Key.replace(oldPrefix, newPrefix);
-
-          // Copiar cada archivo dentro de la carpeta
-          const copyCommand = new CopyObjectCommand({
-            Bucket: bucketName,
-            CopySource: `${bucketName}/${oldKey}`,
-            Key: newKey,
-          });
-
-          await s3Client.send(copyCommand);
-
-          // Borrar el archivo original
-          const deleteCommand = new DeleteObjectCommand({
-            Bucket: bucketName,
-            Key: oldKey,
-          });
-
-          await s3Client.send(deleteCommand);
-
-          totalLoaded++;
-          const newTotalProgress = Math.round((totalLoaded / totalFiles) * 100);
-          setTotalProgress(newTotalProgress);
-        }
-      } else {
-        // Si es un archivo, solo copiar y borrar
-        const oldKey = oldPrefix;
-        const newKey = newPrefix;
-
-        // Copiar el archivo
-        const copyCommand = new CopyObjectCommand({
-          Bucket: bucketName,
-          CopySource: `${bucketName}/${oldKey}`,
-          Key: newKey,
-        });
-
-        await s3Client.send(copyCommand);
-
-        // Borrar el archivo original
-        const deleteCommand = new DeleteObjectCommand({
-          Bucket: bucketName,
-          Key: oldKey,
-        });
-
-        await s3Client.send(deleteCommand);
-      }
-
-      setTotalProgress(0);
-      alert(
-        `Elemento '${selectedItem.name}' movido exitosamente a '${newPath}'.`
-      );
-      listItems(); // Actualiza la lista después de mover
-    } catch (error) {
-      console.error("Error al mover archivo o carpeta:", error);
-      alert("No se pudo mover el archivo o carpeta. Intenta nuevamente.");
-    }
-  };
-
   const deleteItem = async (item) => {
-    const key = `public/analyst/${userId}/${currentPath}${item.name}`;
-    setTotalProgress(0); // Inicia el progreso en 0%
+    const basePath = getBasePath();
+    const key = `${basePath}/${currentPath}${item.name}`;
 
     try {
       if (item.isFolder) {
-        // Listar todos los objetos en la carpeta
         const listCommand = new ListObjectsV2Command({
           Bucket: bucketName,
           Prefix: key,
@@ -430,7 +304,6 @@ const S3FileManager = ({ userId, products }) => {
         const totalItems = response.Contents.length;
 
         if (response.Contents) {
-          // Eliminar cada objeto dentro de la carpeta
           for (const obj of response.Contents) {
             const deleteCommand = new DeleteObjectCommand({
               Bucket: bucketName,
@@ -452,8 +325,80 @@ const S3FileManager = ({ userId, products }) => {
 
       setTotalProgress(0);
       listItems();
+      notify({ msg: 'Elemento eliminado exitosamente', type: 'success' });
     } catch (error) {
       console.error("Error al eliminar archivo o carpeta:", error);
+      notify({ msg: 'Error al eliminar el elemento', type: 'error' });
+    }
+  };
+
+  const moveItem = async (newPath) => {
+    if (!selectedItemToMove) return;
+
+    const basePath = getBasePath();
+    const oldPrefix = `${basePath}/${currentPath}${selectedItemToMove.name}`;
+    const newPrefix = `${newPath}${selectedItemToMove.name}`;
+
+    let totalLoaded = 0;
+    setTotalProgress(0);
+
+    try {
+      if (selectedItemToMove.isFolder) {
+        const listCommand = new ListObjectsV2Command({
+          Bucket: bucketName,
+          Prefix: oldPrefix,
+        });
+
+        const listResponse = await s3Client.send(listCommand);
+        const itemsToMove = listResponse.Contents || [];
+        let totalFiles = itemsToMove.length;
+
+        for (const obj of itemsToMove) {
+          const oldKey = obj.Key;
+          const newKey = obj.Key.replace(oldPrefix, newPrefix);
+
+          const copyCommand = new CopyObjectCommand({
+            Bucket: bucketName,
+            CopySource: `${bucketName}/${oldKey}`,
+            Key: newKey,
+          });
+
+          await s3Client.send(copyCommand);
+
+          const deleteCommand = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: oldKey,
+          });
+
+          await s3Client.send(deleteCommand);
+
+          totalLoaded++;
+          const newTotalProgress = Math.round((totalLoaded / totalFiles) * 100);
+          setTotalProgress(newTotalProgress);
+        }
+      } else {
+        const copyCommand = new CopyObjectCommand({
+          Bucket: bucketName,
+          CopySource: `${bucketName}/${oldPrefix}`,
+          Key: newPrefix,
+        });
+
+        await s3Client.send(copyCommand);
+
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: bucketName,
+          Key: oldPrefix,
+        });
+
+        await s3Client.send(deleteCommand);
+      }
+
+      setTotalProgress(0);
+      notify({ msg: `Elemento '${selectedItemToMove.name}' movido exitosamente`, type: 'success' });
+      listItems();
+    } catch (error) {
+      console.error("Error al mover archivo o carpeta:", error);
+      notify({ msg: 'Error al mover el elemento', type: 'error' });
     }
   };
 
@@ -464,17 +409,49 @@ const S3FileManager = ({ userId, products }) => {
     return Math.round(bytes / Math.pow(1024, i)) + " " + sizes[i];
   };
 
-  if (!userId) {
+  if (!userId || !selectedItem) {
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-4">
+        <p>Error: {error}</p>
+        <button 
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={() => {
+            setIsLoading(true);
+            setError(null);
+            listItems().catch(err => {
+              setError(err.message);
+              notify({ msg: 'Error al cargar los archivos', type: 'error' });
+            }).finally(() => {
+              setIsLoading(false);
+            });
+          }}
+        >
+          Reintentar
+        </button>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold text-gray-800 mb-4">
-        Gestor de Archivos S3
+        Gestor de Archivos
       </h1>
 
-      {/* Barra de progreso */}
       {totalProgress > 0 && (
         <div className="mb-4">
           <div className="w-full bg-gray-300 h-2">
@@ -489,8 +466,10 @@ const S3FileManager = ({ userId, products }) => {
         </div>
       )}
 
-      {/* Opciones de gestión de carga */}
       <div className="flex justify-between items-center mb-2">
+        {/* <p className="text-sm text-gray-600">
+          Ruta {getBasePath()}
+        </p> */}
         <p className="text-sm text-gray-600">
           Ruta actual: {currentPath || "/"}
         </p>
@@ -501,7 +480,7 @@ const S3FileManager = ({ userId, products }) => {
           >
             <AddFolderIcon />
           </button>
-          <label className="p-2 text-white bg-blue-600 rounded-md">
+          <label className="p-2 text-white bg-blue-600 rounded-md" style={{backgroundColor:"#74742c"}}>
             Subir Carpeta
             <input
               type="file"
@@ -511,7 +490,7 @@ const S3FileManager = ({ userId, products }) => {
               className="hidden"
             />
           </label>
-          <label className="p-2 text-white bg-blue-600 rounded-md">
+          <label className="p-2 text-white bg-blue-600 rounded-md" style={{backgroundColor:"#74742c"}}  >
             Subir Archivos
             <input
               type="file"
@@ -522,24 +501,33 @@ const S3FileManager = ({ userId, products }) => {
           </label>
         </div>
       </div>
-      <table className="w-full">
-        <thead>
+
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
           <tr>
-            <th style={{ width: "600px" }}>Nombre</th>
-            <th className="text-center" style={{ width: "150px" }}>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Nombre
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               Tamaño
             </th>
-            <th className="text-center" style={{ width: "300px" }}>
-              Ultima modificación
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Última Modificación
             </th>
-            <th></th>
+            <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
           </tr>
         </thead>
-        <tbody className="align-middle">
-          {currentPath.length > 1 && (
-            <tr className="border-t-[1px] w-full" style={{ height: "3rem" }}>
-              <td onClick={() => goBack()}>
-                <div className="flex items-end">
+        <tbody className="bg-white divide-y divide-gray-200">
+          {currentPath && (
+            <tr className="border-t-[1px] hover:bg-gray-50" style={{ height: "3rem" }}>
+              <td
+                onClick={goBack}
+                style={{ cursor: "pointer" }}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                <div className="flex items-end pl-2">
                   <FolderIcon />
                   <span className="text-lg w-fit pl-2">...</span>
                 </div>
@@ -552,7 +540,6 @@ const S3FileManager = ({ userId, products }) => {
           {items
             .filter((obj) => obj.name !== "")
             .map((item, index) => {
-              console.log("item", item);
               const fileUrl = `https://${bucketName}.s3.amazonaws.com/${item.Key}`;
               return (
                 <tr
@@ -565,6 +552,7 @@ const S3FileManager = ({ userId, products }) => {
                       item.isFolder ? navigateToFolder(item.name) : null
                     }
                     style={{ cursor: "pointer" }}
+                    className="text-blue-600 hover:text-blue-800"
                   >
                     <div className="flex items-end">
                       {item.isFolder ? <FolderIcon /> : <></>}
@@ -596,19 +584,18 @@ const S3FileManager = ({ userId, products }) => {
                           >
                             Descargar
                           </a>
-
                           <Dropdown.Divider />
                         </>
                       )}
-                      <Dropdown.Item
+                      {/* <Dropdown.Item
                         eventKey="4"
                         onClick={() => {
-                          setSelectedItem(item);
+                          setSelectedItemToMove(item);
                           handleShowNewProperty();
                         }}
                       >
                         Mover a
-                      </Dropdown.Item>
+                      </Dropdown.Item> */}
                       <Dropdown.Item
                         eventKey="4"
                         onClick={() => deleteItem(item)}

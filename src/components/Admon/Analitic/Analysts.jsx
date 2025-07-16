@@ -54,8 +54,10 @@ class Analysts extends Component {
         id: "",
         username: "",
         email: "",
-        role: "analyst"
+        role: "analyst",
       },
+      errors: {},
+      showErrors: false,
       showModal: false,
       showModalCreate: false,
       userToDelete: { id: null, username: null },
@@ -137,10 +139,14 @@ class Analysts extends Component {
   }
 
   async confirmCreateUser() {
+    if (!this.validateForm()) {
+      return;
+    }
     const { newUser } = this.state;
     if (newUser) {
       await this.handleCRUDUser();
       this.cleanUserOnCreate();
+      this.setState({ showErrors: false });
     }
   }
 
@@ -153,7 +159,7 @@ class Analysts extends Component {
         showModal: false,
       });
     }
-}
+  }
 
   async loadAnalystUsers() {
     let filter = {
@@ -168,16 +174,61 @@ class Analysts extends Component {
     this.setState({ analysts: listUsersResult.data.listUsers.items });
   }
 
-  handleOnChangeInputForm = async (event) => {
-    let tempNewUser = this.state.newUser;
-    if (event.target.name === "newUser.username") {
-      tempNewUser.username = event.target.value;
-    }
-    if (event.target.name === "newUser.email") {
-      tempNewUser.email = event.target.value;
+  validateForm = () => {
+    const { username, email } = this.state.newUser;
+    const errors = {};
+
+    if (!username.trim()) {
+      errors.username = "El nombre de usuario es obligatorio.";
+    } else if (username.length < 3) {
+      errors.username =
+        "El nombre de usuario debe tener al menos 3 caracteres.";
     }
 
-    this.setState({ newUser: tempNewUser });
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      errors.email = "El correo electrónico es obligatorio.";
+    } else if (!emailRegex.test(email)) {
+      errors.email = "El correo electrónico no es válido.";
+    }
+
+    this.setState({ errors, showErrors: true });
+    return Object.keys(errors).length === 0; // True si no hay errores
+  };
+
+  handleOnChangeInputForm = (e) => {
+    const { name, value } = e.target;
+    this.setState((prevState) => {
+      const updatedUser = { ...prevState.newUser, [name]: value };
+
+      // Validar en tiempo real solo si ya se ha intentado enviar
+      const updatedErrors = { ...prevState.errors };
+      if (prevState.showErrors) {
+        if (name === "username") {
+          if (!value.trim()) {
+            updatedErrors.username = "El nombre de usuario es obligatorio.";
+          } else if (value.length < 3) {
+            updatedErrors.username =
+              "El nombre de usuario debe tener al menos 3 caracteres.";
+          } else {
+            delete updatedErrors.username;
+          }
+        }
+
+        if (name === "email") {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!value.trim()) {
+            updatedErrors.email = "El correo electrónico es obligatorio.";
+          } else if (!emailRegex.test(value)) {
+            updatedErrors.email = "El correo electrónico no es válido.";
+          } else {
+            delete updatedErrors.email;
+          }
+        }
+      }
+
+      return { newUser: updatedUser, errors: updatedErrors };
+    });
   };
 
   async handleCRUDUser() {
@@ -205,6 +256,7 @@ class Analysts extends Component {
         email: "",
         role: "analyst", // Mantener rol de "analyst"
       },
+      errors: {},
       showModalCreate: false,
     });
   }
@@ -220,9 +272,10 @@ class Analysts extends Component {
           isProfileUpdated: false,
           role: `${role}`,
         };
-       const response = await API.graphql(graphqlOperation(createUser, { input: userPayload }));
-       console.log(response);
-       this.setState({ message: "Usuario creado exitosamente!" });
+        const response = await API.graphql(
+          graphqlOperation(createUser, { input: userPayload })
+        );
+        this.setState({ message: "Usuario creado exitosamente!" });
         this.handleHideModalCreate();
         this.cleanUserOnCreate();
       } catch (error) {
@@ -234,58 +287,56 @@ class Analysts extends Component {
   }
 
   render() {
-    let { analysts, newUser } = this.state;
+    let { analysts, newUser, errors } = this.state;
 
     const renderAnalysts = () => {
       if (analysts.length > 0) {
         return (
-          <div className="container mx-auto mt-8 bg-white p-4 rounded-lg shadow-sm mb-4">
+          <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
             <h4 className="text-lg font-semibold mb-4">Lista de analista</h4>
             <div className="overflow-x-auto">
-              <table className="table-auto w-full">
+              <Table striped bordered hover responsive>
                 <thead>
                   <tr>
-                    <th className="border px-4 py-2">Nombre</th>
-                    <th className="border px-4 py-2">Email</th>
-                    <th className="border px-4 py-2">Creado :</th>
-                    <th className="border px-4 py-2">Confirmacion</th>
-                    <th className="border px-4 py-2"></th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Creado :</th>
+                    <th>Confirmacion</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
-  {analysts.map((analyst) => {
-    console.log("Analyst Profile Update Status:", analyst.isProfileUpdated);  // Aquí se hace el log
-    return (
-      <tr key={analyst.id}>
-        <td className="border px-4 py-2">{analyst.name}</td>
-        <td className="border px-4 py-2">{analyst.email}</td>
-        <td className="border px-4 py-2">
-          {`${analyst.createdAt.split("T")[0].split("-")[2]}-${
-            analyst.createdAt.split("T")[0].split("-")[1]
-          }-${analyst.createdAt.split("T")[0].split("-")[0]}`}
-        </td>
-        <td className="border px-4 py-2">
-          {analyst.isProfileUpdated ? "Confirmado" : "Pendiente"}
-        </td>
-        <td className="border px-4 py-2">
-          <button
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() =>
-              this.showModalDelete({
-                id: analyst.id,
-                username: analyst.name,
-              })
-            }
-          >
-            Eliminar
-          </button>
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
-
-              </table>
+                  {analysts.map((analyst) => {
+                    return (
+                      <tr key={analyst.id}>
+                        <td>{analyst.name}</td>
+                        <td>{analyst.email}</td>
+                        <td>
+                          {`${analyst.createdAt.split("T")[0].split("-")[2]}-${
+                            analyst.createdAt.split("T")[0].split("-")[1]
+                          }-${analyst.createdAt.split("T")[0].split("-")[0]}`}
+                        </td>
+                        <td>
+                          {analyst.status === "confirmed" ? "Confirmado" : "Pendiente"}
+                        </td>
+                        <td>
+                          <button
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                            onClick={() =>
+                              this.showModalDelete({
+                                id: analyst.id,
+                                username: analyst.name,
+                              })
+                            }
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
             </div>
           </div>
         );
@@ -293,26 +344,27 @@ class Analysts extends Component {
     };
 
     return (
-      <div className="container mx-auto ">
-        <div className="mt-8 bg-white p-4 rounded-lg shadow-sm mb-4">
+      <div className="container mx-auto mt-20">
+        <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
           <h4 className="text-lg">Crea un nuevo analista</h4>
           <form className="mt-4">
             <div className="mb-4">
-              <label
-                htmlFor="formGridUsername"
-                className="block font-semibold"
-              >
+              <label htmlFor="formGridUsername" className="block font-semibold">
                 Nombre de usuario
               </label>
               <input
                 type="text"
-                placeholder="Username"
-                id="formGridUsername"
-                name="newUser.username"
+                id="username"
+                name="username"
                 value={newUser.username}
-                onChange={(e) => this.handleOnChangeInputForm(e)}
-                className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+                onChange={this.handleOnChangeInputForm}
+                className={`block w-full border ${
+                  errors.username ? "border-red-500" : "border-gray-300"
+                } rounded px-3 py-2 mt-1 focus:outline-none`}
               />
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+              )}
             </div>
             <div className="mb-4">
               <label htmlFor="formGridEmail" className="block font-semibold">
@@ -320,21 +372,17 @@ class Analysts extends Component {
               </label>
               <input
                 type="text"
-                placeholder="Email"
-                id="formGridEmail"
-                name="newUser.email"
+                id="email"
+                name="email"
                 value={newUser.email}
-                onChange={(e) => this.handleOnChangeInputForm(e)}
-                className="block w-full border border-gray-300 rounded px-3 py-2 mt-1 focus:outline-none focus:border-blue-500"
+                onChange={this.handleOnChangeInputForm}
+                className={`block w-full border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } rounded px-3 py-2 mt-1 focus:outline-none`}
               />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="formGridValidatorType"
-                className="block font-semibold"
-              >
-                Tipo de analista
-              </label>
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
             <button
               type="button"
@@ -362,20 +410,27 @@ class Analysts extends Component {
               onClick={() => this.setState({ showModal: false })}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="button"
               onClick={() => this.confirmDeleteUser()}
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
             >
-              Delete
+              Eliminar
             </button>
           </Modal.Footer>
         </Modal>
         <Modal
           show={this.state.showModalCreate}
           onHide={() => this.setState({ showModalCreate: false })}
+          size="lg"
+          style={{
+            maxWidth: "fit-content",
+            margin: "auto",
+            position: "absolute",
+            left: "25%",
+          }}
         >
           <Modal.Header closeButton>
             <Modal.Title>Confirmar datos de nuevo usuario</Modal.Title>
@@ -410,7 +465,7 @@ class Analysts extends Component {
               onClick={() => this.setState({ showModalCreate: false })}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="button"

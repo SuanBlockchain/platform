@@ -20,7 +20,7 @@ class UOM extends Component {
     super(props);
     this.state = {
       unitOfMeasures: [],
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newUnitOfMeasure: {
         id: "",
@@ -121,7 +121,7 @@ class UOM extends Component {
   async handleCRUDUnitOfMeasure() {
     let tempNewUnitOfMeasure = this.state.newUnitOfMeasure;
 
-    if (this.state.CRUDButtonName === "CREATE") {
+    if (this.state.CRUDButtonName === "CREAR") {
       await API.graphql(
         graphqlOperation(createUnitOfMeasure, { input: tempNewUnitOfMeasure })
       );
@@ -151,7 +151,7 @@ class UOM extends Component {
 
   async cleanUnitOfMeasureOnCreate() {
     this.setState({
-      CRUDButtonName: "CREATE",
+      CRUDButtonName: "CREAR",
       isCRUDButtonDisable: true,
       newUnitOfMeasure: {
         id: "",
@@ -170,61 +170,50 @@ class UOM extends Component {
     const renderUnitOfMeasures = () => {
       if (unitOfMeasures.length > 0) {
         return (
-          <div className="container mx-auto mt-8">
-            <h2 className="text-xl font-semibold mb-4">Unit of Measures</h2>
-            <div className="overflow-x-auto">
-              <table className="table-auto w-full">
-                <thead>
-                  <tr>
-                    <th className="border px-4 py-2">Engineering Unit</th>
-                    <th className="border px-4 py-2">Description</th>
-                    <th className="border px-4 py-2">Is Float</th>
-                    <th className="border px-4 py-2">Editar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {unitOfMeasures.map((unitOfMeasure) => (
-                    <tr key={unitOfMeasure.id}>
-                      <td className="border px-4 py-2">
-                        {unitOfMeasure.engineeringUnit}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {unitOfMeasure.description}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {unitOfMeasure.isFloat ? "Yes" : "No"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        <button
-                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                          onClick={(e) =>
-                            this.handleLoadEditUnitOfMeasure(unitOfMeasure, e)
-                          }
-                        >
-                          Editar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Engineering Unit</th>
+                <th>Description</th>
+                <th>Is Float</th>
+                <th>Editar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unitOfMeasures.map((unitOfMeasure) => (
+                <tr key={unitOfMeasure.id}>
+                  <td>{unitOfMeasure.engineeringUnit}</td>
+                  <td>{unitOfMeasure.description}</td>
+                  <td>{unitOfMeasure.isFloat ? "Yes" : "No"}</td>
+                  <td>
+                    <button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                      onClick={(e) =>
+                        this.handleLoadEditUnitOfMeasure(unitOfMeasure, e)
+                      }
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         );
       }
     };
 
     return (
-      <div className="container mt-8 mx-auto bg-white p-4 rounded-lg shadow-sm mb-4">
-        <div className="mt-8 mb-8">
-          <h2 className="text-2xl">{CRUDButtonName} Unit of Measure</h2>
+      <div className="container mx-auto mt-20">
+        <div className="flex flex-col mb-8 p-4 bg-white rounded-md shadow-md">
+          <h2 className="text-2xl">{CRUDButtonName} Unidad de medida</h2>
           <form className="mt-4">
             <div className="mb-4">
               <label
                 htmlFor="formGridEngineeringUnit"
                 className="block font-semibold"
               >
-                Engineering Unit
+                Unidad de Ingeniería
               </label>
               <input
                 type="text"
@@ -241,7 +230,7 @@ class UOM extends Component {
                 htmlFor="formGridDescription"
                 className="block font-semibold"
               >
-                Description
+                Descripción
               </label>
               <input
                 type="text"
@@ -254,7 +243,7 @@ class UOM extends Component {
               />
             </div>
             <div className="mb-4">
-              <label className="block font-semibold">Is Float?</label>
+              <label className="block font-semibold">¿Es Float?</label>
               <br />
               <button
                 type="button"
@@ -263,7 +252,7 @@ class UOM extends Component {
                   newUnitOfMeasure.isFloat ? "bg-blue-700" : ""
                 }`}
               >
-                {newUnitOfMeasure.isFloat ? "YES" : "NO"}
+                {newUnitOfMeasure.isFloat ? "SI" : "NO"}
               </button>
             </div>
             <button

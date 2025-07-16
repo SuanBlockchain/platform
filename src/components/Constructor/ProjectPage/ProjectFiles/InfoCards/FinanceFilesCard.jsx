@@ -163,7 +163,6 @@ function ClaimTokens({ ownerTokensAmount, tokenName, marketplaceID }) {
       (acumulador, objeto) => acumulador + (parseInt(objeto.amount) || 0),
       0
     );
-    console.log(consumed);
     const available = parseInt(ownerTokensAmount) - consumed;
     setTokensAvaiableAmount(available);
   }, [tokenToAdressData]);
@@ -226,8 +225,6 @@ function ClaimTokens({ ownerTokensAmount, tokenName, marketplaceID }) {
   };
 
   const handleSaveData = async (indexToSave) => {
-    console.log(tokenToAdressData[indexToSave].amount);
-    console.log(parseInt(tokenToAdressData[indexToSave].amount));
     if (parseInt(tokenToAdressData[indexToSave].amount) <= 0) {
       notify({
         msg: "Ingrese una cantidad valida",
@@ -286,7 +283,6 @@ function ClaimTokens({ ownerTokensAmount, tokenName, marketplaceID }) {
       tokenName: tokenName,
       tokenSending: getImportantValues(tokenToAdressData),
     };
-    console.log(data);
   };
 
   return (
@@ -439,8 +435,6 @@ function DistributionToken({ infoTable }) {
     return <p>No hay datos disponibles.</p>;
   }
 
-  console.log("totalowner", totalOwnerValue);
-  console.log("infoTable", infoTable);
 
   return (
     <div className="col">

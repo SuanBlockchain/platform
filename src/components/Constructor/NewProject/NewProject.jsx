@@ -52,7 +52,7 @@ export default function NewProject() {
       // "H_aliados_estrategicos_desc",
       // "H_grupo_comunitario_desc",
     ];
-    
+
     const productFeaturesGroupsToCreate1 = [
       //   "D_actual_use",
       //   "D_area_potrero",
@@ -155,7 +155,6 @@ export default function NewProject() {
       productID: productID,
       value: `SUAN-${productID.split("-")[4].toUpperCase()}`,
     };
-    console.log("newProductFeature:", newProductFeatureTokenName);
     promises.push(
       API.graphql(
         graphqlOperation(createProductFeature, {
@@ -170,10 +169,6 @@ export default function NewProject() {
       productID: productID,
       value: "",
     };
-    console.log(
-      "newProductFeature:",
-      newProductFeatureGlobalProjectValidatorFiles
-    );
     promises.push(
       API.graphql(
         graphqlOperation(createProductFeature, {
@@ -188,10 +183,6 @@ export default function NewProject() {
       productID: productID,
       value: "false",
     };
-    console.log(
-      "newProductFeature:",
-      newProductFeatureGlobalOwnerAcceptsConditions
-    );
     promises.push(
       API.graphql(
         graphqlOperation(createProductFeature, {
@@ -206,10 +197,7 @@ export default function NewProject() {
       productID: productID,
       value: "false",
     };
-    console.log(
-      "newProductFeature:",
-      newProductFeatureGlobalValidatorSetFinantialConditions
-    );
+    
     promises.push(
       API.graphql(
         graphqlOperation(createProductFeature, {
@@ -224,10 +212,7 @@ export default function NewProject() {
       productID: productID,
       value: "false",
     };
-    console.log(
-      "newProductFeature:",
-      newProductFeatureGlobalValidatorSetThecnicalConditions
-    );
+    
     promises.push(
       API.graphql(
         graphqlOperation(createProductFeature, {
@@ -275,7 +260,6 @@ export default function NewProject() {
           productID: productID,
           value: value,
         };
-        console.log("newProductFeature:", newProductFeature);
         promises.push(
           API.graphql(
             graphqlOperation(createProductFeature, {
@@ -305,7 +289,6 @@ export default function NewProject() {
         productID: productID,
         value: `[${values.join(", ")}]`,
       };
-      console.log("newProductFeature:", newProductFeature);
       promises.push(
         API.graphql(
           graphqlOperation(createProductFeature, {
@@ -332,7 +315,6 @@ export default function NewProject() {
         productID: productID,
         value: `[${values.join(", ")}]`,
       };
-      console.log("newProductFeature:", newProductFeature);
       promises.push(
         API.graphql(
           graphqlOperation(createProductFeature, {
@@ -359,7 +341,6 @@ export default function NewProject() {
         productID: productID,
         value: `[${values.join(", ")}]`,
       };
-      console.log("newProductFeature:", newProductFeature);
       promises.push(
         API.graphql(
           graphqlOperation(createProductFeature, {
@@ -397,8 +378,6 @@ export default function NewProject() {
             contentType: "*/*",
           });
 
-          console.log("Archivo seleccionado:", file);
-          console.log("Archivo subido:", uploadImageResult);
         } catch (error) {
           console.log("Error al subir el archivo:", error);
         }
@@ -408,7 +387,6 @@ export default function NewProject() {
           productID: productID,
           value: file.name,
         };
-        console.log("newProductFeature:", newProductFeature);
         const createProductFeatureResponse = await API.graphql(
           graphqlOperation(createProductFeature, { input: newProductFeature })
         );
@@ -450,7 +428,6 @@ export default function NewProject() {
       categoryID: formData["A_category"],
       order: 0,
     };
-    console.log("newProduct:", newProduct);
     await API.graphql(graphqlOperation(createProduct, { input: newProduct }));
 
     const newUserProduct = {
@@ -467,35 +444,39 @@ export default function NewProject() {
   };
 
   return (
-    <div className="container-sm">
-      <div className="mb-5">
-        <NewHeaderNavbar></NewHeaderNavbar>
+    <div>
+      <div
+        className="container-sm "
+        style={{ paddingTop: 60, minHeight: "100vh" }}
+      >
+        <div className="mb-5">
+          <NewHeaderNavbar></NewHeaderNavbar>
+        </div>
+        <section className="mb-5">
+          <h2>Creación de un nuevo proyecto</h2>
+          <p>
+            Para crear un proyecto en nuestra plataforma, es necesario que
+            completes el siguiente formulario. Es importante que ingreses toda
+            la información requerida de manera precisa y detallada para que
+            podamos evaluar tu solicitud.
+          </p>
+          <p>
+            Una vez que hayas completado el formulario, nuestro equipo revisará
+            la información proporcionada y te informaremos si tu proyecto ha
+            sido aprobado o no. Si es aprobado, el equipo de Suan te enviará un
+            contrato en el que se te especificará como continuar el proceso.
+          </p>
+        </section>
+        <DynamicForm
+          XLSFormURL={formURL}
+          formData={formData}
+          setFormData={setFormData}
+          formDataErrors={formDataErrors}
+          setFormDataErrors={setFormDataErrors}
+          handleSubmit={handleSubmit}
+          submitBtnLabel="Postular este proyecto"
+        />
       </div>
-      <div className="my-2">-</div>
-      <section className="mb-5">
-        <h2>Creación de un nuevo proyecto</h2>
-        <p>
-          Para crear un proyecto en nuestra plataforma, es necesario que
-          completes el siguiente formulario. Es importante que ingreses toda la
-          información requerida de manera precisa y detallada para que podamos
-          evaluar tu solicitud.
-        </p>
-        <p>
-          Una vez que hayas completado el formulario, nuestro equipo revisará la
-          información proporcionada y te informaremos si tu proyecto ha sido
-          aprobado o no. Si es aprobado, el equipo de Suan te enviará un
-          contrato en el que se te especificará como continuar el proceso.
-        </p>
-      </section>
-      <DynamicForm
-        XLSFormURL={formURL}
-        formData={formData}
-        setFormData={setFormData}
-        formDataErrors={formDataErrors}
-        setFormDataErrors={setFormDataErrors}
-        handleSubmit={handleSubmit}
-        submitBtnLabel="Postular este proyecto"
-      />
     </div>
   );
 }

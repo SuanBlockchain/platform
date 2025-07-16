@@ -259,9 +259,7 @@ const getValidationsCompleteInfoStatus = (data) => {
       arrayDocs.push(...mappedDocs);
     }
   }
-  console.log(arrayDocs, "arrayDocs 230");
   if(arrayDocs.find(item => !item.isApproved)){
-    console.log('hay uno falso')
     return false
   }else{
     console.log('todos validados')
@@ -275,7 +273,6 @@ const getTokenGenesisStatus = (data) => {
 };
 
 export const mapProjectFillProgress = async (data, userRole) => {
-  console.log(data,'data mapProjectFillProgress')
   let sectionsStatus = {
     projectInfo: false,
     geodataInfo: false,

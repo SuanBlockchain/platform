@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { Auth } from "aws-amplify";
 // Sections
 import ProjectDetails from "./ProjectDetails/ProjectDetails";
@@ -24,6 +24,8 @@ import { HourGlassIcon } from "components/common/icons/HourGlassIcon";
 import { API, graphqlOperation } from "aws-amplify";
 import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
 import AlertMessage from "./AlertMessage";
+import { FiEdit3 } from "react-icons/fi";
+import TimelineProject from "./TimeLineProject";
 // Mostrar si tiene asignado validador
 // Tiempo restante para verificar
 
@@ -35,6 +37,7 @@ const GET_PRODUCT_QUERY = `
       campaign {
         name
         id
+        available
       }
       campaignID
     }
@@ -53,6 +56,8 @@ export default function ProjectPage() {
   const [isVerifier, setIsVerifier] = useState(false);
   const [isAdmon, setIsAdmon] = useState(false);
   const [isAnalyst, setIsAnalyst] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editableTitle, setEditableTitle] = useState("");
   const [campaign, setCampaign] = useState(null);
   const [userGroup, setUserGroup] = useState("");
   const projectStatusMapper = {
@@ -67,6 +72,60 @@ export default function ProjectPage() {
     "Validación externa": "En validación externa",
     "Registro del proyecto": "Registrado",
   };
+
+  const [currentStep, setCurrentStep] = useState(1);
+
+  useEffect(() => {
+  if (!projectData || !progressObj) return;
+
+  const {
+    projectInfo,
+    geodataInfo,
+    technicalInfo,
+    financialInfo,
+    ownerAcceptsConditions,
+    projectOnMarketplace,
+  } = progressObj.sectionsStatus || {};
+
+  console.log("🧠 Evaluando paso actual según reglas nuevas:", {
+    campaignAvailable: campaign?.available,
+    projectInfo,
+    geodataInfo,
+    technicalInfo,
+    financialInfo,
+    technicalFreeze: projectData.isTechnicalFreeze,
+    financialFreeze: projectData.isFinancialFreeze,
+    ownerAcceptsConditions,
+    projectOnMarketplace,
+  });
+
+  let step = 2; // 🔵 Paso 2 por defecto: esperando cierre de campaña
+
+  // 🟠 Paso 3: Campaña cerrada pero falta info
+  if (
+    campaign?.available === false &&
+    (!projectInfo || !geodataInfo || !technicalInfo || !financialInfo)
+  ) {
+    step = 3;
+  }
+
+  // 🟡 Paso 4: Datos congelados, pero condiciones no aceptadas
+  if (
+    projectData.isTechnicalFreeze &&
+    projectData.isFinancialFreeze &&
+    !ownerAcceptsConditions
+  ) {
+    step = 4;
+  }
+
+  // 🟢 Paso 5: Proyecto publicado
+  if (projectOnMarketplace) {
+    step = 5;
+  }
+
+  setCurrentStep(step);
+}, [projectData, progressObj, campaign?.available]);
+
 
   useEffect(() => {
     const fetchUserGroups = async () => {
@@ -113,7 +172,6 @@ export default function ProjectPage() {
           graphqlOperation(GET_PRODUCT_QUERY, { id })
         );
         const campaignData = result?.data?.getProduct?.campaign;
-        console.log("campaignData", campaignData);
         setCampaign(campaignData); // Actualiza el estado con la campaña asociada
       } catch (error) {
         console.error("Error fetching campaign data: ", error);
@@ -142,6 +200,54 @@ export default function ProjectPage() {
     }
   }, [projectData, user]);
 
+  useEffect(() => {
+    if (projectData?.projectInfo?.title) {
+      setEditableTitle(projectData.projectInfo.title);
+    }
+  }, [projectData]);
+
+  const updateProduct = async (productId, newName) => {
+    try {
+      const mutation = `
+        mutation UpdateProduct($input: UpdateProductInput!) {
+          updateProduct(input: $input) {
+            id
+            name
+          }
+        }
+      `;
+      const input = {
+        id: productId,
+        name: newName,
+      };
+      const response = await API.graphql(graphqlOperation(mutation, { input }));
+      return response;
+    } catch (error) {
+      console.error("Error actualizando el producto:", error);
+      throw error;
+    }
+  };
+
+  const checkDuplicateProjectName = async (name) => {
+    try {
+      const query = `
+        query GetProjectsByName($name: String!) {
+          listProducts(filter: { name: { eq: $name } }) {
+            items {
+              id
+              name
+            }
+          }
+        }
+      `;
+      const response = await API.graphql(graphqlOperation(query, { name }));
+      return response.data.listProducts.items; // Devuelve los proyectos que coincidan
+    } catch (error) {
+      console.error("Error verificando nombres duplicados:", error);
+      throw error;
+    }
+  };
+
   return (
     <S3ClientProvider>
       <div>
@@ -155,7 +261,94 @@ export default function ProjectPage() {
               <div className="pt-3 px-4 mb-4 mt-4 border rounded shadow">
                 <div className="row gy-2">
                   <header className="d-flex justify-content-between">
-                    <p className="fs-3 mb-0">{projectData.projectInfo.title}</p>
+                    <div className="d-flex align-items-center gap-2">
+                      {isEditingTitle ? (
+                        <div className="d-flex align-items-center gap-2">
+                          <input
+                            type="text"
+                            className="form-control fs-3"
+                            value={editableTitle}
+                            onChange={(e) => setEditableTitle(e.target.value)}
+                          />
+                          <button
+                            className="btn btn-success"
+                            onClick={async () => {
+                              try {
+                                if (editableTitle.trim() === "") {
+                                  toast.error(
+                                    "El título no puede estar vacío."
+                                  );
+                                  return;
+                                }
+                                const duplicates =
+                                  await checkDuplicateProjectName(
+                                    editableTitle
+                                  );
+                                if (
+                                  duplicates.length > 0 &&
+                                  duplicates[0].id !==
+                                    projectData.projectInfo.id
+                                ) {
+                                  toast.error(
+                                    "El nombre del proyecto ya existe. Elige otro."
+                                  );
+                                  setEditableTitle(
+                                    projectData.projectInfo.title
+                                  );
+                                  return;
+                                }
+
+                                await updateProduct(
+                                  projectData.projectInfo.id,
+                                  editableTitle
+                                );
+                                await handleProjectData({
+                                  pID: projectData.projectInfo.id,
+                                });
+                                toast.success(
+                                  "Título actualizado exitosamente"
+                                );
+                              } catch (error) {
+                                console.error(
+                                  "Error actualizando el título:",
+                                  error
+                                );
+                                toast.error(
+                                  "Error al actualizar el título. Intenta nuevamente."
+                                );
+                              } finally {
+                                setIsEditingTitle(false);
+                              }
+                            }}
+                          >
+                            Confirmar
+                          </button>
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => {
+                              setEditableTitle(projectData.projectInfo.title);
+                              setIsEditingTitle(false);
+                            }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="fs-3 mb-0">{editableTitle}</p>
+                          {isPostulant && (
+                            <button
+                              className="bg-transparent border-0 p-0"
+                              onClick={() => setIsEditingTitle(true)}
+                              title="Editar título"
+                            >
+                              <FiEdit3 size={20} color="gray" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
                     <div className="flex gap-2">
                       {projectData.projectInfo.status && (
                         <div className="bg-blue-500 text-xs text-white font-bold px-4 py-2 rounded-md text-nowrap h-8">
@@ -175,6 +368,7 @@ export default function ProjectPage() {
                       </div>
                     </div>
                   </header>
+
                   <section>
                     <p className="fs-6 mb-0 fw-bold">Fecha de creación:</p>
                     <p className="fs-6 mb-0">
@@ -188,13 +382,22 @@ export default function ProjectPage() {
                     </p>
                   </section>
                   {campaign && (
-                  <section>
-                    <p className="fs-6 mb-0 fw-bold">Pertenece a la campaña:</p>
-                    <p className="fs-6 mb-0">
-                      {campaign.name}
-                    </p>
-                  </section>
+                    <div className="d-flex align-items-center justify-content-between w-100">
+                      <div>
+                        <p className="fs-6 mb-0 fw-bold">
+                          Pertenece a la campaña:
+                        </p>
+                        <p className="fs-6 mb-0">{campaign.name}</p>
+                      </div>
+                      <div className="w-75">
+                        <TimelineProject
+                          currentStep={currentStep}
+                          onStepChange={(step) => setCurrentStep(step)}
+                        />
+                      </div>
+                    </div>
                   )}
+
                   {projectData.projectInfo.token.actualPeriodTokenAmount &&
                     projectData.projectInfo.token.actualPeriodTokenPrice && (
                       <section>
@@ -250,12 +453,12 @@ export default function ProjectPage() {
                   </section>
                   {projectData.projectVerifierNames.length > 0 && (
                     <section>
-                      <p className="fs-6 mb-0 fw-bold">Validadores:</p>
+                      <p className="fs-6 mb-0 fw-bold">Consultores:</p>
                       <div className="flex gap-2">
                         {projectData.projectVerifierNames.map((pvn, index) => {
                           return (
                             <div
-                              className="bg-blue-500 text-xs text-white font-bold px-4 py-2 rounded-md text-nowrap "
+                              className="bg-blue-500 text-xs text-white font-bold px-4 py-2 rounded-md"
                               key={index}
                             >
                               Consultor {index + 1}: {pvn}
@@ -266,7 +469,8 @@ export default function ProjectPage() {
                     </section>
                   )}
                 </div>
-                <ul className="font-medium flex mt-4 pl-0 ">
+
+                <ul className="font-medium flex flex-wrap gap-2 mt-4 pl-0 justify-center md:justify-start">
                   <li>
                     <a
                       href="#details"
@@ -289,7 +493,7 @@ export default function ProjectPage() {
                         )}
                     </a>
                   </li>
-                  {(isVerifier || isAdmon || isPostulant) && !isAnalyst && (
+                  {/* {(isVerifier || isAdmon || isPostulant) && !isAnalyst && (
                     <li>
                       <a
                         href="#files"
@@ -310,48 +514,49 @@ export default function ProjectPage() {
                           )}
                       </a>
                     </li>
+                  )} */}
+
+                  {(isVerifier || isAdmon || isAnalyst) && (
+                    <li>
+                      <a
+                        href="#file_manager"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setActiveSection("file_manager");
+                        }}
+                        className={`${
+                          activeSection === "file_manager"
+                            ? "text-black border-t border-r border-l border-gray-400  rounded-t-md"
+                            : "text-blue-500"
+                        } flex py-2 px-3`}
+                      >
+                        Sistema de datos
+                      </a>
+                    </li>
                   )}
 
-                  {(isVerifier || isAdmon) && !isAnalyst && (
-                    <>
-                      <li>
-                        <a
-                          href="#file_manager"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setActiveSection("file_manager");
-                          }}
-                          className={`${
-                            activeSection === "file_manager"
-                              ? "text-black border-t border-r border-l border-gray-400  rounded-t-md"
-                              : "text-blue-500"
-                          } flex py-2 px-3`}
-                        >
-                          Sistema de datos
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          href="#settings"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setActiveSection("settings");
-                          }}
-                          className={`${
-                            activeSection === "settings"
-                              ? "text-black border-t border-r border-l border-gray-400  rounded-t-md"
-                              : "text-blue-500"
-                          } py-2 px-3 flex`}
-                        >
-                          Configuración
-                          {(autorizedUser || isAdmon) &&
-                            (!progressObj?.sectionsStatus.technicalInfo ||
-                              !progressObj?.sectionsStatus.financialInfo) && (
-                              <HourGlassIcon className="text-danger ms-2" />
-                            )}
-                        </a>
-                      </li>
-                    </>
+                  {(isVerifier || isAdmon) && (
+                    <li>
+                      <a
+                        href="#settings"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setActiveSection("settings");
+                        }}
+                        className={`${
+                          activeSection === "settings"
+                            ? "text-black border-t border-r border-l border-gray-400  rounded-t-md"
+                            : "text-blue-500"
+                        } py-2 px-3 flex`}
+                      >
+                        Configuración
+                        {(autorizedUser || isAdmon) &&
+                          (!progressObj?.sectionsStatus.technicalInfo ||
+                            !progressObj?.sectionsStatus.financialInfo) && (
+                            <HourGlassIcon className="text-danger ms-2" />
+                          )}
+                      </a>
+                    </li>
                   )}
 
                   {user?.id &&
@@ -380,7 +585,7 @@ export default function ProjectPage() {
                         </a>
                       </li>
                     )}
-                  {(isVerifier || isAdmon || isAnalyst) && (
+                  {(isAdmon || isAnalyst) && (
                     <li>
                       <a
                         href="#analysis"
@@ -406,12 +611,11 @@ export default function ProjectPage() {
                 visible={activeSection === "file_manager"}
                 userGroup={userGroup}
               />
-              <ProjectFiles visible={activeSection === "files"} />
+              {/* <ProjectFiles visible={activeSection === "files"} /> */}
               <FinanceCard visible={activeSection === "finance"} />
               <ProjectSettings
-                visible={
-                  activeSection === "settings" && (isVerifier || isAdmon)
-                }
+  visible={activeSection === "settings" && (isVerifier || isAdmon)}
+  campaign={campaign}
               />
               <ProjectAnalysis
                 visible={activeSection === "analysis"}

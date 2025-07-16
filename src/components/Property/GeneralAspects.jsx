@@ -9,13 +9,14 @@ import Card from "components/common/Card";
 import FormGroup from "components/common/FormGroup";
 
 export default function GeneralAspects(props) {
-  const { className, autorizedUser } = props;
+  const { className, autorizedUser, setHasUnsavedChanges, handleFieldChange,updateFormCompletion  } = props;
   const { propertyData } = usePropertyData();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState([{}]);
   const [executedOnce, setExecutedOnce] = useState(false);
   const [habitaPfID, setHabitaPfID] = useState(null);
+  const [changedFields, setChangedFields] = useState({});
 
   const productFeaturesGroup = [
     "G_habita_predio",
@@ -30,6 +31,13 @@ export default function GeneralAspects(props) {
     "G_caminos_existence",
     "G_risks_erosion_derrumbe",
   ];
+
+  const checkFormCompletion = () => {
+    // ✅ Se considera completado si al menos un campo tiene datos
+    const hasAnyData = Object.values(formData).some((value) => value !== "" && value !== undefined);
+    updateFormCompletion("generalAspects", hasAnyData);
+  };
+  
 
   useEffect(() => {
     if (propertyData && propertyData.propertyFeatures && user && !executedOnce) {
@@ -64,6 +72,7 @@ export default function GeneralAspects(props) {
     }
   }, [propertyData, user]);
 
+
   const handleChangeInputValue = async (e) => {
     const { name, type, value, checked } = e.target;
 
@@ -90,6 +99,14 @@ export default function GeneralAspects(props) {
 
       return updatedFormData;
     });
+    setChangedFields((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
+  
+    handleFieldChange(name, true);
+    setHasUnsavedChanges(true);
+    checkFormCompletion();
   };
 
   const handleSaveBtn = async () => {
@@ -111,7 +128,6 @@ export default function GeneralAspects(props) {
           id: habitaPfID,
           value: `[${values.join(", ")}]`,
         };
-        console.log("newPropertyFeature:", updatedPropertyFeature);
         await API.graphql(
           graphqlOperation(updatePropertyFeature, {
             input: updatedPropertyFeature,
@@ -123,15 +139,18 @@ export default function GeneralAspects(props) {
           propertyID: propertyData.propertyInfo.id,
           value: `[${values.join(", ")}]`,
         };
-        console.log("newPropertyFeature:", newPropertyFeature);
         const response = await API.graphql(
           graphqlOperation(createPropertyFeature, { input: newPropertyFeature })
         );
         setHabitaPfID(response.data.createPropertyFeature.id);
       }
     }
-
+    updateFormCompletion("generalAspects", true);
+    setChangedFields({});
+    Object.keys(changedFields).forEach((key) => handleFieldChange(key, false));
+    setHasUnsavedChanges(false);
     notify({ msg: "Información actualizada", type: "success" });
+    checkFormCompletion();
   };
 
   return (
@@ -151,6 +170,9 @@ export default function GeneralAspects(props) {
               optionCheckedList={formData.G_habita_predio}
               inputName="G_habita_predio"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_habita_predio"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -165,6 +187,9 @@ export default function GeneralAspects(props) {
               optionCheckedList={formData.G_caminos_existence}
               inputName="G_caminos_existence"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_caminos_existence"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           {formData.G_habita_predio === "yes" && (
@@ -180,6 +205,9 @@ export default function GeneralAspects(props) {
                 optionCheckedList={formData.G_Temporal_permanente}
                 inputName="G_Temporal_permanente"
                 onChangeInputValue={(e) => handleChangeInputValue(e)}
+                className={`border rounded-md p-1 ${
+                  changedFields["G_Temporal_permanente"] ? "border-red-500 bg-red-100" : ""
+                }`}
               />
             </div>
           )}
@@ -192,6 +220,9 @@ export default function GeneralAspects(props) {
                 inputValue={formData.G_habita_years}
                 inputName="G_habita_years"
                 onChangeInputValue={(e) => handleChangeInputValue(e)}
+                className={`border rounded-md p-1 ${
+                  changedFields["G_habita_years"] ? "border-red-500 bg-red-100" : ""
+                }`}
               />
             </div>
           )}
@@ -203,6 +234,9 @@ export default function GeneralAspects(props) {
               inputValue={formData.G_viviendas_number}
               inputName="G_viviendas_number"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_viviendas_number"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -213,6 +247,9 @@ export default function GeneralAspects(props) {
               inputValue={formData.G_familias}
               inputName="G_familias"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_familias"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           {parseInt(propertyData.projectGeneralAspects?.membersPerFamily) >
@@ -225,6 +262,9 @@ export default function GeneralAspects(props) {
                 inputValue={formData.G_familias_miembros}
                 inputName="G_familias_miembros"
                 onChangeInputValue={(e) => handleChangeInputValue(e)}
+                className={`border rounded-md p-1 ${
+                  changedFields["G_familias_miembros"] ? "border-red-500 bg-red-100" : ""
+                }`}
               />
             </div>
           )}
@@ -236,6 +276,9 @@ export default function GeneralAspects(props) {
               inputValue={formData.G_vias_state}
               inputName="G_vias_state"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_vias_state"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -246,6 +289,9 @@ export default function GeneralAspects(props) {
               inputValue={formData.G_distancia_predio_municipal}
               inputName="G_distancia_predio_municipal"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_distancia_predio_municipal"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col">
@@ -256,6 +302,9 @@ export default function GeneralAspects(props) {
               inputValue={formData.G_transport_mean}
               inputName="G_transport_mean"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_transport_mean"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
           <div className="col-12 col-lg-12">
@@ -266,6 +315,9 @@ export default function GeneralAspects(props) {
               inputValue={formData.G_risks_erosion_derrumbe}
               inputName="G_risks_erosion_derrumbe"
               onChangeInputValue={(e) => handleChangeInputValue(e)}
+              className={`border rounded-md p-1 ${
+                changedFields["G_risks_erosion_derrumbe"] ? "border-red-500 bg-red-100" : ""
+              }`}
             />
           </div>
         </div>
